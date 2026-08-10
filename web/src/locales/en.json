@@ -1,0 +1,176 @@
+{
+  "header": {
+    "home": "Home",
+    "search": "Search trip",
+    "offers": "Offers",
+    "blog": "Blog",
+    "about": "About us",
+    "login": "Login",
+    "register": "Register",
+    "myTickets": "My Tickets",
+    "profile": "Profile",
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all as read",
+    "seeAll": "See all",
+    "hot": "HOT"
+  },
+  "home": {
+    "heroLine1": "OUR GOAL IS TO HELP YOU FIND AND CHOOSE THE BEST BUS TRIP.",
+    "heroLine2": "THIS IS ALSO AN OPPORTUNITY TO EXPERIENCE PROFESSIONAL TRANSPORTATION SERVICES IN VIETNAM.",
+    "scrollDown": "Scroll Down",
+    "search": {
+      "origin": "Origin",
+      "originPlaceholder": "Ex: Sai Gon",
+      "destination": "Destination",
+      "destinationPlaceholder": "Where to?",
+      "date": "Date",
+      "passengers": "Passengers",
+      "onePassenger": "1 person",
+      "manyPassengers": "Many people",
+      "button": "SEARCH"
+    },
+    "services": {
+      "tickets": "Bus Tickets",
+      "delivery": "Delivery",
+      "rental": "Car Rental",
+      "tour": "Book Tour",
+      "event": "Events"
+    },
+    "about": {
+      "title": "ABOUT",
+      "viewMore": "VIEW MORE",
+      "desc1": "The <strong class=\"text-slate-900\">An Chuyen</strong> platform is designed to help passengers find their ideal trip, providing high-quality services and ensuring maximum safety on every journey.",
+      "desc2": "Our system supports booking tickets anytime, anywhere. We continuously strive to improve our services to bring the highest convenience and efficiency for all your journeys."
+    },
+    "popular": {
+      "subtitle": "Explore",
+      "title": "Popular Destinations",
+      "seeAll": "See all",
+      "tripsPerDay": "trips/day"
+    },
+    "flashSale": {
+      "sold": "Sold",
+      "almostSoldOut": "Almost gone!",
+      "buyNow": "Buy Now"
+    },
+    "promotions": {
+      "subtitle": "Hot offers",
+      "title": "Exclusive Promo Codes"
+    },
+    "reviews": {
+      "subtitle": "Reviews",
+      "title": "What customers say about An Chuyen?",
+      "fromReviews": "from 12,000+ reviews",
+      "writeReview": "Write a Review",
+      "member": "An Chuyen Member"
+    },
+    "stations": {
+      "subtitle": "Map",
+      "title": "Nearby Stations",
+      "relocate": "Relocate",
+      "minutes": "mins"
+    }
+  },
+  "footer": {
+    "brandDesc": "Vietnam's leading intercity bus booking platform. Bringing the most convenient, safe, and professional travel experience for every journey.",
+    "about": {
+      "title": "About An Chuyen",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "news": "News",
+      "promotions": "Promotions"
+    },
+    "support": {
+      "title": "Customer Support",
+      "helpCenter": "Help Center",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "regulations": "Operating Regulations"
+    },
+    "contact": {
+      "title": "Contact",
+      "address": "Floor 12, An Chuyen Building, 123 ABC Street, District 1, HCMC",
+      "emailPlaceholder": "Enter email for offers"
+    },
+    "copyright": "© 2026 An Chuyen. All rights reserved by An Chuyen Co., Ltd.",
+    "registered": "Registered BCT"
+  },
+  "services": {
+    "delivery": {
+      "title": "Delivery",
+      "desc": "Fast and safe freight forwarding service.",
+      "sender": "Sender",
+      "senderPlaceholder": "Sender's name...",
+      "receiver": "Receiver",
+      "receiverPlaceholder": "Receiver's name...",
+      "package": "Package Type",
+      "doc": "Document",
+      "food": "Food",
+      "fragile": "Fragile",
+      "quote": "Get Quote"
+    },
+    "rental": {
+      "title": "Car Rental",
+      "mainTitle": "Find your perfect ride",
+      "location": "Location",
+      "locationPlaceholder": "City, Airport, or Station",
+      "pickup": "Pick-up",
+      "pickupPlaceholder": "Date & Time",
+      "dropoff": "Drop-off",
+      "dropoffPlaceholder": "Date & Time",
+      "driveType": "Drive Type",
+      "selfDrive": "Self-drive",
+      "withDriver": "With Driver",
+      "searchBtn": "Search",
+      
+      "filters": {
+        "recommended": "Recommended",
+        "priceLowHigh": "Price: Low to High",
+        "suv": "SUVs",
+        "electric": "Electric"
+      },
+      
+      "cars": {
+        "compactEv": "Compact Electric Hatchback",
+        "premiumSuv": "Premium Family SUV",
+        "bestValue": "Best Value",
+        "perDay": "/day",
+        "automatic": "Automatic",
+        "seats": "Seats",
+        "electric350": "Electric (350mi)",
+        "hybrid": "Hybrid",
+        "insuranceIncluded": "Insurance included",
+        "select": "Select"
+      },
+      
+      "verification": {
+        "title": "Fast-track Verification",
+        "desc": "Upload your ID now for instant approval.",
+        "clickToUpload": "Click to upload",
+        "hint": "Driver's License or Passport (Max 5MB)",
+        "secure": "Secure & Encrypted"
+      },
+      
+      "price": {
+        "title": "Price Breakdown",
+        "baseRate": "Base Rate (3 days)",
+        "insurance": "Comprehensive Insurance",
+        "taxes": "Taxes & Fees",
+        "total": "Total",
+        "depositHint": "A refundable security deposit of $200 will be held on your card during the rental.",
+        "bookNow": "Book Now"
+      }
+    },
+    "tour": {
+      "title": "Book Tour",
+      "from": "From",
+      "viewDetail": "View Detail"
+    },
+    "event": {
+      "title": "Popular Events",
+      "buyTicket": "Buy Ticket",
+      "buyCombo": "Bus + Ticket Combo"
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "header": {
+    "home": "Trang chủ",
+    "search": "Tìm chuyến",
+    "offers": "Ưu đãi",
+    "blog": "Cẩm nang",
+    "about": "Về chúng tôi",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "myTickets": "Vé của tôi",
+    "profile": "Hồ sơ cá nhân",
+    "logout": "Đăng xuất",
+    "notifications": "Thông báo",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "seeAll": "Xem tất cả",
+    "hot": "HOT"
+  },
+  "home": {
+    "heroLine1": "MỤC TIÊU CỦA CHÚNG TÔI LÀ GIÚP BẠN TÌM VÀ CHỌN CHUYẾN XE PHÙ HỢP NHẤT.",
+    "heroLine2": "ĐÂY CŨNG LÀ CƠ HỘI ĐỂ TRẢI NGHIỆM DỊCH VỤ DI CHUYỂN CHUYÊN NGHIỆP TẠI VIỆT NAM.",
+    "scrollDown": "Scroll Down",
+    "search": {
+      "origin": "Điểm đi",
+      "originPlaceholder": "VD: Sài Gòn",
+      "destination": "Điểm đến",
+      "destinationPlaceholder": "Bạn muốn đi đâu?",
+      "date": "Ngày đi",
+      "passengers": "Hành khách",
+      "onePassenger": "1 người",
+      "manyPassengers": "Nhiều người",
+      "button": "TÌM KIẾM"
+    },
+    "services": {
+      "tickets": "Vé xe khách",
+      "delivery": "Giao hàng",
+      "rental": "Thuê xe",
+      "tour": "Đặt Tour",
+      "event": "Sự kiện"
+    },
+    "about": {
+      "title": "ABOUT",
+      "viewMore": "VIEW MORE",
+      "desc1": "Nền tảng <strong class=\"text-slate-900\">An Chuyến</strong> được thiết kế để giúp hành khách tìm được chuyến xe ưng ý, cung cấp dịch vụ chất lượng cao và đảm bảo an toàn tối đa trên mỗi cung đường.",
+      "desc2": "Hệ thống của chúng tôi hỗ trợ đặt vé mọi lúc mọi nơi. Chúng tôi không ngừng nỗ lực cải thiện dịch vụ để mang lại sự tiện lợi và hiệu quả cao nhất cho mọi hành trình của bạn."
+    },
+    "popular": {
+      "subtitle": "Khám phá",
+      "title": "Điểm đến phổ biến",
+      "seeAll": "Xem tất cả",
+      "tripsPerDay": "chuyến/ngày"
+    },
+    "flashSale": {
+      "sold": "Đã bán",
+      "almostSoldOut": "Sắp hết!",
+      "buyNow": "Mua ngay"
+    },
+    "promotions": {
+      "subtitle": "Ưu đãi hot",
+      "title": "Mã khuyến mãi độc quyền"
+    },
+    "reviews": {
+      "subtitle": "Đánh giá",
+      "title": "Khách hàng nói gì về An Chuyến?",
+      "fromReviews": "từ 12,000+ đánh giá",
+      "writeReview": "Viết Đánh Giá",
+      "member": "Thành viên An Chuyến"
+    },
+    "stations": {
+      "subtitle": "Bản đồ",
+      "title": "Trạm dừng gần bạn",
+      "relocate": "Định vị lại",
+      "minutes": "phút"
+    }
+  },
+  "footer": {
+    "brandDesc": "Nền tảng đặt vé xe khách liên tỉnh hàng đầu Việt Nam. Mang đến trải nghiệm di chuyển tiện lợi, an toàn và chuyên nghiệp nhất cho mỗi hành trình của bạn.",
+    "about": {
+      "title": "Về An Chuyến",
+      "aboutUs": "Về chúng tôi",
+      "careers": "Tuyển dụng",
+      "news": "Tin tức",
+      "promotions": "Khuyến mãi"
+    },
+    "support": {
+      "title": "Hỗ trợ khách hàng",
+      "helpCenter": "Trung tâm trợ giúp",
+      "privacyPolicy": "Chính sách bảo mật",
+      "termsOfService": "Điều khoản sử dụng",
+      "regulations": "Quy chế hoạt động"
+    },
+    "contact": {
+      "title": "Liên hệ",
+      "address": "Tầng 12, Tòa nhà An Chuyến, 123 Đường ABC, Quận 1, TP. HCM",
+      "emailPlaceholder": "Nhập email nhận ưu đãi"
+    },
+    "copyright": "© 2026 An Chuyến. Bản quyền thuộc về Công ty TNHH An Chuyến.",
+    "registered": "Đã đăng ký BCT"
+  },
+  "services": {
+    "delivery": {
+      "title": "Giao Hàng",
+      "desc": "Dịch vụ vận chuyển hàng hóa nhanh chóng và an toàn.",
+      "sender": "Người gửi",
+      "senderPlaceholder": "Tên người gửi...",
+      "receiver": "Người nhận",
+      "receiverPlaceholder": "Tên người nhận...",
+      "package": "Loại hàng hóa",
+      "doc": "Tài liệu",
+      "food": "Thực phẩm",
+      "fragile": "Hàng dễ vỡ",
+      "quote": "Nhận Báo Giá"
+    },
+    "rental": {
+      "title": "Thuê Xe",
+      "mainTitle": "Tìm kiếm chuyến đi hoàn hảo",
+      "location": "Địa điểm",
+      "locationPlaceholder": "Thành phố, Sân bay, hoặc Trạm",
+      "pickup": "Ngày nhận",
+      "pickupPlaceholder": "Ngày & Giờ",
+      "dropoff": "Ngày trả",
+      "dropoffPlaceholder": "Ngày & Giờ",
+      "driveType": "Loại hình",
+      "selfDrive": "Tự lái",
+      "withDriver": "Có tài xế",
+      "searchBtn": "Tìm kiếm",
+      
+      "filters": {
+        "recommended": "Đề xuất",
+        "priceLowHigh": "Giá: Thấp đến Cao",
+        "suv": "Xe SUV",
+        "electric": "Xe điện"
+      },
+      
+      "cars": {
+        "compactEv": "Hatchback Điện",
+        "premiumSuv": "SUV Gia đình Cao cấp",
+        "bestValue": "Giá tốt nhất",
+        "perDay": "/ngày",
+        "automatic": "Tự động",
+        "seats": "Chỗ",
+        "electric350": "Điện (500km)",
+        "hybrid": "Lai (Hybrid)",
+        "insuranceIncluded": "Đã gồm bảo hiểm",
+        "select": "Chọn"
+      },
+      
+      "verification": {
+        "title": "Xác minh nhanh",
+        "desc": "Tải CMND/CCCD để được duyệt ngay.",
+        "clickToUpload": "Nhấn để tải lên",
+        "hint": "GPLX hoặc Hộ chiếu (Tối đa 5MB)",
+        "secure": "Bảo mật & Mã hóa"
+      },
+      
+      "price": {
+        "title": "Chi tiết giá",
+        "baseRate": "Phí cơ bản (3 ngày)",
+        "insurance": "Bảo hiểm toàn diện",
+        "taxes": "Thuế & Phí",
+        "total": "Tổng cộng",
+        "depositHint": "Một khoản đặt cọc hoàn lại trị giá $200 sẽ được giữ trên thẻ của bạn trong thời gian thuê.",
+        "bookNow": "Đặt Ngay"
+      }
+    },
+    "tour": {
+      "title": "Đặt Tour",
+      "from": "Từ",
+      "viewDetail": "Chi tiết"
+    },
+    "event": {
+      "title": "Sự Kiện Nổi Bật",
+      "buyTicket": "Mua Vé",
+      "buyCombo": "Combo Xe + Vé"
+    }
+  }
+}
