@@ -26,7 +26,7 @@ export function TourPage() {
  useEffect(() => {
  const fetchTours = async () => {
  try {
- const response = await axios.get('http://localhost:3000/api/tours');
+ const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/tours`);
  setTours(response.data);
  } catch (error) {
  console.error('Failed to fetch tours', error);

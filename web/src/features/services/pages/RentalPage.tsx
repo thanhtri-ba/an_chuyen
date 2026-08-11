@@ -26,7 +26,7 @@ export function RentalPage() {
  useEffect(() => {
  const fetchCars = async () => {
  try {
- const response = await axios.get('http://localhost:3000/api/rentals/cars');
+ const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/rentals/cars`);
  setCars(response.data);
  } catch (error) {
  console.error('Failed to fetch cars', error);

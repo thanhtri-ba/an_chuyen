@@ -54,7 +54,7 @@ export function DeliveryPage() {
  useEffect(() => {
  const fetchVehicles = async () => {
  try {
- const response = await axios.get('http://localhost:3000/api/deliveries/vehicles');
+ const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/deliveries/vehicles`);
  setVehicles(response.data);
  if (response.data.length > 0) {
  setSelectedVehicle(response.data[1]?.id || response.data[0]?.id);
@@ -122,7 +122,7 @@ export function DeliveryPage() {
  
  setIsSubmitting(true);
  try {
- await axios.post('http://localhost:3000/api/deliveries/book', {
+ await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/deliveries/book`, {
  userId:'f47ac10b-58cc-4372-a567-0e02b2c3d479', 
  vehicleId: selectedVehicle,
  packageType,
