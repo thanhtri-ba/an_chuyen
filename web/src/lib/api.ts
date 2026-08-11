@@ -1,10 +1,10 @@
-import axios from'axios';
+import axios from 'axios';
 
-const api = axios.create({
- baseURL:'http://127.0.0.1:3000/api', // Point to backend Express API
- headers: {
-'Content-Type':'application/json',
- },
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api', // Use environment variable in production
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use((config) => {
