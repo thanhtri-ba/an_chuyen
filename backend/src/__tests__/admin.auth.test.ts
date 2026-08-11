@@ -1,9 +1,3 @@
-jest.mock('../modules/ai-advisor/ai-advisor.routes', () => {
-  const express = require('express');
-  const router = express.Router();
-  return router;
-});
-
 import request from 'supertest';
 import app from '../index';
 import jwt from 'jsonwebtoken';

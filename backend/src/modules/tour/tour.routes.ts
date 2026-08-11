@@ -9,12 +9,6 @@ tourRoutes.get('/', async (req, res, next) => {
   try {
     const tours = await getCached('tours', async () => {
       return prisma.tour.findMany({
-        include: {
-          itineraries: {
-            orderBy: { day: 'asc' }
-          },
-          reviews: true
-        },
         orderBy: { price: 'asc' }
       });
     }, 300);

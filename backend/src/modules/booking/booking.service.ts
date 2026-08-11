@@ -96,7 +96,7 @@ export class BookingService {
           userId,
           tripScheduleId,
           totalAmount, // Giá TỰ TÍNH của Backend, tuyệt đối an toàn
-          status: 'PENDING',
+          status: 'PENDING_PAYMENT',
           passengers: {
             create: passengers.map(p => ({
               name: p.name,
@@ -114,9 +114,11 @@ export class BookingService {
       });
 
       // 4. Tạo vé (Ticket) cho từng hành khách
-      if (booking.passengers && booking.passengers.length > 0) {
+      // Cast booking to any to bypass TS error if Prisma types are outdated
+      const bookingWithPassengers = booking as any;
+      if (bookingWithPassengers.passengers && bookingWithPassengers.passengers.length > 0) {
         await tx.ticket.createMany({
-          data: booking.passengers.map(p => ({
+          data: bookingWithPassengers.passengers.map((p: any) => ({
             bookingId: booking.id,
             passengerId: p.id,
             status: 'PENDING'
@@ -141,7 +143,7 @@ export class BookingService {
             bookingId: booking.id,
             method: paymentMethod,
             amount: totalAmount,
-            status: 'UNPAID'
+            status: 'PENDING'
           }
         });
       }

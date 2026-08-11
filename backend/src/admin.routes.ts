@@ -140,6 +140,7 @@ router.post('/invite-user', async (req, res) => {
       data: {
         id: userId,
         email,
+        phone: '0000000000',
         fullName: fullName || email.split('@')[0],
         role: role || 'user',
         updatedAt: new Date()

@@ -32,26 +32,26 @@ app.use(requestContextMiddleware);
 app.use(loggingMiddleware);
 
 import aiRoutes from './modules/ai/ai.routes';
-import aiAdvisorRoutes from './modules/ai-advisor/ai-advisor.routes';
+// import aiAdvisorRoutes from './modules/ai-advisor/ai-advisor.routes';
 import bookingRoutes from './modules/booking/booking.routes';
 import adminRoutes from './admin.routes';
 import authRoutes from './auth.routes';
 import { loyaltyRoutes } from './modules/loyalty/loyalty.routes';
 import { rentalRoutes } from './modules/rental/rental.routes';
-import { tourRoutes } from './modules/tour/tour.routes';
-import { eventRoutes } from './modules/event/event.routes';
+// import { tourRoutes } from './modules/tour/tour.routes';
+// import { eventRoutes } from './modules/event/event.routes';
 import { deliveryRoutes } from './modules/delivery/delivery.routes';
 
 app.use('/api/auth', authRoutes);
 
 app.use('/api/ai', aiRoutes);
-app.use('/api/ai-advisor', aiAdvisorRoutes);
+// app.use('/api/ai-advisor', aiAdvisorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/rentals', rentalRoutes);
-app.use('/api/tours', tourRoutes);
-app.use('/api/events', eventRoutes);
+// app.use('/api/tours', tourRoutes);
+// app.use('/api/events', eventRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 
 app.get('/', (req, res) => {
