@@ -36,7 +36,7 @@ export function CookieConsent() {
  className="fixed bottom-0 left-0 right-0 z-[100] p-4 pointer-events-none"
  >
  <div className="max-w-6xl mx-auto pointer-events-auto">
- <div className="bg-white shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.15)] border border-gray-100 p-5 flex flex-col lg:flex-row items-center gap-6 justify-between overflow-hidden relative">
+ <div className="bg-white shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.15)] border border-gray-100 p-5 flex flex-col lg:flex-row items-center gap-6 justify-between overflow-hidden relative rounded-2xl md:rounded-3xl">
  {/* Background gradient decoration */}
  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
  

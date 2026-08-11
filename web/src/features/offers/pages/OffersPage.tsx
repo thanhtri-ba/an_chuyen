@@ -3,7 +3,7 @@ import { User, Ticket, Bell, LogOut, Gift, Copy } from'lucide-react';
 
 export function OffersPage() {
  return (
- <div className="bg-muted/10 min-h-[calc(100vh-4rem)] py-8">
+ <div className="bg-muted/10 min-h-[calc(100vh-4rem)] pt-24 pb-8">
  <div className="container flex flex-col lg:flex-row gap-8">
  
  {/* Sidebar Nav */}

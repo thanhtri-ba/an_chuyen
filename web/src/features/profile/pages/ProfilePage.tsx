@@ -67,7 +67,7 @@ export function ProfilePage() {
  const progressPercent = Math.min((tier.currentPoints / tier.pointsNeeded) * 100, 100);
 
  return (
- <div className="min-h-screen bg-gray-50 pt-24 pb-16">
+ <div className="min-h-screen bg-gray-50 pt-24 pb-8">
  {/* Page Header */}
  <div className="bg-white border-b border-gray-100 shadow-sm mb-8">
  <div className="container px-4 py-6 flex justify-between items-center">

@@ -1,4 +1,4 @@
-git remote add origin https://github.com/thanhtri-ba/an_chuyen.gitgenerator client {
+generator client {
   provider = "prisma-client-js"
 }
 

@@ -30,7 +30,7 @@ export function Header() {
  const location = useLocation();
  const navigate = useNavigate();
  const { user, logout } = useAuth();
- const { theme, setTheme } = useTheme();
+ //const { theme, setTheme } = useTheme();
  
  const isHomePage = location.pathname ==='/';
  const userMenuRef = useRef<HTMLDivElement>(null);
@@ -142,15 +142,6 @@ export function Header() {
  )}
  </AnimatePresence>
  </div>
- 
- {/* Theme Toggle */}
- <button
- onClick={() => setTheme(theme ==='dark' ?'light' :'dark')}
- className={`p-2 rounded-full transition-colors ${isTransparent ?'text-white hover:bg-white/10' :'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
- >
- {theme ==='dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
- </button>
-
  {/* Notification Bell */}
  <div ref={notifRef} className="relative hidden sm:block">
  <button onClick={() => setNotifOpen(!notifOpen)} className={`relative p-2 rounded-full transition-colors ${isTransparent ?'text-white hover:bg-white/10' :'text-gray-600 hover:bg-gray-100'}`}>

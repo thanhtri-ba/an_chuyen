@@ -250,8 +250,8 @@ export function HomePage() {
  className="w-full max-w-[1100px] mx-auto relative group/widget"
  >
  <form onSubmit={handleSearch}>
- <div className="bg-white/40 backdrop-blur-3xl .5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/70 flex flex-col md:flex-row items-center p-2 relative overflow-hidden transition-all duration-500 group-hover/widget:border-white group-hover/widget:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4)] group-hover/widget:bg-white/50">
- <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none"></div>
+ <div className="bg-white/40 backdrop-blur-3xl rounded-2xl md:rounded-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/70 flex flex-col md:flex-row items-center p-2 relative overflow-hidden transition-all duration-500 group-hover/widget:border-white group-hover/widget:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4)] group-hover/widget:bg-white/50">
+ <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none rounded-2xl md:rounded-full"></div>
 
  {/* Origin */}
  <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 ] px-6 py-3 cursor-text">
@@ -328,8 +328,8 @@ export function HomePage() {
  {/* Submit Button */}
  <div className="w-full md:w-auto p-1 mt-2 md:mt-0 relative">
  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95, y: 2 }} transition={{ type:"spring", stiffness: 400, damping: 15 }}>
- <div className="absolute inset-0 bg-orange-500 blur-xl opacity-30 ] animate-pulse pointer-events-none"></div>
- <Button type="submit" className="h-[60px] px-10 font-bold text-[16px] bg-gradient-to-r from-red-500 to-orange-500 text-white w-full ] shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 transition-all relative overflow-hidden group/btn flex items-center justify-center gap-3 border border-white/20">
+ <div className="absolute inset-0 bg-orange-500 blur-xl opacity-30 animate-pulse pointer-events-none rounded-xl md:rounded-full"></div>
+ <Button type="submit" className="h-[60px] px-10 font-bold text-[16px] bg-gradient-to-r from-red-500 to-orange-500 text-white w-full shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 transition-all relative overflow-hidden group/btn flex items-center justify-center gap-3 border border-white/20 rounded-xl md:rounded-full">
  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]"></span>
  <Search className="w-5 h-5 relative z-10" /> <span className="relative z-10">{t('home.search.button')}</span>
  </Button>
@@ -682,7 +682,7 @@ export function HomePage() {
  )}
 
  {/* APP DOWNLOAD BANNER */}
- <section className="relative overflow-hidden bg-gradient-to-br from-primary via-[#00B4D8] to-slate-900 p-8 md:p-12 text-white shadow-xl group">
+ <section className="relative overflow-hidden bg-gradient-to-br from-primary via-[#00B4D8] to-slate-900 p-8 md:p-12 text-white shadow-xl group rounded-3xl mx-4 md:mx-0">
  {/* Background Patterns */}
  <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] bg-[size:24px_24px] opacity-50"></div>
  
@@ -712,7 +712,7 @@ export function HomePage() {
  </div>
  
  <div className="flex flex-col sm:flex-row gap-4 flex-shrink-0 w-full sm:w-auto">
- <button className="flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 hover:bg-black transition-all hover:scale-105 shadow-[0_10px_20px_rgba(0,0,0,0.2)] w-full sm:w-auto">
+ <button className="flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 hover:bg-black transition-all hover:scale-105 shadow-[0_10px_20px_rgba(0,0,0,0.2)] w-full sm:w-auto rounded-2xl">
  {/* Apple Icon */}
  <svg className="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.19 2.29-.88 3.56-.88 1.48.05 2.6.58 3.32 1.6-3 1.63-2.5 5.5.76 6.8-.75 1.94-1.74 3.65-2.72 4.65zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
  <div className="text-left">
@@ -721,7 +721,7 @@ export function HomePage() {
  </div>
  </button>
  
- <button className="flex items-center justify-center gap-3 bg-white text-slate-900 px-6 py-4 hover:bg-gray-50 transition-all hover:scale-105 shadow-[0_10px_20px_rgba(0,0,0,0.1)] w-full sm:w-auto border border-gray-100">
+ <button className="flex items-center justify-center gap-3 bg-white text-slate-900 px-6 py-4 hover:bg-gray-50 transition-all hover:scale-105 shadow-[0_10px_20px_rgba(0,0,0,0.1)] w-full sm:w-auto border border-gray-100 rounded-2xl">
  {/* Play Store Icon */}
  <svg className="w-8 h-8" viewBox="0 0 24 24"><path fill="#4CAF50" d="M3.73 2.55C3.3 2.92 3 3.5 3 4.29v15.42c0 .8.3 1.38.74 1.74l.05.05L12 13.27v-.55l-8.22-8.22-.05.05z"/><path fill="#FFC107" d="M16 17.27l-4-4v-.55l4-4 .08.05 4.7 2.67c1.34.76 1.34 2.01 0 2.78l-4.7 2.67-.08.04z"/><path fill="#F44336" d="M16 17.27l-4-4-8.27 8.22c.86.92 2.34.99 3.97.07L16 17.27z"/><path fill="#2196F3" d="M16 6.73L7.7 2.06c-1.63-.92-3.11-.84-3.97.07L12 10.33l4-3.6z"/></svg>
  <div className="text-left">
