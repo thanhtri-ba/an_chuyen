@@ -34,7 +34,7 @@ const RoutesPage = () => {
     if (cityData) setCities(cityData);
 
     // Fetch Routes
-    const { data: routeData } = await supabase.from('Route').select('*');
+    const { data: routeData } = await supabase.from('routes').select('*');
     if (routeData) setRoutes(routeData);
     
     setIsLoading(false);
@@ -83,7 +83,7 @@ const RoutesPage = () => {
     };
 
     if (editingRoute) {
-      const { error } = await supabase.from('Route').update(payload).eq('id', editingRoute.id);
+      const { error } = await supabase.from('routes').update(payload).eq('id', editingRoute.id);
       if (!error) {
         setIsModalOpen(false);
         fetchData();
@@ -91,7 +91,7 @@ const RoutesPage = () => {
         alert(error.message);
       }
     } else {
-      const { error } = await supabase.from('Route').insert([payload]);
+      const { error } = await supabase.from('routes').insert([payload]);
       if (!error) {
         setIsModalOpen(false);
         fetchData();
@@ -103,7 +103,7 @@ const RoutesPage = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this route?')) {
-      await supabase.from('Route').delete().eq('id', id);
+      await supabase.from('routes').delete().eq('id', id);
       fetchData();
     }
   };

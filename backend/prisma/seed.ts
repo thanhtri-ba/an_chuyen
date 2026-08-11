@@ -3,8 +3,13 @@ import { PrismaClient, SeatClass } from '@prisma/client';
 import process from 'process';
 import bcrypt from 'bcryptjs';
 
+const dbUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || '';
+const urlWithLimit = dbUrl.includes('connection_limit') 
+  ? dbUrl.replace(/connection_limit=\d+/, 'connection_limit=1')
+  : (dbUrl.includes('?') ? `${dbUrl}&connection_limit=1` : `${dbUrl}?connection_limit=1`);
+
 const prisma = new PrismaClient({
-  datasources: { db: { url: process.env.DATABASE_URL?.replace('connection_limit=10', 'connection_limit=1') } }
+  datasources: { db: { url: urlWithLimit } }
 });
 
 async function main() {
@@ -27,6 +32,7 @@ async function main() {
       email: 'admin@anchuyen.com',
       password: hashedPassword,
       fullName: 'Admin An Chuyến',
+      phone: '0123456789',
       role: 'admin',
       wallet: {
         create: { balance: 1000000 },

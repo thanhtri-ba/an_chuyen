@@ -28,7 +28,7 @@ const Users = () => {
   }, []);
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from('User').select('*').order('createdAt', { ascending: false });
+    const { data } = await supabase.from('users').select('*').order('createdAt', { ascending: false });
     if (data) {
       setUsers(data);
     }
@@ -56,7 +56,7 @@ const Users = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('User').update({
+      const { error } = await supabase.from('users').update({
         fullName: formData.fullName,
         phone: formData.phone || null,
         avatar: formData.avatar || null,

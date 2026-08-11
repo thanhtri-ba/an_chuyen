@@ -37,9 +37,9 @@ const Bookings = () => {
       { data: scheduleData },
       { data: cityData }
     ] = await Promise.all([
-      supabase.from('Booking').select('*, User(fullName), TripSchedule(departureTime, trips(Route(departureCityId, arrivalCityId)))').order('createdAt', { ascending: false }),
-      supabase.from('User').select('id, fullName'),
-      supabase.from('TripSchedule').select('id, departureTime, trips(Route(departureCityId, arrivalCityId))'),
+      supabase.from('bookings').select('*, User(fullName), TripSchedule(departureTime, trips(Route(departureCityId, arrivalCityId)))').order('createdAt', { ascending: false }),
+      supabase.from('users').select('id, fullName'),
+      supabase.from('trip_schedules').select('id, departureTime, trips(Route(departureCityId, arrivalCityId))'),
       supabase.from('cities').select('id, name')
     ]);
     
@@ -88,8 +88,8 @@ const Bookings = () => {
     };
 
     const { error } = formData.id 
-      ? await supabase.from('Booking').update(bookingPayload).eq('id', bookingId)
-      : await supabase.from('Booking').insert([{ ...bookingPayload, id: bookingId }]);
+      ? await supabase.from('bookings').update(bookingPayload).eq('id', bookingId)
+      : await supabase.from('bookings').insert([{ ...bookingPayload, id: bookingId }]);
 
     if (error) {
       alert('Error saving booking: ' + error.message);
@@ -104,7 +104,7 @@ const Bookings = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
-      await supabase.from('Booking').delete().eq('id', id);
+      await supabase.from('bookings').delete().eq('id', id);
       fetchData();
     }
   };

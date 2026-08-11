@@ -29,7 +29,7 @@ const Reviews = () => {
     setIsLoading(true);
     
     // Fetch users
-    const { data: userData } = await supabase.from('User').select('id, fullName, avatar');
+    const { data: userData } = await supabase.from('users').select('id, fullName, avatar');
     if (userData) setUsers(userData);
 
     // Fetch trips
@@ -38,7 +38,7 @@ const Reviews = () => {
 
     // Fetch reviews (Limit to 500 to prevent UI lag, typically you'd use pagination)
     const { data: reviewData, error } = await supabase
-      .from('Review')
+      .from('reviews')
       .select('*, User(fullName, avatar)')
       .order('createdAt', { ascending: false })
       .limit(500);
@@ -79,7 +79,7 @@ const Reviews = () => {
 
     if (editingReview) {
       const { error } = await supabase
-        .from('Review')
+        .from('reviews')
         .update(reviewData)
         .eq('id', editingReview.id);
       
@@ -92,7 +92,7 @@ const Reviews = () => {
     } else {
       const crypto = window.crypto || (window as any).msCrypto;
       const { error } = await supabase
-        .from('Review')
+        .from('reviews')
         .insert([{
           ...reviewData,
           id: crypto.randomUUID(),
@@ -110,7 +110,7 @@ const Reviews = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this review?')) {
-      const { error } = await supabase.from('Review').delete().eq('id', id);
+      const { error } = await supabase.from('reviews').delete().eq('id', id);
       if (error) {
         alert('Failed to delete review.');
       } else {
@@ -121,7 +121,7 @@ const Reviews = () => {
 
   const handleToggleApprove = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
-      .from('Review')
+      .from('reviews')
       .update({ isApproved: !currentStatus })
       .eq('id', id);
     if (error) {

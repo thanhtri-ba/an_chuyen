@@ -24,7 +24,7 @@ const Cities = () => {
   const fetchData = async () => {
     setIsLoading(true);
     // Fetch Provinces
-    const { data: provData } = await supabase.from('Province').select('*');
+    const { data: provData } = await supabase.from('provinces').select('*');
     if (provData) setProvinces(provData);
 
     // Fetch Cities

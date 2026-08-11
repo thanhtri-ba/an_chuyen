@@ -21,8 +21,8 @@ const Dashboard = () => {
   const fetchDashboardStats = async () => {
     setIsLoading(true);
     try {
-      const { count: usersCount } = await supabase.from('User').select('*', { count: 'exact', head: true });
-      const { data: bookings } = await supabase.from('Booking').select('totalAmount, status');
+      const { count: usersCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
+      const { data: bookings } = await supabase.from('bookings').select('totalAmount, status');
       let totalRevenue = 0;
       let validBookingsCount = 0;
       
@@ -34,11 +34,11 @@ const Dashboard = () => {
           }
         });
       }
-      const { count: routesCount } = await supabase.from('Route').select('*', { count: 'exact', head: true });
+      const { count: routesCount } = await supabase.from('routes').select('*', { count: 'exact', head: true });
 
       // Fetch recent bookings for notifications
       const { data: recentBookings } = await supabase
-        .from('Booking')
+        .from('bookings')
         .select(`
           id,
           status,

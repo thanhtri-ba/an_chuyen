@@ -24,7 +24,7 @@ const SalesChat = () => {
   const fetchChats = async () => {
     try {
       // Get admin user for sending messages
-      const { data: admin } = await supabase.from('User').select('id, fullName').eq('role', 'admin').limit(1).single();
+      const { data: admin } = await supabase.from('users').select('id, fullName').eq('role', 'admin').limit(1).single();
       setAdminUser(admin);
 
       // Fetch conversations

@@ -34,9 +34,9 @@ const Login = () => {
       if (data.user) {
         // Verify admin role
         const { data: userData, error: userError } = await supabase
-          .from('User')
+          .from('users')
           .select('role')
-          .eq('id', data.user.id)
+          .eq('email', data.user.email)
           .single();
 
         if (userError || userData?.role !== 'admin') {

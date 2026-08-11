@@ -64,7 +64,7 @@ function AppRoutes() {
 
 function App() {
  return (
- <ThemeProvider defaultTheme="dark" storageKey="busz-theme">
+ <ThemeProvider defaultTheme="light" storageKey="busz-theme">
  <AuthProvider>
  <BrowserRouter>
  <AppRoutes />

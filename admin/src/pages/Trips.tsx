@@ -39,7 +39,7 @@ const Trips = () => {
       { data: tripData },
       { data: cityData }
     ] = await Promise.all([
-      supabase.from('TripSchedule').select('*, trips(Route(departureCityId, arrivalCityId)), buses(plateNumber), TripPrice(price)'),
+      supabase.from('trip_schedules').select('*, trips(Route(departureCityId, arrivalCityId)), buses(plateNumber), TripPrice(price)'),
       supabase.from('buses').select('*'),
       supabase.from('trips').select('id, Route(departureCityId, arrivalCityId)'),
       supabase.from('cities').select('id, name')
@@ -95,13 +95,13 @@ const Trips = () => {
 
     let opError = null;
     if (formData.id) {
-      const { error } = await supabase.from('TripSchedule').update(schedulePayload).eq('id', scheduleId);
+      const { error } = await supabase.from('trip_schedules').update(schedulePayload).eq('id', scheduleId);
       opError = error;
     } else {
-      const { error: insErr } = await supabase.from('TripSchedule').insert([{ ...schedulePayload, id: scheduleId }]);
+      const { error: insErr } = await supabase.from('trip_schedules').insert([{ ...schedulePayload, id: scheduleId }]);
       opError = insErr;
       if (!insErr) {
-        await supabase.from('TripPrice').insert([{ id: crypto.randomUUID(), tripScheduleId: scheduleId, seatClass: 'EXECUTIVE', price: Number(formData.price) }]);
+        await supabase.from('trip_prices').insert([{ id: crypto.randomUUID(), tripScheduleId: scheduleId, seatClass: 'EXECUTIVE', price: Number(formData.price) }]);
       }
     }
 
@@ -118,7 +118,7 @@ const Trips = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this trip schedule?')) {
-      await supabase.from('TripSchedule').delete().eq('id', id);
+      await supabase.from('trip_schedules').delete().eq('id', id);
       fetchData();
     }
   };
