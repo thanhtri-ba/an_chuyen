@@ -1,0 +1,85 @@
+Starting simulation of 100 real users...
+Finished batch 1/10
+Finished batch 2/10
+Finished batch 3/10
+Finished batch 4/10
+Finished batch 5/10
+Finished batch 6/10
+Finished batch 7/10
+Finished batch 8/10
+Finished batch 9/10
+Finished batch 10/10
+===SIMULATION_REPORT===
+{
+  "totalAttempted": 100,
+  "successfulBookings": 36,
+  "failedBookings": 64,
+  "errors": [
+    "User 2 failed: \nInvalid `prisma.user.create()` invocation in\n/Users/thanhtri/Desktop/an_chuyen/backend/prisma/simulate-100-users.ts:56:44\n\n  53 promises.push((async () => {\n  54   try {\n  55     // Simulate User Registration\n→ 56     const user = await prisma.user.create(\nCan't reach database server at `aws-0-ap-south-1.pooler.supabase.com:5432`\n\nPlease make sure your database server is running at `aws-0-ap-south-1.pooler.supabase.com:5432`.",
+    "User 1 failed: Concurrency error: Seats taken by someone else.",
+    "User 20 failed: Concurrency error: Seats taken by someone else.",
+    "User 14 failed: Concurrency error: Seats taken by someone else.",
+    "User 26 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 25 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 29 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 21 failed: Concurrency error: Seats taken by someone else.",
+    "User 27 failed: Concurrency error: Seats taken by someone else.",
+    "User 34 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 40 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 35 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 31 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 47 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 48 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 43 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 46 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 41 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 49 failed: Concurrency error: Seats taken by someone else.",
+    "User 55 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 57 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 58 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 52 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 51 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 53 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 59 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 56 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 64 failed: Schedule 7d49cf7e-5943-48d5-9222-0251a0db2891 has no available seats left.",
+    "User 62 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 67 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 61 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 68 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 65 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 63 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 66 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 70 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 69 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 74 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 78 failed: Schedule fa534698-b2ca-4cd1-b64c-906099a65fed has no available seats left.",
+    "User 77 failed: Schedule c537d87b-0908-4b86-9d7f-f8dce0af605b has no available seats left.",
+    "User 80 failed: Schedule fa534698-b2ca-4cd1-b64c-906099a65fed has no available seats left.",
+    "User 76 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 71 failed: Schedule 5bc294c3-0678-4bde-afc9-d28ddcf50999 has no available seats left.",
+    "User 79 failed: Concurrency error: Seats taken by someone else.",
+    "User 83 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 87 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 88 failed: Schedule 7d49cf7e-5943-48d5-9222-0251a0db2891 has no available seats left.",
+    "User 86 failed: Schedule f628795a-2ef9-4ede-bfd5-a17ab583c345 has no available seats left.",
+    "User 89 failed: Schedule dd885cf7-2853-450a-b8fb-e8692db54282 has no available seats left.",
+    "User 81 failed: Schedule dd885cf7-2853-450a-b8fb-e8692db54282 has no available seats left.",
+    "User 90 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 82 failed: Schedule 5bc294c3-0678-4bde-afc9-d28ddcf50999 has no available seats left.",
+    "User 85 failed: Schedule 5bc294c3-0678-4bde-afc9-d28ddcf50999 has no available seats left.",
+    "User 84 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 91 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 97 failed: Schedule 5bc294c3-0678-4bde-afc9-d28ddcf50999 has no available seats left.",
+    "User 93 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left.",
+    "User 94 failed: Schedule 7d49cf7e-5943-48d5-9222-0251a0db2891 has no available seats left.",
+    "User 96 failed: Schedule dd885cf7-2853-450a-b8fb-e8692db54282 has no available seats left.",
+    "User 92 failed: Schedule fa534698-b2ca-4cd1-b64c-906099a65fed has no available seats left.",
+    "User 98 failed: Schedule dd885cf7-2853-450a-b8fb-e8692db54282 has no available seats left.",
+    "User 100 failed: Schedule fa534698-b2ca-4cd1-b64c-906099a65fed has no available seats left.",
+    "User 95 failed: Schedule d77a47c6-9602-4857-90d1-144aec0027a0 has no available seats left.",
+    "User 99 failed: Schedule 396365f1-5e87-4de3-9446-bcd89ad73fb5 has no available seats left."
+  ],
+  "startTime": "2026-08-11T08:43:57.644Z",
+  "endTime": "2026-08-11T08:45:20.320Z"
+}

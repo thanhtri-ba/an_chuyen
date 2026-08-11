@@ -13,6 +13,7 @@ import { initSocket } from './core/socket';
 const app = express();
 const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
+//app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 import { requestContextMiddleware } from './middleware/request-context.middleware';
 import { loggingMiddleware } from './middleware/logging.middleware';
