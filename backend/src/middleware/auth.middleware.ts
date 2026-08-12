@@ -16,31 +16,45 @@ export async function verifyAccessToken(
 ): Promise<void> {
   const authorization = req.headers.authorization;
 
+  // Dev-only bypass: authenticates as the first DB user when no/invalid token.
+  // Must be explicitly opted into per-environment; never active unless both
+  // conditions hold, so it can't accidentally run in production.
+  const devAuthFallbackEnabled =
+    process.env.NODE_ENV === 'development' &&
+    process.env.ALLOW_DEV_AUTH_FALLBACK === 'true';
+
+  async function applyDevFallback(): Promise<void> {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const firstUser = await prisma.user.findFirst();
+    req.user = {
+      id: firstUser?.id || '00000000-0000-0000-0000-000000000000',
+      role: firstUser?.role || 'user',
+      email: firstUser?.email || 'test@example.com',
+    };
+  }
+
   if (!authorization?.startsWith('Bearer ')) {
-    if (process.env.NODE_ENV === 'test') {
-      res.status(401).json({
-        message: 'Authentication required',
-      });
-      return;
+    if (devAuthFallbackEnabled) {
+      try {
+        await applyDevFallback();
+      } catch {
+        req.user = { id: '00000000-0000-0000-0000-000000000000', role: 'user' };
+      }
+      return next();
     }
-    // FALLBACK CHO DEV
-    try {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-      const firstUser = await prisma.user.findFirst();
-      req.user = {
-        id: firstUser?.id || '00000000-0000-0000-0000-000000000000',
-        role: firstUser?.role || 'user',
-        email: firstUser?.email || 'test@example.com'
-      };
-    } catch {
-      req.user = { id: '00000000-0000-0000-0000-000000000000', role: 'user' };
-    }
-    return next();
+    res.status(401).json({
+      message: 'Authentication required',
+    });
+    return;
   }
 
   const token = authorization.slice(7);
-  const secret = process.env.JWT_SECRET || 'busz_super_secret_jwt_key_2026';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    res.status(500).json({ message: 'JWT configuration is missing' });
+    return;
+  }
 
   try {
     const payload = jwt.verify(token, secret);
@@ -66,25 +80,16 @@ export async function verifyAccessToken(
 
     next();
   } catch {
-    if (process.env.NODE_ENV === 'test') {
-      res.status(401).json({
-        message: 'Invalid access token',
-      });
-      return;
+    if (devAuthFallbackEnabled) {
+      try {
+        await applyDevFallback();
+      } catch {
+        req.user = { id: '00000000-0000-0000-0000-000000000000', role: 'user' };
+      }
+      return next();
     }
-    // FALLBACK CHO MÔI TRƯỜNG DEV ĐỂ TEST CHỨC NĂNG KHÔNG CẦN ĐĂNG NHẬP
-    try {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-      const firstUser = await prisma.user.findFirst();
-      req.user = {
-        id: firstUser?.id || '00000000-0000-0000-0000-000000000000',
-        role: firstUser?.role || 'user',
-        email: firstUser?.email || 'test@example.com'
-      };
-    } catch {
-      req.user = { id: '00000000-0000-0000-0000-000000000000', role: 'user' };
-    }
-    next();
+    res.status(401).json({
+      message: 'Invalid access token',
+    });
   }
 }

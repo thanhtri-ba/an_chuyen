@@ -1,6 +1,6 @@
 import { useState, useEffect } from'react';
 import { useNavigate } from'react-router-dom';
-import { MapPin, Search, ArrowRightLeft, Ticket, Clock, Zap, Sparkles, Star, ChevronRight, Edit3, X } from'lucide-react';
+import { MapPin, Search, ArrowRightLeft, Ticket, Zap, Sparkles, Star, ChevronRight, Edit3, X } from'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from'framer-motion';
 
 import { Button } from'../../../design-system/components/Button';
@@ -109,7 +109,6 @@ export function HomePage() {
  originalPrice: schedule.prices?.[0]?.price || 350000,
  salePrice: (schedule.prices?.[0]?.price || 350000) * 0.8,
  company: schedule.trip.busAgent.name,
- sold: Math.floor(Math.random() * 50) + 50,
  img: [
 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=600&auto=format&fit=crop',
 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=600&auto=format&fit=crop',
@@ -120,26 +119,22 @@ export function HomePage() {
  })
  .catch(() => {
  setFlashSales([
- { id: 1, from:'Sài Gòn', to:'Đà Lạt', originalPrice: 350000, salePrice: 250000, company:'Phương Trang', sold: 85, img:'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=600&auto=format&fit=crop' },
- { id: 2, from:'Sài Gòn', to:'Nha Trang', originalPrice: 400000, salePrice: 320000, company:'Hoa Mai VIP', sold: 45, img:'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=600&auto=format&fit=crop' },
- { id: 3, from:'Hà Nội', to:'Sapa', originalPrice: 450000, salePrice: 350000, company:'Sao Việt', sold: 92, img:'https://images.unsplash.com/photo-1506905925275-25d74944d957?q=80&w=600&auto=format&fit=crop' }
+ { id: 1, from:'Sài Gòn', to:'Đà Lạt', originalPrice: 350000, salePrice: 250000, company:'Phương Trang', img:'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=600&auto=format&fit=crop' },
+ { id: 2, from:'Sài Gòn', to:'Nha Trang', originalPrice: 400000, salePrice: 320000, company:'Hoa Mai VIP', img:'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=600&auto=format&fit=crop' },
+ { id: 3, from:'Hà Nội', to:'Sapa', originalPrice: 450000, salePrice: 350000, company:'Sao Việt', img:'https://images.unsplash.com/photo-1506905925275-25d74944d957?q=80&w=600&auto=format&fit=crop' }
  ]);
  });
 
  api.get('/stations')
  .then(res => {
  const stations = res.data.slice(0, 3);
- setNearbyStations(stations.map((st: any) => ({
- name: st.name,
- distance: (Math.random() * 10 + 1).toFixed(1) +' km',
- time: Math.floor(Math.random() * 30 + 10) +' phút'
- })));
+ setNearbyStations(stations.map((st: any) => ({ name: st.name })));
  })
  .catch(() => {
  setNearbyStations([
- { name:'Bến xe Miền Đông', distance:'2.5 km', time:'10 phút' },
- { name:'Bến xe Miền Tây', distance:'8.2 km', time:'25 phút' },
- { name:'Trạm Phạm Ngũ Lão', distance:'1.5 km', time:'5 phút' }
+ { name:'Bến xe Miền Đông' },
+ { name:'Bến xe Miền Tây' },
+ { name:'Trạm Phạm Ngũ Lão' }
  ]);
  });
 
@@ -665,10 +660,6 @@ export function HomePage() {
  </div>
  <div>
  <h4 className="font-bold text-sm mb-1 text-gray-900">{station.name}</h4>
- <div className="text-xs font-medium text-gray-500 flex items-center gap-3">
- <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" />{station.distance}</span>
- <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-gray-400" />{station.time.replace('phút', t('home.stations.minutes'))}</span>
- </div>
  </div>
  </div>
  ))}

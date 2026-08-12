@@ -41,6 +41,7 @@ import { rentalRoutes } from './modules/rental/rental.routes';
 // import { tourRoutes } from './modules/tour/tour.routes';
 // import { eventRoutes } from './modules/event/event.routes';
 import { deliveryRoutes } from './modules/delivery/delivery.routes';
+import seatRoutes from './modules/seat/seat.routes';
 
 app.use('/api/auth', authRoutes);
 
@@ -53,6 +54,7 @@ app.use('/api/rentals', rentalRoutes);
 // app.use('/api/tours', tourRoutes);
 // app.use('/api/events', eventRoutes);
 app.use('/api/deliveries', deliveryRoutes);
+app.use('/api/trip-schedules', seatRoutes);
 
 app.get('/', (req, res) => {
   res.send('An Chuyến Backend API is running!');

@@ -14,7 +14,7 @@ export function errorMiddleware(err: any, req: Request, res: Response, next: Nex
   res.status(500).json({
     success: false,
     message: err.message || 'Internal server error',
-    stack: err.stack,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
     requestId: req.headers['x-request-id'] || 'unknown',
   });
 }

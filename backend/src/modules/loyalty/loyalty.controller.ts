@@ -4,7 +4,7 @@ import { LoyaltyService } from "./loyalty.service";
 export class LoyaltyController {
   static async getMyLoyalty(req: Request, res: Response) {
     try {
-      const userId = (req as any).user?.id; // Assuming auth middleware attaches user
+      const userId = (req as any).user?.id;
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
       const loyalty = await LoyaltyService.getLoyaltyInfo(userId);

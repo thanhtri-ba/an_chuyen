@@ -36,7 +36,7 @@ function AppRoutes() {
  <Routes>
  <Route path="/" element={<HomePage />} />
  <Route path="/search" element={<TripSearchPage />} />
- <Route path="/seat-selection" element={<SeatSelectionPage />} />
+ <Route path="/seat-selection/:tripScheduleId" element={<SeatSelectionPage />} />
  <Route path="/booking-review" element={<BookingReviewPage />} />
  <Route path="/payment" element={<PaymentPage />} />
  <Route path="/booking-confirmation" element={<BookingConfirmationPage />} />

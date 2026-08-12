@@ -1,5 +1,5 @@
 import { useState, useEffect } from'react';
-import { Link, useNavigate } from'react-router-dom';
+import { Link, useNavigate, useParams } from'react-router-dom';
 import { ArrowLeft, Check, Star, Car, ShieldCheck, User } from'lucide-react';
 import { motion, AnimatePresence } from'framer-motion';
 
@@ -8,26 +8,37 @@ import { Input } from'../../../design-system/components/Input';
 import { Checkbox } from'../../../design-system/components/Checkbox';
 import { Card } from'../../../design-system/components/Card';
 import { toast } from'sonner';
+import api from'../../../lib/api';
+
+interface SeatData {
+ id: string;
+ floor: number;
+ status:'available' |'occupied';
+ price: number;
+}
 
 export function SeatSelectionPage() {
  const navigate = useNavigate();
+ const { tripScheduleId } = useParams<{ tripScheduleId: string }>();
  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
  const [isBookerSameAsPassenger, setIsBookerSameAsPassenger] = useState(true);
  const [needVAT, setNeedVAT] = useState(false);
  const [addInsurance, setAddInsurance] = useState(false);
  const [activeFloor, setActiveFloor] = useState(1);
- const [seats, setSeats] = useState(() => {
- const generatedSeats = [];
- // Generate 6 rows (1-6) per floor, each with A, B, C.
- for (let floor = 1; floor <= 2; floor++) {
- for (let row = 1; row <= 6; row++) {
- generatedSeats.push({ id: `T${floor}-${row}A`, floor, status:'available' }, { id: `T${floor}-${row}B`, floor, status:'available' }, { id: `T${floor}-${row}C`, floor, status:'available' });
- }
- }
- // Mark a few as occupied for demo
- const occupiedIds = ['T1-1B','T1-2C','T2-3A','T2-5C'];
- return generatedSeats.map(s => occupiedIds.includes(s.id) ? { ...s, status:'occupied' } : s);
- });
+ const [seats, setSeats] = useState<SeatData[]>([]);
+ const [isLoadingSeats, setIsLoadingSeats] = useState(true);
+
+ useEffect(() => {
+ if (!tripScheduleId) return;
+ setIsLoadingSeats(true);
+ api.get(`/trip-schedules/${tripScheduleId}/seats`)
+ .then(res => setSeats(res.data.data))
+ .catch(() => {
+ toast.error('Không thể tải sơ đồ ghế. Vui lòng thử lại.');
+ setSeats([]);
+ })
+ .finally(() => setIsLoadingSeats(false));
+ }, [tripScheduleId]);
 
  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
  
@@ -63,7 +74,6 @@ export function SeatSelectionPage() {
  return () => clearInterval(interval);
  }, [timerRunning]);
 
- const seatPrice = 350000;
  const insurancePrice = 20000;
 
  const toggleSeat = (id: string, status: string) => {
@@ -79,8 +89,15 @@ export function SeatSelectionPage() {
  }
  };
 
+ const calculateSeatsTotal = () => {
+ return selectedSeats.reduce((sum, id) => {
+ const seat = seats.find(s => s.id === id);
+ return sum + (seat?.price || 0);
+ }, 0);
+ };
+
  const calculateTotal = () => {
- let total = selectedSeats.length * seatPrice;
+ let total = calculateSeatsTotal();
  if (addInsurance && selectedSeats.length > 0) {
  total += selectedSeats.length * insurancePrice;
  }
@@ -111,11 +128,14 @@ export function SeatSelectionPage() {
 
  // Save to localStorage
  const bookingData = {
+ tripScheduleId,
  seats: selectedSeats,
+ seatsTotal: calculateSeatsTotal(),
  totalAmount: calculateTotal(),
  pickupPoint,
  dropoffPoint,
  addInsurance,
+ insurancePrice,
  needVAT,
  passengerInfo: {
  name: passengerName,
@@ -319,7 +339,11 @@ export function SeatSelectionPage() {
 
  {/* Seats Grid */}
  <div className="relative z-10 w-full flex justify-center mt-4">
- {renderBlueprintSeats(seats.filter(s => s.floor === activeFloor))}
+ {isLoadingSeats ? (
+ <div className="py-16 text-sm text-gray-400 dark:text-gray-500">Đang tải sơ đồ ghế...</div>
+ ) : (
+ renderBlueprintSeats(seats.filter(s => s.floor === activeFloor))
+ )}
  </div>
  
  {/* Cabin Rear Area */}

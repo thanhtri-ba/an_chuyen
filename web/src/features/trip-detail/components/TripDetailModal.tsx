@@ -24,7 +24,7 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
 
  const handleSelectSeat = () => {
  onClose();
- navigate('/seat-selection');
+ navigate(`/seat-selection/${trip.id}`);
  };
 
  const galleryImages = [

@@ -1,4 +1,4 @@
-import { useState } from'react';
+import { useState, useEffect } from'react';
 import { Link, useNavigate } from'react-router-dom';
 import { ArrowLeft, CreditCard, Wallet, QrCode, ShieldCheck, Ticket, CheckCircle2, Loader2, Info } from'lucide-react';
 import { motion } from'framer-motion';
@@ -9,6 +9,16 @@ import { Card } from'../../../design-system/components/Card';
 import { Checkbox } from'../../../design-system/components/Checkbox';
 import api from'../../../lib/api';
 
+interface PendingBooking {
+ tripScheduleId: string;
+ seats: string[];
+ seatsTotal: number;
+ totalAmount: number;
+ addInsurance: boolean;
+ insurancePrice: number;
+ passengerInfo: { name: string; phone: string; email: string };
+}
+
 export function PaymentPage() {
  const navigate = useNavigate();
  const [selectedMethod, setSelectedMethod] = useState('busz-wallet');
@@ -16,12 +26,29 @@ export function PaymentPage() {
  const [usePoints, setUsePoints] = useState(false);
  const [voucherCode, setVoucherCode] = useState('');
  const [voucherApplied, setVoucherApplied] = useState(false);
+ const [pendingBooking, setPendingBooking] = useState<PendingBooking | null>(null);
+ const [availablePoints, setAvailablePoints] = useState(0);
 
- const baseTotal = 0;
- const availablePoints = 0;
+ useEffect(() => {
+ const raw = localStorage.getItem('pending_booking');
+ if (raw) {
+ try {
+ setPendingBooking(JSON.parse(raw));
+ } catch {
+ setPendingBooking(null);
+ }
+ }
+
+ api.get('/loyalty/me')
+ .then(res => setAvailablePoints(res.data?.data?.points || 0))
+ .catch(() => setAvailablePoints(0));
+ }, []);
+
+ const baseTotal = pendingBooking?.totalAmount || 0;
+ const insuranceTotal = pendingBooking?.addInsurance ? (pendingBooking.seats.length * pendingBooking.insurancePrice) : 0;
  const pointsDiscount = availablePoints * 10;
  const voucherDiscount = voucherApplied ? 50000 : 0;
- const finalTotal = baseTotal - (usePoints ? pointsDiscount : 0) - voucherDiscount;
+ const finalTotal = Math.max(0, baseTotal - (usePoints ? pointsDiscount : 0) - voucherDiscount);
 
  const handleApplyVoucher = () => {
  if (voucherCode.toUpperCase() ==='BUSZVIP') {
@@ -33,16 +60,24 @@ export function PaymentPage() {
 
  const handlePayment = async (e: React.FormEvent) => {
  e.preventDefault();
+ if (!pendingBooking) {
+ alert('Không tìm thấy thông tin đặt vé. Vui lòng chọn ghế lại.');
+ return;
+ }
  setIsProcessing(true);
  try {
- // Giả lập delay gọi API để show loading state cho đẹp
- await new Promise(resolve => setTimeout(resolve, 1500));
- 
- // Chuyển thẳng đến trang thành công (Bỏ qua gọi API thật vì đang dùng data tĩnh)
+ await api.post('/bookings/create', {
+ tripScheduleId: pendingBooking.tripScheduleId,
+ seatNumbers: pendingBooking.seats,
+ passengers: [{ name: pendingBooking.passengerInfo.name }],
+ paymentMethod: selectedMethod
+ });
+
+ localStorage.removeItem('pending_booking');
  navigate('/booking-confirmation');
- } catch (error) {
+ } catch (error: any) {
  console.error("Booking failed", error);
- alert('Thanh toán thất bại, vui lòng thử lại.');
+ alert(error?.response?.data?.message || 'Thanh toán thất bại, vui lòng thử lại.');
  } finally {
  setIsProcessing(false);
  }
@@ -257,17 +292,19 @@ export function PaymentPage() {
  <div className="flex justify-between items-start text-gray-700">
  <div>
  <div className="font-bold text-gray-900">Điểm đi ➔ Điểm đến</div>
- <div className="text-sm text-gray-500 mt-1">Chuyến xe • Ghế --</div>
+ <div className="text-sm text-gray-500 mt-1">
+ Chuyến xe • Ghế {pendingBooking?.seats.join(', ') ||'--'}
  </div>
- <div className="font-bold text-gray-900">0đ</div>
  </div>
- 
+ <div className="font-bold text-gray-900">{new Intl.NumberFormat('vi-VN').format(pendingBooking?.seatsTotal || 0)}đ</div>
+ </div>
+
  <div className="flex justify-between items-start text-gray-700">
  <div className="flex items-center gap-1.5">
  <ShieldCheck className="w-4 h-4 text-emerald-500" />
  <span className="text-sm font-semibold">Bảo hiểm chuyến đi</span>
  </div>
- <div className="font-bold text-gray-900">0đ</div>
+ <div className="font-bold text-gray-900">{new Intl.NumberFormat('vi-VN').format(insuranceTotal)}đ</div>
  </div>
 
  {(usePoints || voucherApplied) && (

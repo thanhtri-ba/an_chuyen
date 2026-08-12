@@ -73,6 +73,9 @@ export function TripSearchPage() {
  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
  const durationStr = `${diffHrs}h${diffMins > 0 ? diffMins :''}`;
 
+ const pickupCheckpoint = item.checkpoints?.find((c: any) => c.type ==='PICKUP');
+ const dropoffCheckpoint = item.checkpoints?.find((c: any) => c.type ==='DROPOFF');
+
  return {
  id: item.id,
  company: item.trip.busAgent.name,
@@ -82,6 +85,8 @@ export function TripSearchPage() {
  duration: durationStr,
  from: item.trip.route.departureCity.name,
  to: item.trip.route.arrivalCity.name,
+ pickupStation: pickupCheckpoint?.station?.name || item.trip.route.departureCity.name,
+ dropoffStation: dropoffCheckpoint?.station?.name || item.trip.route.arrivalCity.name,
  price: item.prices[0]?.price || 350000,
  emptySeats: item.availableSeats,
  rating: 0,
@@ -384,14 +389,14 @@ export function TripSearchPage() {
  <div className="flex items-start gap-3">
  <div className="w-3 h-3 rounded-full bg-primary ring-4 ring-primary/20 mt-1"></div>
  <div>
- <div className="font-bold text-base text-gray-900 dark:text-white">Bến Xe Miền Đông</div>
+ <div className="font-bold text-base text-gray-900 dark:text-white">{trip.pickupStation}</div>
  <div className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3 text-gray-400" /> Xem vị trí</div>
  </div>
  </div>
  <div className="flex items-start gap-3">
  <div className="w-3 h-3 rounded-full border-2 border-gray-300 dark:border-gray-600 mt-1 bg-white dark:bg-slate-900"></div>
  <div>
- <div className="font-bold text-base text-gray-500 dark:text-gray-400">Bến Xe Đà Lạt</div>
+ <div className="font-bold text-base text-gray-500 dark:text-gray-400">{trip.dropoffStation}</div>
  </div>
  </div>
  </div>
@@ -412,7 +417,7 @@ export function TripSearchPage() {
  <div className="w-full mt-6 flex flex-col gap-2">
  <Button 
  size="lg"
- onClick={() => navigate('/seat-selection')}
+ onClick={() => navigate(`/seat-selection/${trip.id}`)}
  className="w-full font-bold h-12 btn-secondary text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
  >
  Chọn ghế
