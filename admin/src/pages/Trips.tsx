@@ -39,9 +39,9 @@ const Trips = () => {
       { data: tripData },
       { data: cityData }
     ] = await Promise.all([
-      supabase.from('trip_schedules').select('*, trips(Route(departureCityId, arrivalCityId)), buses(plateNumber), TripPrice(price)'),
+      supabase.from('trip_schedules').select('*, trips(Route:routes(departureCityId, arrivalCityId)), buses(plateNumber), TripPrice:trip_prices(price)'),
       supabase.from('buses').select('*'),
-      supabase.from('trips').select('id, Route(departureCityId, arrivalCityId)'),
+      supabase.from('trips').select('id, Route:routes(departureCityId, arrivalCityId)'),
       supabase.from('cities').select('id, name')
     ]);
     

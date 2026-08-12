@@ -37,9 +37,9 @@ const Bookings = () => {
       { data: scheduleData },
       { data: cityData }
     ] = await Promise.all([
-      supabase.from('bookings').select('*, User(fullName), TripSchedule(departureTime, trips(Route(departureCityId, arrivalCityId)))').order('createdAt', { ascending: false }),
+      supabase.from('bookings').select('*, User:users(fullName), TripSchedule:trip_schedules(departureTime, trips(Route:routes(departureCityId, arrivalCityId)))').order('createdAt', { ascending: false }),
       supabase.from('users').select('id, fullName'),
-      supabase.from('trip_schedules').select('id, departureTime, trips(Route(departureCityId, arrivalCityId))'),
+      supabase.from('trip_schedules').select('id, departureTime, trips(Route:routes(departureCityId, arrivalCityId))'),
       supabase.from('cities').select('id, name')
     ]);
     

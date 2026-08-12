@@ -30,7 +30,8 @@ const Cities = () => {
     // Fetch Cities
     const { data: cityData, error } = await supabase
       .from('cities')
-      .select('*, Province(name)');
+      .select('*, Province:provinces(name)')
+      .order('name');
       
     if (cityData) {
       setCities(cityData);

@@ -44,7 +44,7 @@ const Dashboard = () => {
           status,
           totalAmount,
           createdAt,
-          User ( fullName, avatar )
+          User:users ( fullName, avatar )
         `)
         .order('createdAt', { ascending: false })
         .limit(10);

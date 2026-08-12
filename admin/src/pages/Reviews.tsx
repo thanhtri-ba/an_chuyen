@@ -39,7 +39,7 @@ const Reviews = () => {
     // Fetch reviews (Limit to 500 to prevent UI lag, typically you'd use pagination)
     const { data: reviewData, error } = await supabase
       .from('reviews')
-      .select('*, User(fullName, avatar)')
+      .select('*, User:users(fullName, avatar)')
       .order('createdAt', { ascending: false })
       .limit(500);
       
