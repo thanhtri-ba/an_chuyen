@@ -76,8 +76,13 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: email },
+          { phone: email }
+        ]
+      },
       select: {
         id: true,
         email: true,

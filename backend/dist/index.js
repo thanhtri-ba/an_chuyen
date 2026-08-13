@@ -108,14 +108,21 @@ app.get('/api/trips', async (req, res, next) => {
         const destination = req.query.destination;
         const date = req.query.date;
         const whereClause = {};
+        // OPTIMIZATION: Resolve Trip IDs first to avoid deep JOINs in TripSchedule query
         if (origin || destination) {
-            whereClause.trip = { route: {} };
-            if (origin) {
-                whereClause.trip.route.departureCity = { name: { contains: origin } };
-            }
-            if (destination) {
-                whereClause.trip.route.arrivalCity = { name: { contains: destination } };
-            }
+            const routes = await prisma.route.findMany({
+                where: {
+                    ...(origin ? { departureCity: { name: { contains: origin, mode: 'insensitive' } } } : {}),
+                    ...(destination ? { arrivalCity: { name: { contains: destination, mode: 'insensitive' } } } : {}),
+                },
+                select: { id: true }
+            });
+            const routeIds = routes.map(r => r.id);
+            const trips = await prisma.trip.findMany({
+                where: { routeId: { in: routeIds } },
+                select: { id: true }
+            });
+            whereClause.tripId = { in: trips.map(t => t.id) };
         }
         if (date) {
             const searchDate = new Date(date);
