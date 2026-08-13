@@ -1,5 +1,6 @@
 import { useEffect, useState } from'react';
-import { useTranslation } from'react-i18next';
+import { toast } from 'sonner';
+
 import { Loader2, Search, Calendar, Users, Star, Clock, Plane, Map, Heart } from'lucide-react';
 import axios from'axios';
 
@@ -10,12 +11,11 @@ interface Tour {
  duration: string;
  price: number;
  imageUrl: string;
- itineraries: any[];
- reviews: any[];
+ itineraries: unknown[];
+ reviews: unknown[];
 }
 
 export function TourPage() {
- const { t } = useTranslation();
  const [tours, setTours] = useState<Tour[]>([]);
  const [loading, setLoading] = useState(true);
 
@@ -26,10 +26,12 @@ export function TourPage() {
  useEffect(() => {
  const fetchTours = async () => {
  try {
- const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/tours`);
+ const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+ const response = await axios.get(`${baseUrl}/api/tours`);
  setTours(response.data);
  } catch (error) {
  console.error('Failed to fetch tours', error);
+ toast.error('Lỗi tải tours. Vui lòng thử lại.');
  } finally {
  setLoading(false);
  }
@@ -118,7 +120,7 @@ export function TourPage() {
  
  {isImageLeft && (
  <div className="md:w-5/12 relative h-64 md:h-auto overflow-hidden">
- <img src={tour.imageUrl ||'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600'} alt={tour.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+ <img src={tour.imageUrl ||'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600'} alt={tour.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
  <Star className="w-3 h-3 text-orange-400 fill-orange-400" />
  4.9 (128)
@@ -160,7 +162,7 @@ export function TourPage() {
 
  {!isImageLeft && (
  <div className="md:w-5/12 relative h-64 md:h-auto overflow-hidden">
- <img src={tour.imageUrl ||'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600'} alt={tour.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+ <img src={tour.imageUrl ||'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600'} alt={tour.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
  <Star className="w-3 h-3 text-orange-400 fill-orange-400" />
  4.8 (95)

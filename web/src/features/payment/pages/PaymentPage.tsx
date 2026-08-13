@@ -9,17 +9,7 @@ import { Card } from'../../../design-system/components/Card';
 import { Checkbox } from'../../../design-system/components/Checkbox';
 import api from'../../../lib/api';
 
-interface PendingBooking {
- tripScheduleId: string;
- seats: string[];
- seatsTotal: number;
- totalAmount: number;
- addInsurance: boolean;
- insurancePrice: number;
- passengerInfo: { name: string; phone: string; email: string };
- routeLabel?: string;
- busAgentName?: string;
-}
+import type { BookingData } from '../../../types';
 
 export function PaymentPage() {
  const navigate = useNavigate();
@@ -28,11 +18,11 @@ export function PaymentPage() {
  const [usePoints, setUsePoints] = useState(false);
  const [voucherCode, setVoucherCode] = useState('');
  const [voucherApplied, setVoucherApplied] = useState(false);
- const [pendingBooking, setPendingBooking] = useState<PendingBooking | null>(null);
+ const [pendingBooking, setPendingBooking] = useState<BookingData | null>(null);
  const [availablePoints, setAvailablePoints] = useState(0);
 
  useEffect(() => {
- const raw = localStorage.getItem('pending_booking');
+ const raw = sessionStorage.getItem('pending_booking');
  if (raw) {
  try {
  setPendingBooking(JSON.parse(raw));
@@ -76,7 +66,7 @@ export function PaymentPage() {
  });
 
  const booking = res.data?.data;
- localStorage.setItem('last_booking', JSON.stringify({
+ sessionStorage.setItem('last_booking', JSON.stringify({
  bookingId: booking?.id,
  passengerName: pendingBooking.passengerInfo.name,
  routeLabel: pendingBooking.routeLabel,
@@ -86,7 +76,7 @@ export function PaymentPage() {
  createdAt: booking?.createdAt || new Date().toISOString(),
  }));
 
- localStorage.removeItem('pending_booking');
+ sessionStorage.removeItem('pending_booking');
  navigate('/booking-confirmation');
  } catch (error: any) {
  console.error("Booking failed", error);
@@ -304,9 +294,9 @@ export function PaymentPage() {
  <div className="space-y-4 mb-6">
  <div className="flex justify-between items-start text-gray-700">
  <div>
- <div className="font-bold text-gray-900">Điểm đi ➔ Điểm đến</div>
+ <div className="font-bold text-gray-900">{pendingBooking?.routeLabel || 'Chuyến xe'}</div>
  <div className="text-sm text-gray-500 mt-1">
- Chuyến xe • Ghế {pendingBooking?.seats.join(', ') ||'--'}
+ {pendingBooking?.busAgentName || 'Nhà xe'} • Ghế {pendingBooking?.seats.join(', ') ||'--'}
  </div>
  </div>
  <div className="font-bold text-gray-900">{new Intl.NumberFormat('vi-VN').format(pendingBooking?.seatsTotal || 0)}đ</div>

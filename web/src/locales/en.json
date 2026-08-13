@@ -21,9 +21,9 @@
     "scrollDown": "Scroll Down",
     "search": {
       "origin": "Origin",
-      "originPlaceholder": "Ex: Sai Gon",
+      "originPlaceholder": "Where are you from?",
       "destination": "Destination",
-      "destinationPlaceholder": "Where to?",
+      "destinationPlaceholder": "Where are you going to?",
       "date": "Date",
       "passengers": "Passengers",
       "onePassenger": "1 person",

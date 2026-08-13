@@ -15,7 +15,14 @@ const prisma = new PrismaClient({
 async function main() {
   console.log('Starting seed...');
   console.log('Cleaning up existing data...');
+  await prisma.ticket.deleteMany();
+  await prisma.seatBooking.deleteMany();
+  await prisma.bookingTimeline.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.booking.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.seat.deleteMany();
+  await prisma.tripPrice.deleteMany();
   await prisma.tripSchedule.deleteMany();
   await prisma.trip.deleteMany();
   await prisma.route.deleteMany();
@@ -141,6 +148,7 @@ async function main() {
   // 4. Create Routes
   const routeConfigs = [
     { from: 'TP.HCM', to: 'Đà Lạt', price: 180000, duration: 420, color: '#0796A8', isPopular: true },
+    { from: 'TP.HCM', to: 'Hà Nội', price: 950000, duration: 1800, color: '#1E3A8A', isPopular: true },
     { from: 'TP.HCM', to: 'Nha Trang', price: 220000, duration: 540, color: '#9B51E0', isPopular: true },
     { from: 'TP.HCM', to: 'Vũng Tàu', price: 90000, duration: 120, color: '#27AE60', isPopular: true },
     { from: 'Hà Nội', to: 'Sapa', price: 250000, duration: 360, color: '#F2994A', isPopular: true },

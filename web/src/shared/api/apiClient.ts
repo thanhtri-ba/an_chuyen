@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:4001/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export class ApiError extends Error {
     public status: number;
@@ -10,7 +10,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('busz_token');
     const headers = new Headers(options.headers || {});
 
     if (token) {

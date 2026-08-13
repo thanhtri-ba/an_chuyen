@@ -94,14 +94,31 @@ export const getBookings = async (req: AuthenticatedRequest, res: Response, next
             }
           }
         },
-        passengers: true
+        passengers: true,
+        seatBookings: {
+          include: {
+            seat: true
+          }
+        },
+        payment: true
       },
       orderBy: { createdAt: 'desc' }
     });
 
+    const mappedBookings = bookings.map((booking: any) => {
+      const seatNumbers = booking.seatBookings.map((sb: any) => sb.seat.seatNumber);
+      const paymentStatus = (booking.payment?.status === 'SUCCESS' || booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') ? 'PAID' : 'UNPAID';
+      
+      return {
+        ...booking,
+        seatNumbers,
+        paymentStatus
+      };
+    });
+
     res.json({
       success: true,
-      data: bookings
+      data: mappedBookings
     });
   } catch (error) {
     next(error);

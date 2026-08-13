@@ -21,7 +21,7 @@
     "scrollDown": "Scroll Down",
     "search": {
       "origin": "Điểm đi",
-      "originPlaceholder": "VD: Sài Gòn",
+      "originPlaceholder": "Bạn đang ở đâu ? ",
       "destination": "Điểm đến",
       "destinationPlaceholder": "Bạn muốn đi đâu?",
       "date": "Ngày đi",

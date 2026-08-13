@@ -1,12 +1,7 @@
 import { createContext, useContext, useState, useEffect } from'react';
 import api from'../lib/api';
 
-interface User {
- id: string;
- email: string;
- fullName: string;
- role: string;
-}
+import type { User } from '../types';
 
 interface AuthContextType {
  user: User | null;
@@ -20,7 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
  const [user, setUser] = useState<User | null>(null);
- const [token, setToken] = useState<string | null>(localStorage.getItem('busz_token'));
+ const [token, setToken] = useState<string | null>(sessionStorage.getItem('busz_token'));
  const [isLoading, setIsLoading] = useState(true);
 
  useEffect(() => {
@@ -34,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  } catch (error) {
  console.error("Failed to fetch profile", error);
  setToken(null);
- localStorage.removeItem('busz_token');
+ sessionStorage.removeItem('busz_token');
  }
  }
  setIsLoading(false);
@@ -44,13 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }, [token]);
 
  const login = (newToken: string, userData: User) => {
- localStorage.setItem('busz_token', newToken);
+ sessionStorage.setItem('busz_token', newToken);
  setToken(newToken);
  setUser(userData);
  };
 
  const logout = () => {
- localStorage.removeItem('busz_token');
+ sessionStorage.removeItem('busz_token');
  setToken(null);
  setUser(null);
  };

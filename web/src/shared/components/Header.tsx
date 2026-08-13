@@ -1,10 +1,9 @@
 import { Link, useLocation, useNavigate } from'react-router-dom';
-import { Bell, Menu, X, User, Ticket, LogOut, ChevronDown, Sun, Moon, Globe, Crown } from'lucide-react';
+import { Bell, Menu, X, User, Ticket, LogOut, ChevronDown, Globe, Crown } from'lucide-react';
 import { useState, useEffect, useRef } from'react';
 import { Button } from'../../design-system/components/Button';
 import { cn } from'../utils/cn';
 import { useAuth } from'../../contexts/AuthContext';
-import { useTheme } from'../../contexts/ThemeContext';
 import { useTranslation } from'react-i18next';
 import { motion, AnimatePresence } from'framer-motion';
 
@@ -30,8 +29,7 @@ export function Header() {
  const location = useLocation();
  const navigate = useNavigate();
  const { user, logout } = useAuth();
- //const { theme, setTheme } = useTheme();
- 
+
  const isHomePage = location.pathname ==='/';
  const userMenuRef = useRef<HTMLDivElement>(null);
  const notifRef = useRef<HTMLDivElement>(null);
@@ -71,36 +69,36 @@ export function Header() {
 
  return (
  <>
- <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isTransparent ?'bg-transparent text-white' :'bg-white dark:bg-slate-900 shadow-sm text-foreground border-b border-gray-100 dark:border-slate-800'}`}>
+ <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isTransparent ?'bg-transparent text-white' :'bg-white shadow-sm text-foreground border-b border-gray-100'}`}>
  <div className="w-full flex h-20 items-center justify-between px-4 lg:px-8">
  
  {/* Logo + Nav */}
  <div className="flex items-center gap-8">
  <Link to="/" className="flex items-center space-x-2 group">
  <img src="/an_chuyen_logo.png" alt="An Chuyen Logo" className="h-10 w-auto drop-shadow-sm" />
- <span className={`font-extrabold text-2xl tracking-tight transition-colors ${isTransparent ?'text-white' :'text-primary dark:text-white'}`}>
+ <span className={`font-extrabold text-2xl tracking-tight transition-colors ${isTransparent ?'text-white' :'text-primary'}`}>
  An Chuyến
  </span>
  </Link>
  
  <nav className="hidden lg:flex items-center gap-8 font-medium">
- <Link to="/" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 dark:text-slate-300 hover:text-primary dark:hover:text-white'}`}>
+ <Link to="/" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 hover:text-primary'}`}>
  {t('header.home')}
  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
  </Link>
- <Link to="/search" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 dark:text-slate-300 hover:text-primary dark:hover:text-white'}`}>
+ <Link to="/search" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 hover:text-primary'}`}>
  {t('header.search')}
  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
  </Link>
- <Link to="/offers" className={`relative group transition-opacity flex items-center gap-1 ${isTransparent ?'text-white/90' :'text-gray-700 dark:text-slate-300 hover:text-primary dark:hover:text-white'}`}>
+ <Link to="/offers" className={`relative group transition-opacity flex items-center gap-1 ${isTransparent ?'text-white/90' :'text-gray-700 hover:text-primary'}`}>
  {t('header.offers')} <span className="bg-secondary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-sm">{t('header.hot')}</span>
  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
  </Link>
- <Link to="/blog" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 dark:text-slate-300 hover:text-primary dark:hover:text-white'}`}>
+ <Link to="/blog" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 hover:text-primary'}`}>
  {t('header.blog')}
  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
  </Link>
- <Link to="/about" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 dark:text-slate-300 hover:text-primary dark:hover:text-white'}`}>
+ <Link to="/about" className={`relative group transition-opacity ${isTransparent ?'text-white/90' :'text-gray-700 hover:text-primary'}`}>
  {t('header.about')}
  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
  </Link>
@@ -160,12 +158,12 @@ export function Header() {
  initial={{ opacity: 0, y: 10, scale: 0.95 }}
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: 10, scale: 0.95 }}
- className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 shadow-xl border border-gray-100 dark:border-slate-800 overflow-hidden"
+ className="absolute right-0 mt-2 w-80 bg-white shadow-xl border border-gray-100 overflow-hidden"
  >
- <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/50">
- <h3 className="font-bold text-gray-800 dark:text-white">{t('header.notifications')}</h3>
+ <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+ <h3 className="font-bold text-gray-800">{t('header.notifications')}</h3>
  {unreadCount > 0 && (
- <button onClick={markAllAsRead} className="text-xs text-primary dark:text-blue-400 font-semibold hover:underline">
+ <button onClick={markAllAsRead} className="text-xs text-primary font-semibold hover:underline">
  {t('header.markAllRead')}
  </button>
  )}
@@ -176,19 +174,19 @@ export function Header() {
  <div 
  key={notif.id} 
  onClick={() => setNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n))}
- className={`p-4 border-b border-gray-50 dark:border-slate-800 transition-colors cursor-pointer ${notif.read ?'opacity-60 hover:bg-gray-50 dark:hover:bg-slate-800' :'bg-blue-50/50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700'}`}
+ className={`p-4 border-b border-gray-50 transition-colors cursor-pointer ${notif.read ?'opacity-60 hover:bg-gray-50' :'bg-blue-50/50 hover:bg-blue-50'}`}
  >
- <div className={`text-sm font-bold mb-1 ${notif.type ==='promo' ?'text-secondary' :'text-gray-800 dark:text-white'}`}>{notif.title}</div>
- <div className="text-xs text-gray-600 dark:text-slate-400">{notif.message}</div>
- <div className="text-[10px] text-gray-400 dark:text-slate-500 mt-2">{notif.time}</div>
+ <div className={`text-sm font-bold mb-1 ${notif.type ==='promo' ?'text-secondary' :'text-gray-800'}`}>{notif.title}</div>
+ <div className="text-xs text-gray-600">{notif.message}</div>
+ <div className="text-[10px] text-gray-400 mt-2">{notif.time}</div>
  </div>
  ))
  ) : (
- <div className="p-8 text-center text-gray-500 dark:text-slate-400 text-sm">Không có thông báo nào</div>
+ <div className="p-8 text-center text-gray-500 text-sm">Không có thông báo nào</div>
  )}
  </div>
- <div className="p-3 border-t border-gray-100 dark:border-slate-800 text-center">
- <Link to="/notifications" className="text-sm text-primary dark:text-blue-400 font-bold hover:underline" onClick={() => setNotifOpen(false)}>{t('header.seeAll')}</Link>
+ <div className="p-3 border-t border-gray-100 text-center">
+ <Link to="/notifications" className="text-sm text-primary font-bold hover:underline" onClick={() => setNotifOpen(false)}>{t('header.seeAll')}</Link>
  </div>
  </motion.div>
  )}
@@ -231,8 +229,8 @@ export function Header() {
  onClick={() => setUserMenuOpen(false)}
  className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-700 text-sm font-medium"
  >
- <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
- <User className="w-4 h-4 text-primary dark:text-blue-400" />
+ <div className="w-8 h-8 bg-slate-100 flex items-center justify-center">
+ <User className="w-4 h-4 text-primary" />
  </div>
  {t('header.profile')}
  </Link>
@@ -241,8 +239,8 @@ export function Header() {
  onClick={() => setUserMenuOpen(false)}
  className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-700 text-sm font-medium"
  >
- <div className="w-8 h-8 bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
- <Ticket className="w-4 h-4 text-secondary dark:text-orange-400" />
+ <div className="w-8 h-8 bg-orange-50 flex items-center justify-center">
+ <Ticket className="w-4 h-4 text-secondary" />
  </div>
  {t('header.myTickets')}
  </Link>
@@ -266,7 +264,7 @@ export function Header() {
  onClick={handleLogout}
  className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-red-500 text-sm font-medium w-full"
  >
- <div className="w-8 h-8 bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+ <div className="w-8 h-8 bg-red-50 flex items-center justify-center">
  <LogOut className="w-4 h-4 text-red-500" />
  </div>
  {t('header.logout')}

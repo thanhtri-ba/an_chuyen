@@ -70,6 +70,37 @@ app.get('/health', async (req, res) => {
   }
 });
 
+function mapCityName(input: string | undefined): string | undefined {
+  if (!input) return input;
+  const trimmed = input.trim();
+  const clean = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, "").replace(/\s+/g, "");
+  
+  const mapping: Record<string, string> = {
+    tphcm: 'TP.HCM',
+    hcm: 'TP.HCM',
+    saigon: 'TP.HCM',
+    saison: 'TP.HCM', // Map 'Sài Sòn' / 'saison' typo
+    hochiminh: 'TP.HCM',
+    hanoi: 'Hà Nội',
+    dalat: 'Đà Lạt',
+    nhatrang: 'Nha Trang',
+    vungtau: 'Vũng Tàu',
+    danang: 'Đà Nẵng',
+    cantho: 'Cần Thơ',
+    sapa: 'Sapa',
+    hoian: 'Hội An',
+    phuquoc: 'Phú Quốc',
+    haiphong: 'Hải Phòng',
+    halong: 'Hạ Long',
+    hue: 'Huế',
+    ninhbinh: 'Ninh Bình',
+    buonmathuot: 'Buôn Ma Thuột',
+    bmt: 'Buôn Ma Thuột'
+  };
+
+  return mapping[clean] || trimmed;
+}
+
 // Public API for Flutter App
 app.get('/api/trips', async (req, res, next) => {
   try {
@@ -77,9 +108,17 @@ app.get('/api/trips', async (req, res, next) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
     
-    const origin = req.query.origin as string;
-    const destination = req.query.destination as string;
+    const origin = mapCityName(req.query.origin as string);
+    const destination = mapCityName(req.query.destination as string);
     const date = req.query.date as string;
+
+    console.log('Search API received query:', {
+      rawOrigin: req.query.origin,
+      mappedOrigin: origin,
+      rawDest: req.query.destination,
+      mappedDest: destination,
+      date
+    });
 
     const whereClause: any = {};
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from'react';
+import { toast } from 'sonner';
 import { useAuth } from'../../../contexts/AuthContext';
 import { Navigate } from'react-router-dom';
 import { User, Phone, Mail, Save, LogOut, Wallet, Award, Ticket, TrendingUp, ChevronRight, Shield, Bell } from'lucide-react';
@@ -43,7 +44,7 @@ export function ProfilePage() {
  useEffect(() => {
  if (user) {
  setFullName(user.fullName ||'');
- setPhone((user as any).phone ||'');
+ setPhone(user.phone ||'');
  }
  }, [user]);
 
@@ -53,12 +54,13 @@ export function ProfilePage() {
  const handleSave = async (e: React.FormEvent) => {
  e.preventDefault();
  setIsSaving(true);
- setMessage('');
  try {
  await api.put('/auth/profile', { fullName, phone });
- setMessage('Lưu hồ sơ thành công!');
+ setMessage('Lưu thành công!');
+ toast.success('Lưu hồ sơ thành công!');
  } catch {
  setMessage('Có lỗi xảy ra khi lưu.');
+ toast.error('Có lỗi xảy ra khi lưu.');
  } finally {
  setIsSaving(false);
  }

@@ -15,7 +15,7 @@ export function FloatingChat() {
  }
  }, [messages, isOpen, isTyping]);
 
- const handleSend = (e: React.FormEvent) => {
+ const handleSend = async (e: React.FormEvent) => {
  e.preventDefault();
  if (!input.trim()) return;
 
@@ -24,10 +24,30 @@ export function FloatingChat() {
  setInput('');
  setIsTyping(true);
 
- setTimeout(() => {
- setMessages(prev => [...prev, { role:'ai', content:'Hệ thống AI đang được bảo trì hoặc chưa kết nối API. Vui lòng thử lại sau.' }]);
+ try {
+ const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+ const response = await fetch(`${baseUrl}/api/ai/chat`, {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+ 'X-App-Source': 'web'
+ },
+ body: JSON.stringify({ message: userMessage })
+ });
+
+ if (response.ok) {
+ const data = await response.json();
+ setMessages(prev => [...prev, { role:'ai', content: data.response || data.message || 'Xin lỗi, tôi không thể trả lời ngay bây giờ.' }]);
+ } else {
+ setMessages(prev => [...prev, { role:'ai', content:'Xin lỗi, tôi gặp sự cố. Vui lòng thử lại sau.' }]);
+ }
+ } catch (error) {
+ console.error('AI chat error:', error);
+ setMessages(prev => [...prev, { role:'ai', content:'Kết nối AI không khả dụng. Vui lòng thử lại sau.' }]);
+ } finally {
  setIsTyping(false);
- }, 1000);
+ }
  };
 
  return (

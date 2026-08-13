@@ -1,7 +1,6 @@
-import { useRef, useState, useEffect } from'react';
+import { useState } from'react';
 import { Canvas } from'@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Text, useGLTF } from'@react-three/drei';
-import * as THREE from'three';
 
 // Coordinate mapping for the seats (approximate relative to the GLB model center)
 // These coordinates need to match where the seats are in KIMLONG99.glb

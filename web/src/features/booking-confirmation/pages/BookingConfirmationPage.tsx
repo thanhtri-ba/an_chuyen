@@ -20,23 +20,15 @@ function ConfettiParticle({ delay, color }: { delay: number; color: string }) {
 
 const CONFETTI_COLORS = ['#10b981','#3b82f6','#f59e0b','#ec4899'];
 
-interface LastBooking {
- bookingId?: string;
- passengerName: string;
- routeLabel?: string;
- busAgentName?: string;
- seats: string[];
- totalAmount: number;
- createdAt: string;
-}
+import type { BookingConfirmation } from '../../../types';
 
 export function BookingConfirmationPage() {
  const [showConfetti, setShowConfetti] = useState(true);
- const [booking, setBooking] = useState<LastBooking | null>(null);
+ const [booking, setBooking] = useState<BookingConfirmation | null>(null);
 
  useEffect(() => {
  const timer = setTimeout(() => setShowConfetti(false), 5000);
- const raw = localStorage.getItem('last_booking');
+ const raw = sessionStorage.getItem('last_booking');
  if (raw) {
  try {
  setBooking(JSON.parse(raw));

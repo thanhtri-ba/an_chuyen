@@ -8,7 +8,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
- const token = localStorage.getItem('busz_token');
+ const token = sessionStorage.getItem('busz_token');
  if (token && config.headers) {
  config.headers.Authorization = `Bearer ${token}`;
  }
@@ -21,7 +21,11 @@ api.interceptors.response.use((response) => {
  return response;
 }, (error) => {
  if (error.response?.status === 401) {
- localStorage.removeItem('busz_token');
+ sessionStorage.removeItem('busz_token');
+ const currentPath = window.location.pathname + window.location.search;
+ if (currentPath !== '/auth') {
+ window.location.href = `/auth?returnUrl=${encodeURIComponent(currentPath)}`;
+ }
  }
  return Promise.reject(error);
 });

@@ -1,11 +1,12 @@
-import { useState, useEffect } from'react';
-import { useNavigate } from'react-router-dom';
-import { MapPin, Search, ArrowRightLeft, Ticket, Zap, Sparkles, Star, ChevronRight, Edit3, X } from'lucide-react';
-import { motion, useScroll, useTransform, AnimatePresence } from'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, Search, ArrowRightLeft, Ticket, Zap, Sparkles, Star, ChevronRight, Edit3, X, Calendar } from 'lucide-react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
-import { Button } from'../../../design-system/components/Button';
-import { Input } from'../../../design-system/components/Input';
-import { Card, CardContent } from'../../../design-system/components/Card';
+import { Button } from '../../../design-system/components/Button';
+import { Input } from '../../../design-system/components/Input';
+
 import { StationMap } from'../../../shared/components/StationMap';
 import { useTranslation } from'react-i18next';
 
@@ -27,17 +28,29 @@ const DEFAULT_REVIEWS = [
 ];
 
 export function HomePage() {
- const { t } = useTranslation();
- const navigate = useNavigate();
- const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
- const [reviewRating, setReviewRating] = useState(5);
- const [origin, setOrigin] = useState('');
- const [destination, setDestination] = useState('');
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [focusedField, setFocusedField] = useState<'origin' | 'destination' | 'date' | 'passengers' | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
- // Set default date to today
- const today = new Date().toISOString().split('T')[0];
- const [date, setDate] = useState(today);
- const [passengers, setPassengers] = useState(1);
+  const triggerDatePicker = () => {
+    if (dateInputRef.current) {
+      if (typeof dateInputRef.current.showPicker === 'function') {
+        dateInputRef.current.showPicker();
+      } else {
+        dateInputRef.current.click();
+      }
+    }
+  };
+
+  // Set default date to today
+  const today = new Date().toISOString().split('T')[0];
+  const [date, setDate] = useState(today);
+  const [passengers, setPassengers] = useState(1);
  const [timeLeft, setTimeLeft] = useState(3600);
  const [promotions, setPromotions] = useState<any[]>([]);
  const [flashSales, setFlashSales] = useState<any[]>([]);
@@ -74,6 +87,7 @@ export function HomePage() {
  }
  } catch (error) {
  console.error('Failed to fetch homepage data:', error);
+ toast.error('Không thể tải dữ liệu trang chủ.');
  }
  };
  fetchData();
@@ -86,13 +100,17 @@ export function HomePage() {
  if (res.data.home_left_banner_url) setLeftBanner(res.data.home_left_banner_url);
  if (res.data.home_right_banner_url) setRightBanner(res.data.home_right_banner_url);
  })
- .catch(console.error);
+ .catch(err => {
+ console.error(err);
+ toast.error('Lỗi tải cấu hình trang chủ.');
+ });
  }, []);
 
  useEffect(() => {
  api.get('/promotions')
  .then(res => setPromotions(res.data))
  .catch(() => {
+ toast.error('Không thể tải danh sách khuyến mãi. Đang dùng dữ liệu tạm.');
  setPromotions([
  { id: 1, title:'Giảm 20%', description:'Đăng ký ngay để nhận ưu đãi lên đến 100k', code:'NEWBIE20' },
  { id: 2, title:'Hoàn tiền 5%', description:'Thanh toán qua ví điện tử nhận hoàn tiền', code:'MOMO5' }
@@ -118,6 +136,7 @@ export function HomePage() {
  setFlashSales(mappedSales);
  })
  .catch(() => {
+ toast.error('Không thể tải các chuyến đi giảm giá. Đang dùng dữ liệu tạm.');
  setFlashSales([
  { id: 1, from:'Sài Gòn', to:'Đà Lạt', originalPrice: 350000, salePrice: 250000, company:'Phương Trang', img:'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=600&auto=format&fit=crop' },
  { id: 2, from:'Sài Gòn', to:'Nha Trang', originalPrice: 400000, salePrice: 320000, company:'Hoa Mai VIP', img:'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=600&auto=format&fit=crop' },
@@ -179,6 +198,8 @@ export function HomePage() {
  <motion.img
  src={heroBg}
  alt="Hero"
+ loading="lazy"
+ decoding="async"
  className="absolute inset-0 w-full h-[120%] object-cover z-0 origin-top"
  style={{ y: yHeroBg }}
  />
@@ -236,142 +257,301 @@ export function HomePage() {
  </div>
  )}
 
- {/* SEARCH WIDGET (ULTRA PREMIUM) */}
- <div className="container relative z-20 px-4 -mt-16 mb-24">
- <motion.div
- initial={{ opacity: 0, y: 60 }}
- animate={{ opacity: 1, y: 0 }}
- transition={{ delay: 0.4, type:"spring", stiffness: 100 }}
- className="w-full max-w-[1100px] mx-auto relative group/widget"
- >
- <form onSubmit={handleSearch}>
- <div className="bg-white/40 backdrop-blur-3xl rounded-2xl md:rounded-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/70 flex flex-col md:flex-row items-center p-2 relative overflow-hidden transition-all duration-500 group-hover/widget:border-white group-hover/widget:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4)] group-hover/widget:bg-white/50">
- <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none rounded-2xl md:rounded-full"></div>
+  {/* SEARCH WIDGET (ULTRA PREMIUM - MATCHING SCREENSHOT) */}
+  <div className="container relative z-20 px-4 -mt-16 mb-24">
+    <motion.div
+      initial={{ opacity: 0, y: 60 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+      className="w-full max-w-[1100px] mx-auto relative"
+    >
+      <form onSubmit={handleSearch}>
+        <div className="bg-[#d2d5da]/95 backdrop-blur-md rounded-full border border-white/60 flex flex-col md:flex-row items-center p-2 relative shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] transition-all duration-300">
+          
+          {/* Origin */}
+          <div 
+            onClick={() => setFocusedField('origin')}
+            className={`relative z-10 w-full flex-1 flex flex-col justify-center h-full px-6 py-3 cursor-text transition-all duration-300 rounded-[32px] ${
+              focusedField === 'origin' 
+                ? 'bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-slate-200/80' 
+                : 'hover:bg-white/20'
+            }`}
+          >
+            <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-1 select-none">
+              {t('home.search.origin').toUpperCase()}
+            </span>
+            <div className={`w-full flex items-center transition-all ${
+              focusedField === 'origin' ? 'border border-slate-900 rounded-[2px] px-2 py-0.5 bg-transparent' : ''
+            }`}>
+              <input
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                onFocus={() => setFocusedField('origin')}
+                onBlur={() => setFocusedField(null)}
+                className="h-7 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-slate-800 placeholder-[#475569] outline-none w-full truncate"
+                placeholder={t('home.search.originPlaceholder')}
+              />
+            </div>
+          </div>
 
- {/* Origin */}
- <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 rounded-xl px-6 py-3 cursor-text">
- <div className="flex flex-col justify-center h-full">
- <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{t('home.search.origin')}</span>
- <Input
- value={origin}
- onChange={(e) => setOrigin(e.target.value)}
- className="h-8 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-gray-800 placeholder-gray-400 outline-none w-full shadow-none truncate transition-all"
- placeholder={t('home.search.originPlaceholder')}
- />
- </div>
- </div>
+          {/* Swap Icon */}
+          <div className="hidden md:flex items-center justify-center relative z-20 -mx-4">
+            <button
+              type="button"
+              onClick={swapLocations}
+              className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow hover:bg-slate-50 text-slate-500 hover:text-primary transition-all flex items-center justify-center hover:scale-110"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="w-full md:hidden h-[1px] bg-white/30 my-1"></div>
 
- {/* Swap Icon */}
- <div className="hidden md:flex items-center justify-center relative z-10 px-1 -mx-3">
- <button
- type="button"
- onClick={swapLocations}
- className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm hover:shadow-md hover:bg-gray-50 text-gray-400 hover:text-primary transition-all flex items-center justify-center hover:scale-110"
- >
- <ArrowRightLeft className="w-4 h-4" />
- </button>
- </div>
- <div className="w-full md:hidden h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent my-2"></div>
+          {/* Destination */}
+          <div 
+            onClick={() => setFocusedField('destination')}
+            className={`relative z-10 w-full flex-1 flex flex-col justify-center h-full px-6 py-3 cursor-text transition-all duration-300 rounded-[32px] ${
+              focusedField === 'destination' 
+                ? 'bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-slate-200/80' 
+                : 'hover:bg-white/20'
+            }`}
+          >
+            <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-1 select-none">
+              {t('home.search.destination').toUpperCase()}
+            </span>
+            <div className={`w-full flex items-center transition-all ${
+              focusedField === 'destination' ? 'border border-slate-900 rounded-[2px] px-2 py-0.5 bg-transparent' : ''
+            }`}>
+              <input
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                onFocus={() => setFocusedField('destination')}
+                onBlur={() => setFocusedField(null)}
+                className="h-7 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-slate-800 placeholder-[#475569] outline-none w-full truncate"
+                placeholder={t('home.search.destinationPlaceholder')}
+              />
+            </div>
+          </div>
 
- {/* Destination */}
- <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 rounded-xl px-6 py-3 cursor-text">
- <div className="flex flex-col justify-center h-full pl-0 md:pl-2">
- <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-red-500 transition-colors">{t('home.search.destination')}</span>
- <Input
- value={destination}
- onChange={(e) => setDestination(e.target.value)}
- className="h-8 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-gray-800 placeholder-gray-400 outline-none w-full shadow-none truncate transition-all"
- placeholder={t('home.search.destinationPlaceholder')}
- />
- </div>
- </div>
+          <div className="hidden md:block w-[1px] h-10 bg-slate-400/30 mx-2"></div>
+          <div className="w-full md:hidden h-[1px] bg-white/30 my-1"></div>
 
- <div className="hidden md:block w-[1px] h-12 bg-gray-200/60 mx-1"></div>
- <div className="w-full md:hidden h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2"></div>
+          {/* Date */}
+          <div 
+            onClick={() => {
+              setFocusedField('date');
+              triggerDatePicker();
+            }}
+            className={`relative z-10 w-full flex-1 flex flex-col justify-center h-full px-6 py-3 cursor-pointer transition-all duration-300 rounded-[32px] ${
+              focusedField === 'date' 
+                ? 'bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-slate-200/80' 
+                : 'hover:bg-white/20'
+            }`}
+          >
+            <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-1 select-none">
+              {t('home.search.date').toUpperCase()}
+            </span>
+            <div className="flex items-center justify-between w-full">
+              <span className="text-[18px] font-bold text-slate-800 leading-none">
+                {date ? new Date(date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'Chọn ngày'}
+              </span>
+              <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0 ml-2" />
+            </div>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              onFocus={() => setFocusedField('date')}
+              onBlur={() => setFocusedField(null)}
+              className="absolute opacity-0 w-0 h-0 pointer-events-none"
+            />
+          </div>
 
- {/* Date */}
- <div className="relative w-full flex-1 group hover:bg-white/60 transition-all duration-300 rounded-xl px-6 py-3 cursor-pointer">
- <div className="flex flex-col justify-center h-full">
- <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{t('home.search.date')}</span>
- <Input
- type="date"
- value={date}
- onChange={(e) => setDate(e.target.value)}
- className="h-8 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-gray-800 outline-none w-full shadow-none cursor-pointer transition-all [color-scheme:light]"
- />
- </div>
- </div>
+          <div className="hidden md:block w-[1px] h-10 bg-slate-400/30 mx-2"></div>
+          <div className="w-full md:hidden h-[1px] bg-white/30 my-1"></div>
 
- <div className="hidden md:block w-[1px] h-12 bg-gray-300/40 mx-1"></div>
- <div className="w-full md:hidden h-[1px] bg-gradient-to-r from-transparent via-gray-300 to-transparent my-2"></div>
+          {/* Passengers */}
+          <div 
+            onClick={() => setFocusedField('passengers')}
+            className={`relative z-10 w-full flex-[0.8] flex flex-col justify-center h-full px-6 py-3 cursor-pointer transition-all duration-300 rounded-[32px] ${
+              focusedField === 'passengers' 
+                ? 'bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-slate-200/80' 
+                : 'hover:bg-white/20'
+            }`}
+          >
+            <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-1 select-none">
+              {t('home.search.passengers').toUpperCase()}
+            </span>
+            <div className="relative w-full">
+              <select
+                value={passengers}
+                onChange={(e) => setPassengers(Number(e.target.value))}
+                onFocus={() => setFocusedField('passengers')}
+                onBlur={() => setFocusedField(null)}
+                className="appearance-none bg-transparent border-none p-0 text-[18px] font-bold text-slate-800 outline-none w-full cursor-pointer focus:ring-0 shadow-none"
+              >
+                <option value={1} className="bg-white text-slate-800">1 người</option>
+                <option value={2} className="bg-white text-slate-800">2 người</option>
+                <option value={3} className="bg-white text-slate-800">3 người</option>
+                <option value={4} className="bg-white text-slate-800">4 người</option>
+                <option value={5} className="bg-white text-slate-800">5 người</option>
+              </select>
+            </div>
+          </div>
 
- {/* Passengers */}
- <div className="relative w-full flex-[0.8] group hover:bg-white/60 transition-all duration-300 rounded-xl pl-6 pr-4 py-3 cursor-pointer">
- <div className="flex flex-col justify-center h-full">
- <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{t('home.search.passengers')}</span>
- <select
- value={passengers}
- onChange={(e) => setPassengers(Number(e.target.value))}
- className="h-8 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-gray-800 outline-none w-full shadow-none cursor-pointer appearance-none transition-all"
- >
- <option value={1}>{t('home.search.onePassenger')}</option>
- <option value={2}>{t('home.search.manyPassengers')}</option>
- </select>
- </div>
- </div>
+          {/* Submit Button */}
+          <div className="w-full md:w-auto p-1 mt-2 md:mt-0 relative z-10">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+              <Button 
+                type="submit" 
+                className="h-[60px] px-10 font-bold text-[16px] bg-gradient-to-r from-[#ff4525] to-[#ff7d1a] text-white w-full shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all relative overflow-hidden flex items-center justify-center gap-3 rounded-full border border-white/20"
+              >
+                <Search className="w-5 h-5" /> <span>{t('home.search.button')}</span>
+              </Button>
+            </motion.div>
+          </div>
 
- {/* Submit Button */}
- <div className="w-full md:w-auto p-1 mt-2 md:mt-0 relative">
- <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95, y: 2 }} transition={{ type:"spring", stiffness: 400, damping: 15 }}>
- <div className="absolute inset-0 bg-orange-500 blur-xl opacity-30 animate-pulse pointer-events-none rounded-xl md:rounded-full"></div>
- <Button type="submit" className="h-[60px] px-10 font-bold text-[16px] bg-gradient-to-r from-red-500 to-orange-500 text-white w-full shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 transition-all relative overflow-hidden group/btn flex items-center justify-center gap-3 border border-white/20 rounded-xl md:rounded-full">
- <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]"></span>
- <Search className="w-5 h-5 relative z-10" /> <span className="relative z-10">{t('home.search.button')}</span>
- </Button>
- </motion.div>
- </div>
+        </div>
+      </form>
+    </motion.div>
+  </div>
 
- </div>
- </form>
- </motion.div>
- </div>
+  {/* ===================== SERVICES GRID (REDESIGNED PREMIUM) ===================== */}
+  <section className="container max-w-7xl mx-auto px-4 mb-20 relative z-10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
 
- {/* ===================== SERVICES GRID ===================== */}
- <section className="container max-w-7xl mx-auto px-4 mb-20 relative z-10">
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      {/* Card 1 - Bus Tickets */}
+      <motion.div 
+        onClick={() => navigate('/search')} 
+        initial={{ opacity: 0, y: 30 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true }} 
+        transition={{ duration: 0.5, delay: 0.1 }}
+        whileTap={{ scale: 0.97 }} 
+        className="group relative bg-white border border-slate-100 rounded-2xl p-6 h-[180px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(239,68,68,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+      >
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none bg-red-500"></div>
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-slate-800 group-hover:text-red-500 transition-colors leading-snug">
+            {t('home.services.tickets')}
+          </h3>
+          <p className="text-xs text-slate-400 font-semibold mt-1 max-w-[120px] sm:max-w-[140px] leading-relaxed">
+            Đặt vé xe khách chất lượng cao nhanh chóng.
+          </p>
+        </div>
+        <img 
+          src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Bus/3D/bus_3d.png" 
+          alt="Bus" 
+          className="absolute bottom-2 right-2 w-28 h-28 md:w-32 md:h-32 object-contain transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-6" 
+        />
+      </motion.div>
 
- {/* Card 1 */}
- <motion.div onClick={() => navigate('/search')} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-[#FFE5E5] p-6 h-[180px] relative overflow-hidden cursor-pointer transition-transform">
- <h3 className="text-xl md:text-2xl font-bold text-slate-800">{t('home.services.tickets')}</h3>
- <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Bus/3D/bus_3d.png" alt="Bus" className="absolute bottom-0 right-0 w-32 h-32 md:w-36 md:h-36 object-contain" />
- </motion.div>
+      {/* Card 2 - Delivery */}
+      <motion.div 
+        onClick={() => navigate('/delivery')} 
+        initial={{ opacity: 0, y: 30 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true }} 
+        transition={{ duration: 0.5, delay: 0.2 }}
+        whileTap={{ scale: 0.97 }} 
+        className="group relative bg-white border border-slate-100 rounded-2xl p-6 h-[180px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(139,92,246,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+      >
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none bg-purple-500"></div>
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-slate-800 group-hover:text-purple-600 transition-colors leading-snug">
+            {t('home.services.delivery')}
+          </h3>
+          <p className="text-xs text-slate-400 font-semibold mt-1 max-w-[120px] sm:max-w-[140px] leading-relaxed">
+            Giao nhận hàng hóa nội thành và liên tỉnh.
+          </p>
+        </div>
+        <img 
+          src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Delivery%20truck/3D/delivery_truck_3d.png" 
+          alt="Delivery" 
+          className="absolute bottom-2 right-2 w-28 h-28 md:w-32 md:h-32 object-contain transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-6" 
+        />
+      </motion.div>
 
- {/* Card 2 */}
- <motion.div onClick={() => navigate('/delivery')} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-[#DDD8FF] p-6 h-[180px] relative overflow-hidden cursor-pointer transition-transform">
- <h3 className="text-xl md:text-2xl font-bold text-slate-800">{t('home.services.delivery')}</h3>
- <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Delivery%20truck/3D/delivery_truck_3d.png" alt="Delivery" className="absolute bottom-0 right-0 w-32 h-32 md:w-36 md:h-36 object-contain" />
- </motion.div>
+      {/* Card 3 - Rental */}
+      <motion.div 
+        onClick={() => navigate('/rental')} 
+        initial={{ opacity: 0, y: 30 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true }} 
+        transition={{ duration: 0.5, delay: 0.3 }}
+        whileTap={{ scale: 0.97 }} 
+        className="group relative bg-white border border-slate-100 rounded-2xl p-6 h-[180px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+      >
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none bg-blue-500"></div>
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-slate-800 group-hover:text-blue-500 transition-colors leading-snug">
+            {t('home.services.rental')}
+          </h3>
+          <p className="text-xs text-slate-400 font-semibold mt-1 max-w-[120px] sm:max-w-[140px] leading-relaxed">
+            Thuê xe tự lái hoặc có tài xế đa dạng.
+          </p>
+        </div>
+        <img 
+          src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Automobile/3D/automobile_3d.png" 
+          alt="Car" 
+          className="absolute bottom-2 right-2 w-28 h-28 md:w-32 md:h-32 object-contain transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-6" 
+        />
+      </motion.div>
 
- {/* Card 3 */}
- <motion.div onClick={() => navigate('/rental')} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-[#CDE8FF] p-6 h-[180px] relative overflow-hidden cursor-pointer transition-transform">
- <h3 className="text-xl md:text-2xl font-bold text-slate-800">{t('home.services.rental')}</h3>
- <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Automobile/3D/automobile_3d.png" alt="Car" className="absolute bottom-0 right-0 w-32 h-32 md:w-36 md:h-36 object-contain" />
- </motion.div>
+      {/* Card 4 - Book Tour */}
+      <motion.div 
+        onClick={() => navigate('/tour')} 
+        initial={{ opacity: 0, y: 30 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true }} 
+        transition={{ duration: 0.5, delay: 0.4 }}
+        whileTap={{ scale: 0.97 }} 
+        className="group relative bg-white border border-slate-100 rounded-2xl p-6 h-[180px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(249,115,22,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+      >
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none bg-orange-500"></div>
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-slate-800 group-hover:text-orange-500 transition-colors leading-snug">
+            {t('home.services.tour')}
+          </h3>
+          <p className="text-xs text-slate-400 font-semibold mt-1 max-w-[120px] sm:max-w-[140px] leading-relaxed">
+            Trải nghiệm tour du lịch hấp dẫn trọn gói.
+          </p>
+        </div>
+        <img 
+          src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Palm%20tree/3D/palm_tree_3d.png" 
+          alt="Tour" 
+          className="absolute bottom-2 right-2 w-28 h-28 md:w-32 md:h-32 object-contain transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-6" 
+        />
+      </motion.div>
 
- {/* Card 4 */}
- <motion.div onClick={() => navigate('/tour')} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-[#FFE3C8] p-6 h-[180px] relative overflow-hidden cursor-pointer transition-transform">
- <h3 className="text-xl md:text-2xl font-bold text-slate-800">{t('home.services.tour')}</h3>
- <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Palm%20tree/3D/palm_tree_3d.png" alt="Tour" className="absolute bottom-0 right-4 w-32 h-32 md:w-36 md:h-36 object-contain" />
- </motion.div>
+      {/* Card 5 - Events */}
+      <motion.div 
+        onClick={() => navigate('/events')} 
+        initial={{ opacity: 0, y: 30 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true }} 
+        transition={{ duration: 0.5, delay: 0.5 }}
+        whileTap={{ scale: 0.97 }} 
+        className="group relative bg-white border border-slate-100 rounded-2xl p-6 h-[180px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(16,185,129,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between"
+      >
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none bg-emerald-500"></div>
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-slate-800 group-hover:text-emerald-500 transition-colors leading-snug">
+            {t('home.services.event')}
+          </h3>
+          <p className="text-xs text-slate-400 font-semibold mt-1 max-w-[120px] sm:max-w-[140px] leading-relaxed">
+            Săn vé liveshow ca nhạc và sự kiện thể thao.
+          </p>
+        </div>
+        <img 
+          src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Admission%20tickets/3D/admission_tickets_3d.png" 
+          alt="Event" 
+          className="absolute bottom-2 right-2 w-28 h-28 md:w-32 md:h-32 object-contain transition-all duration-500 ease-out group-hover:scale-110 group-hover:rotate-[5deg] group-hover:-translate-y-1" 
+        />
+      </motion.div>
 
- {/* Card 5 */}
- <motion.div onClick={() => navigate('/events')} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.5 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-[#CBFFD3] p-6 h-[180px] relative overflow-hidden cursor-pointer transition-transform">
- <h3 className="text-xl md:text-2xl font-bold text-slate-800">{t('home.services.event')}</h3>
- <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Admission%20tickets/3D/admission_tickets_3d.png" alt="Event" className="absolute bottom-2 right-2 w-28 h-28 md:w-32 md:h-32 object-contain shadow-[0_10px_20px_rgba(255,0,128,0.3)]" style={{ transform:"rotate(-10deg)" }} />
- </motion.div>
-
- </div>
- </section>
+    </div>
+  </section>
 
  {/* ===================== ABOUT SECTION ===================== */}
  <section className="bg-white py-24 mb-8 overflow-hidden">
@@ -444,7 +624,7 @@ export function HomePage() {
  className="relative overflow-hidden cursor-pointer aspect-[3/4] group shadow-sm hover:shadow-md transition-all"
  onClick={() => { setDestination(dest.name); navigate('/search'); }}
  >
- <img src={dest.img} alt={dest.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+ <img src={dest.img} alt={dest.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80"></div>
  
  {/* Tag top-left */}
@@ -491,7 +671,7 @@ export function HomePage() {
  className="relative overflow-hidden cursor-pointer aspect-[16/9] group shadow-sm hover:shadow-md transition-all"
  onClick={() => navigate('/search')}
  >
- <img src={sale.img} alt={sale.to} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+ <img src={sale.img} alt={sale.to} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80"></div>
  
  {/* Tag sale top-left */}
