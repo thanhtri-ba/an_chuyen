@@ -35,7 +35,7 @@ export function LoyaltyPage() {
  transition={{ duration: 0.6, type:'spring', stiffness: 200, damping: 20 }}
  >
  {/* Front Side - Gold Tier */}
- <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 ] p-8 text-white shadow-xl overflow-hidden flex flex-col justify-between">
+ <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 rounded-2xl p-8 text-white shadow-xl overflow-hidden flex flex-col justify-between">
  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
  <div className="relative z-10 flex justify-between items-start">
  <div>
@@ -51,7 +51,7 @@ export function LoyaltyPage() {
  </div>
 
  {/* Back Side */}
- <div className="absolute inset-0 backface-hidden bg-gray-900 ] p-8 text-white shadow-xl rotate-y-180 flex flex-col justify-center items-center text-center">
+ <div className="absolute inset-0 backface-hidden bg-gray-900 rounded-2xl p-8 text-white shadow-xl rotate-y-180 flex flex-col justify-center items-center text-center">
  <div className="w-full h-12 bg-gray-800 mb-6 w-[120%] -ml-10"></div>
  <div className="bg-white text-black p-3 mb-4 w-4/5 text-left font-mono font-bold">CVC: 123</div>
  <p className="text-xs text-gray-400">Thẻ điện tử này được phát hành bởi An Chuyến. Hotline: 1900 1234</p>
@@ -60,7 +60,7 @@ export function LoyaltyPage() {
  </div>
 
  {/* Progress & Stats */}
- <Card className="p-6 md:p-8 ] shadow-sm border-gray-100 bg-white h-full flex flex-col justify-center">
+ <Card className="p-6 md:p-8 rounded-2xl shadow-sm border-gray-100 bg-white h-full flex flex-col justify-center">
  <div className="flex items-center gap-3 mb-6">
  <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
  <Sparkles className="w-6 h-6" />

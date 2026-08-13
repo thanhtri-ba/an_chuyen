@@ -20,13 +20,34 @@ function ConfettiParticle({ delay, color }: { delay: number; color: string }) {
 
 const CONFETTI_COLORS = ['#10b981','#3b82f6','#f59e0b','#ec4899'];
 
+interface LastBooking {
+ bookingId?: string;
+ passengerName: string;
+ routeLabel?: string;
+ busAgentName?: string;
+ seats: string[];
+ totalAmount: number;
+ createdAt: string;
+}
+
 export function BookingConfirmationPage() {
  const [showConfetti, setShowConfetti] = useState(true);
+ const [booking, setBooking] = useState<LastBooking | null>(null);
 
  useEffect(() => {
  const timer = setTimeout(() => setShowConfetti(false), 5000);
+ const raw = localStorage.getItem('last_booking');
+ if (raw) {
+ try {
+ setBooking(JSON.parse(raw));
+ } catch {
+ setBooking(null);
+ }
+ }
  return () => clearTimeout(timer);
  }, []);
+
+ const bookingDate = booking ? new Date(booking.createdAt) : null;
 
  return (
  <div className="min-h-screen bg-gray-100 pt-24 pb-16 flex flex-col items-center justify-start p-4 font-sans text-gray-900">
@@ -91,7 +112,9 @@ export function BookingConfirmationPage() {
  <div className="text-center mb-6">
  <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-wide">VÉ XE KHÁCH</h2>
  <p className="text-xs text-gray-600 mt-1">(Bản thể hiện của vé điện tử)</p>
- <p className="text-xs text-gray-600 mt-1">Ngày 20 Tháng 11 Năm 2026</p>
+ {bookingDate && (
+ <p className="text-xs text-gray-600 mt-1">Ngày {bookingDate.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' })}</p>
+ )}
  </div>
 
  <div className="w-full border-t-2 border-gray-800 mb-6"></div>
@@ -100,19 +123,19 @@ export function BookingConfirmationPage() {
  <div className="space-y-2 text-sm mb-6 font-medium">
  <div className="flex justify-between">
  <span>Hành khách:</span>
- <span className="font-bold text-right">Nguyễn Văn A</span>
+ <span className="font-bold text-right">{booking?.passengerName ||'—'}</span>
  </div>
  <div className="flex justify-between">
  <span>Tuyến xe:</span>
- <span className="font-bold text-right">Sài Gòn - Đà Lạt</span>
+ <span className="font-bold text-right">{booking?.routeLabel ||'—'}</span>
  </div>
  <div className="flex justify-between">
- <span>Khởi hành:</span>
- <span className="font-bold text-right">08:30 | 20/11/2026</span>
+ <span>Nhà xe:</span>
+ <span className="font-bold text-right">{booking?.busAgentName ||'—'}</span>
  </div>
  <div className="flex justify-between">
- <span>Ghế / Biển số:</span>
- <span className="font-bold text-right">A1 / 51B-123.45</span>
+ <span>Ghế:</span>
+ <span className="font-bold text-right">{booking?.seats?.join(', ') ||'—'}</span>
  </div>
  </div>
 
@@ -120,7 +143,7 @@ export function BookingConfirmationPage() {
 
  {/* Total Amount */}
  <div className="text-center mb-6">
- <h3 className="text-2xl font-bold">Tổng tiền: 350.000 đ</h3>
+ <h3 className="text-2xl font-bold">Tổng tiền: {booking ? new Intl.NumberFormat('vi-VN').format(booking.totalAmount) : '—'} đ</h3>
  <p className="text-xs text-gray-600 mt-1">(Bao gồm thuế GTGT)</p>
  </div>
 
@@ -167,7 +190,7 @@ export function BookingConfirmationPage() {
  </div>
  
  <p className="text-[11px] text-gray-600 mb-1">Mã tra cứu</p>
- <h4 className="text-xl font-bold tracking-widest text-gray-900 mb-1">XLS789MKAH</h4>
+ <h4 className="text-xl font-bold tracking-widest text-gray-900 mb-1">{booking?.bookingId ? booking.bookingId.slice(0, 8).toUpperCase() :'—'}</h4>
  <p className="text-[10px] text-gray-600">Tra cứu tại: https://meinvoice.vn/tra-cuu/</p>
  </div>
 

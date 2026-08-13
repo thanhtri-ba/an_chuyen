@@ -17,6 +17,8 @@ interface PendingBooking {
  addInsurance: boolean;
  insurancePrice: number;
  passengerInfo: { name: string; phone: string; email: string };
+ routeLabel?: string;
+ busAgentName?: string;
 }
 
 export function PaymentPage() {
@@ -66,12 +68,23 @@ export function PaymentPage() {
  }
  setIsProcessing(true);
  try {
- await api.post('/bookings/create', {
+ const res = await api.post('/bookings/create', {
  tripScheduleId: pendingBooking.tripScheduleId,
  seatNumbers: pendingBooking.seats,
  passengers: [{ name: pendingBooking.passengerInfo.name }],
  paymentMethod: selectedMethod
  });
+
+ const booking = res.data?.data;
+ localStorage.setItem('last_booking', JSON.stringify({
+ bookingId: booking?.id,
+ passengerName: pendingBooking.passengerInfo.name,
+ routeLabel: pendingBooking.routeLabel,
+ busAgentName: pendingBooking.busAgentName,
+ seats: pendingBooking.seats,
+ totalAmount: booking?.totalAmount ?? finalTotal,
+ createdAt: booking?.createdAt || new Date().toISOString(),
+ }));
 
  localStorage.removeItem('pending_booking');
  navigate('/booking-confirmation');

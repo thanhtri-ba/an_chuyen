@@ -11,6 +11,8 @@ import api from'../../../lib/api';
 export function AuthPage() {
  const [isLogin, setIsLogin] = useState(true);
  const [showPassword, setShowPassword] = useState(false);
+ const [fullName, setFullName] = useState('');
+ const [phone, setPhone] = useState('');
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [error, setError] = useState('');
@@ -22,9 +24,6 @@ export function AuthPage() {
  e.preventDefault();
  setError('');
  setIsSubmitting(true);
- 
- // Simulate network delay for premium feel
- await new Promise(r => setTimeout(r, 800));
 
  if (isLogin) {
  try {
@@ -35,11 +34,21 @@ export function AuthPage() {
  }
  } catch (err: any) {
  setError(err.response?.data?.message ||'Thông tin đăng nhập không chính xác');
+ } finally {
  setIsSubmitting(false);
  }
  } else {
- setIsSubmitting(false);
+ try {
+ const res = await api.post('/auth/register', { fullName, phone, email, password });
+ if (res.data && res.data.token) {
+ login(res.data.token, res.data.user);
  navigate('/');
+ }
+ } catch (err: any) {
+ setError(err.response?.data?.message ||'Không thể tạo tài khoản. Vui lòng thử lại.');
+ } finally {
+ setIsSubmitting(false);
+ }
  }
  };
 
@@ -148,7 +157,7 @@ export function AuthPage() {
  </div>
 
  {/* Floating Decorative Elements */}
- <motion.div variants={floatingVariants} animate="float1" className="absolute top-[20%] right-[10%] w-32 h-32 ] border border-white/10 bg-white/5 backdrop-blur-3xl shadow-2xl rotate-12"></motion.div>
+ <motion.div variants={floatingVariants} animate="float1" className="absolute top-[20%] right-[10%] w-32 h-32 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl shadow-2xl rotate-12"></motion.div>
  <motion.div variants={floatingVariants} animate="float2" className="absolute bottom-[30%] right-[20%] w-20 h-20 rounded-full border border-white/10 bg-gradient-to-br from-primary/30 to-slate-600/30 backdrop-blur-xl shadow-2xl"></motion.div>
  </div>
 
@@ -212,17 +221,27 @@ export function AuthPage() {
  <label className="text-[11px] font-black text-slate-400 ml-1 uppercase tracking-widest">Họ và tên</label>
  <div className="relative group">
  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
- <Input type="text" required className="pl-12 h-14 bg-slate-50 border-slate-200 focus:bg-white focus:shadow-md focus:border-primary/50 transition-all text-base font-semibold" placeholder="VD: Nguyễn Văn A" />
+ <Input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="pl-12 h-14 bg-slate-50 border-slate-200 focus:bg-white focus:shadow-md focus:border-primary/50 transition-all text-base font-semibold" placeholder="VD: Nguyễn Văn A" />
  </div>
  </motion.div>
  )}
  </AnimatePresence>
- 
+
+ {!isLogin && (
  <div className="space-y-1.5">
- <label className="text-[11px] font-black text-slate-400 ml-1 uppercase tracking-widest">Email / Số điện thoại</label>
+ <label className="text-[11px] font-black text-slate-400 ml-1 uppercase tracking-widest">Số điện thoại</label>
+ <div className="relative group">
+ <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+ <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required className="pl-12 h-14 bg-slate-50 border-slate-200 focus:bg-white focus:shadow-md focus:border-primary/50 transition-all text-base font-semibold" placeholder="09xxxxxxxx" />
+ </div>
+ </div>
+ )}
+
+ <div className="space-y-1.5">
+ <label className="text-[11px] font-black text-slate-400 ml-1 uppercase tracking-widest">{isLogin ?'Email / Số điện thoại' :'Email (không bắt buộc)'}</label>
  <div className="relative group">
  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
- <Input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-12 h-14 bg-slate-50 border-slate-200 focus:bg-white focus:shadow-md focus:border-primary/50 transition-all text-base font-semibold" placeholder="admin@example.com" />
+ <Input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required={isLogin} className="pl-12 h-14 bg-slate-50 border-slate-200 focus:bg-white focus:shadow-md focus:border-primary/50 transition-all text-base font-semibold" placeholder="admin@example.com" />
  </div>
  </div>
 

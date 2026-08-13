@@ -13,6 +13,30 @@ function isVipSeat(seatNumber: string): boolean {
 }
 
 export class SeatService {
+  static async getTripScheduleDetail(tripScheduleId: string) {
+    const tripSchedule = await prisma.tripSchedule.findUnique({
+      where: { id: tripScheduleId },
+      include: {
+        trip: {
+          include: {
+            busAgent: true,
+            route: {
+              include: { departureCity: true, arrivalCity: true }
+            }
+          }
+        },
+        prices: true,
+        checkpoints: { include: { station: true } }
+      }
+    });
+
+    if (!tripSchedule) {
+      throw new Error('Chuyến xe không tồn tại');
+    }
+
+    return tripSchedule;
+  }
+
   static async getSeatMap(tripScheduleId: string) {
     const tripSchedule = await prisma.tripSchedule.findUnique({
       where: { id: tripScheduleId },

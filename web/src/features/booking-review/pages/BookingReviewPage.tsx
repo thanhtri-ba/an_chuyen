@@ -58,9 +58,11 @@ export function BookingReviewPage() {
 
  const {
  seats,
- totalAmount,
- pickupPoint,
- dropoffPoint,
+ seatsTotal,
+ pickupLabel,
+ dropoffLabel,
+ routeLabel,
+ busAgentName,
  addInsurance,
  needVAT,
  passengerInfo,
@@ -70,7 +72,7 @@ export function BookingReviewPage() {
  const handleProceedToPayment = () => {
  if (!termsAccepted) return;
  // Cập nhật lại bookingData với các tùy chọn mới nhất nếu cần thiết
- const updatedBooking = { ...bookingData, addInsurance: isInsuranceEnabled, finalTotalAmount };
+ const updatedBooking = { ...bookingData, addInsurance: isInsuranceEnabled, totalAmount: finalTotalAmount };
  localStorage.setItem('pending_booking', JSON.stringify(updatedBooking));
  
  // Chuyển tới trang thanh toán thực sự
@@ -86,22 +88,9 @@ export function BookingReviewPage() {
  }
  };
 
- const basePrice = seats.length * 350000;
+ const basePrice = seatsTotal;
  const insurancePrice = isInsuranceEnabled ? seats.length * 20000 : 0;
  const finalTotalAmount = basePrice + insurancePrice - discount;
-
- const pickupLabel = pickupPoint ==='bx-md' ?'Bến xe Miền Đông' : pickupPoint ==='vp-q1' ?'VP Quận 1 - Phạm Ngũ Lão' :'Ngã 4 Hàng Xanh';
- const dropoffLabel = dropoffPoint ==='bx-dl' ?'Bến xe liên tỉnh Đà Lạt' : dropoffPoint ==='vp-dl' ?'VP Đà Lạt' :'Ngã 3 Tình Yêu';
-
- const getAddress = (point: string) => {
- switch(point) {
- case'bx-md': return'292 Đinh Bộ Lĩnh, P.26, Q.Bình Thạnh, TP.HCM';
- case'vp-q1': return'Phạm Ngũ Lão, Quận 1, TP.HCM';
- case'bx-dl': return'01 Tô Hiến Thành, P.3, TP. Đà Lạt';
- case'vp-dl': return'Nguyễn Thái Học, P.1, TP. Đà Lạt';
- default: return'Điểm đón/trả mặc định';
- }
- };
 
  return (
  <div className="bg-gray-50 dark:bg-slate-900 min-h-[calc(100vh-4rem)] pt-20 pb-32 font-sans text-gray-900 dark:text-white transition-colors duration-300">
@@ -127,7 +116,7 @@ export function BookingReviewPage() {
  
  {/* Trip Info */}
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
- <Card className="relative overflow-hidden bg-white dark:bg-slate-950 ] border-0 shadow-xl shadow-blue-900/5 dark:shadow-none">
+ <Card className="relative overflow-hidden bg-white dark:bg-slate-950 border-0 shadow-xl shadow-blue-900/5 dark:shadow-none">
  {/* Gradient Header Background */}
  <div className="absolute top-0 left-0 w-full h-36 bg-gradient-to-r from-blue-600 to-indigo-600">
  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
@@ -140,26 +129,21 @@ export function BookingReviewPage() {
  <MapPin className="w-8 h-8" />
  </div>
  <div>
- <h2 className="text-2xl md:text-3xl font-black text-white drop-shadow-md">Sài Gòn - Đà Lạt</h2>
+ <h2 className="text-2xl md:text-3xl font-black text-white drop-shadow-md">{routeLabel || 'Đang tải...'}</h2>
  <div className="text-blue-100 font-medium mt-1.5 flex items-start sm:items-center gap-2 text-sm md:text-base">
  <span className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2 sm:mt-0 flex-shrink-0"></span>
- <span className="leading-tight">An Chuyến Premium &bull; Limousine 22 Giường VIP</span>
+ <span className="leading-tight">{busAgentName}</span>
  </div>
  </div>
  </div>
  
- <div className="bg-gray-50/80 dark:bg-slate-900/80 backdrop-blur-md p-6 md:p-8 ] border border-white dark:border-slate-800 shadow-sm">
+ <div className="bg-gray-50/80 dark:bg-slate-900/80 backdrop-blur-md p-6 md:p-8 border border-white dark:border-slate-800 shadow-sm">
  <div className="flex flex-col md:flex-row items-center gap-6 relative">
  
  {/* Origin */}
  <div className="flex-1 w-full text-center md:text-left">
  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Điểm đón</p>
- <p className="font-extrabold text-gray-900 dark:text-white text-lg md:text-xl line-clamp-2">{pickupLabel}</p>
- <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{getAddress(pickupPoint)}</p>
- <div className="inline-flex items-center gap-2 mt-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 border border-blue-100 dark:border-blue-800/30">
- <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
- <span className="text-sm text-blue-700 dark:text-blue-300 font-bold">08:30 - Hôm nay</span>
- </div>
+ <p className="font-extrabold text-gray-900 dark:text-white text-lg md:text-xl line-clamp-2">{pickupLabel || 'Chưa chọn điểm đón'}</p>
  </div>
  
  {/* Connection Line */}
@@ -173,12 +157,7 @@ export function BookingReviewPage() {
  {/* Destination */}
  <div className="flex-1 w-full text-center md:text-right">
  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 font-bold uppercase tracking-wider">Điểm trả</p>
- <p className="font-extrabold text-gray-900 dark:text-white text-lg md:text-xl line-clamp-2">{dropoffLabel}</p>
- <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{getAddress(dropoffPoint)}</p>
- <div className="inline-flex items-center gap-2 mt-2 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 border border-emerald-100 dark:border-emerald-800/30">
- <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
- <span className="text-sm text-emerald-700 dark:text-emerald-300 font-bold">15:30 - Cùng ngày</span>
- </div>
+ <p className="font-extrabold text-gray-900 dark:text-white text-lg md:text-xl line-clamp-2">{dropoffLabel || 'Chưa chọn điểm trả'}</p>
  </div>
  
  </div>
@@ -209,7 +188,7 @@ export function BookingReviewPage() {
 
  {/* Passenger Info */}
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
- <Card className="bg-white dark:bg-slate-950 ] p-6 md:p-8 border border-gray-100 dark:border-slate-800 shadow-lg shadow-gray-200/20 dark:shadow-none">
+ <Card className="bg-white dark:bg-slate-950 rounded-xl p-6 md:p-8 border border-gray-100 dark:border-slate-800 shadow-lg shadow-gray-200/20 dark:shadow-none">
  <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100 dark:border-slate-800">
  <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
  <User className="w-7 h-7" />
@@ -281,7 +260,7 @@ export function BookingReviewPage() {
  {/* Extras */}
  {(addInsurance || needVAT) && (
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
- <Card className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 ] p-6 md:p-8 border border-emerald-100/50 dark:border-emerald-900/30 shadow-sm flex flex-col gap-4">
+ <Card className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-xl p-6 md:p-8 border border-emerald-100/50 dark:border-emerald-900/30 shadow-sm flex flex-col gap-4">
  {addInsurance && (
  <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-950/50 backdrop-blur-sm p-4 border border-emerald-200/50 dark:border-emerald-800/50 shadow-sm">
  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
@@ -309,7 +288,7 @@ export function BookingReviewPage() {
  <div className="sticky top-28 space-y-6">
  
  {/* Countdown Timer */}
- <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-4 ] flex items-center justify-between shadow-sm">
+ <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400">
  <Clock className="w-5 h-5" />
@@ -325,7 +304,7 @@ export function BookingReviewPage() {
  </div>
 
  {/* Promo Code */}
- <Card className="bg-white dark:bg-slate-950 ] p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
+ <Card className="bg-white dark:bg-slate-950 rounded-xl p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
  <p className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
  <Tag className="w-4 h-4 text-blue-500" /> Mã giảm giá / Ưu đãi
  </p>
@@ -335,16 +314,16 @@ export function BookingReviewPage() {
  value={promoCode}
  onChange={(e) => setPromoCode(e.target.value)}
  placeholder="Nhập mã (VD: ANCHUYEN10)" 
- className="flex-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 ] px-4 py-3 text-sm uppercase font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+ className="flex-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm uppercase font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
  />
- <Button onClick={handleApplyPromo} className="bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white ] px-6 font-bold shadow-none h-[46px]">
+ <Button onClick={handleApplyPromo} className="bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl px-6 font-bold shadow-none h-[46px]">
  Áp dụng
  </Button>
  </div>
  </Card>
 
  {/* Payment Methods */}
- <Card className="bg-white dark:bg-slate-950 ] p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
+ <Card className="bg-white dark:bg-slate-950 rounded-xl p-6 border border-gray-200 dark:border-slate-800 shadow-sm">
  <p className="text-sm font-bold text-gray-900 dark:text-white mb-4">Phương thức thanh toán</p>
  <div className="space-y-3">
  <label className={`flex items-center gap-4 p-4 border-2 cursor-pointer transition-all ${paymentMethod ==='qr' ?'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md shadow-blue-500/10' :'border-gray-100 dark:border-slate-800 hover:border-gray-200 dark:hover:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900'}`}>
@@ -372,7 +351,7 @@ export function BookingReviewPage() {
  </Card>
 
  {/* Total Summary */}
- <Card className="bg-white dark:bg-slate-950 ] p-6 md:p-8 border-2 border-orange-200 dark:border-orange-900/50 shadow-2xl shadow-orange-500/10 relative overflow-hidden">
+ <Card className="bg-white dark:bg-slate-950 rounded-xl p-6 md:p-8 border-2 border-orange-200 dark:border-orange-900/50 shadow-2xl shadow-orange-500/10 relative overflow-hidden">
  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/50 dark:bg-orange-900/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
  
  <h3 className="text-2xl font-black mb-6 flex items-center gap-4 relative">

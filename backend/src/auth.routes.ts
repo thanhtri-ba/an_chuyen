@@ -6,6 +6,67 @@ import bcrypt from 'bcryptjs';
 const router = Router();
 const prisma = new PrismaClient();
 
+router.post('/register', async (req, res) => {
+  try {
+    const { fullName, phone, email, password } = req.body;
+
+    if (!fullName || !phone || !password) {
+      res.status(400).json({ message: 'Họ tên, số điện thoại và mật khẩu là bắt buộc' });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+      return;
+    }
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phone },
+          ...(email ? [{ email }] : []),
+        ],
+      },
+    });
+    if (existing) {
+      res.status(409).json({ message: 'Số điện thoại hoặc email đã được sử dụng' });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        fullName,
+        phone,
+        email: email || null,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        fullName: true,
+        role: true,
+      },
+    });
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      res.status(500).json({ message: 'JWT configuration is missing' });
+      return;
+    }
+
+    const token = jwt.sign(
+      { role: user.role, email: user.email },
+      secret,
+      { subject: user.id, expiresIn: '15m' },
+    );
+
+    res.status(201).json({ token, user });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;

@@ -59,7 +59,7 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
  </div>
  </div>
  
- <div className="absolute -bottom-6 right-6 bg-white text-foreground ] shadow-xl px-8 py-4 flex items-center gap-8 border z-20">
+ <div className="absolute -bottom-6 right-6 bg-white text-foreground rounded-2xl shadow-xl px-8 py-4 flex items-center gap-8 border z-20">
  <div>
  <div className="text-sm text-muted-foreground font-semibold mb-1">Giá vé chỉ từ</div>
  <div className="text-3xl font-extrabold text-primary">{new Intl.NumberFormat('vi-VN').format(trip.price)}đ</div>

@@ -83,7 +83,9 @@ export class BookingService {
 
       let totalAmount = 0;
       for (const seat of seats) {
-        const isVip = seat.seatNumber.startsWith('1') || seat.seatNumber.startsWith('2');
+        const rowMatch = seat.seatNumber.match(/-(\d+)[A-Z]$/);
+        const row = rowMatch ? rowMatch[1] : '';
+        const isVip = row === '1' || row === '2';
         totalAmount += isVip ? vipPrice : ecoPrice;
       }
 

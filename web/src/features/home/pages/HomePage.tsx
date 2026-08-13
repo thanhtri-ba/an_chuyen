@@ -249,7 +249,7 @@ export function HomePage() {
  <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none rounded-2xl md:rounded-full"></div>
 
  {/* Origin */}
- <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 ] px-6 py-3 cursor-text">
+ <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 rounded-xl px-6 py-3 cursor-text">
  <div className="flex flex-col justify-center h-full">
  <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{t('home.search.origin')}</span>
  <Input
@@ -274,7 +274,7 @@ export function HomePage() {
  <div className="w-full md:hidden h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent my-2"></div>
 
  {/* Destination */}
- <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 ] px-6 py-3 cursor-text">
+ <div className="relative z-10 w-full flex-1 group hover:bg-white/60 transition-all duration-300 rounded-xl px-6 py-3 cursor-text">
  <div className="flex flex-col justify-center h-full pl-0 md:pl-2">
  <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-red-500 transition-colors">{t('home.search.destination')}</span>
  <Input
@@ -290,14 +290,14 @@ export function HomePage() {
  <div className="w-full md:hidden h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2"></div>
 
  {/* Date */}
- <div className="relative w-full flex-1 group hover:bg-white/60 transition-all duration-300 ] px-6 py-3 cursor-pointer">
+ <div className="relative w-full flex-1 group hover:bg-white/60 transition-all duration-300 rounded-xl px-6 py-3 cursor-pointer">
  <div className="flex flex-col justify-center h-full">
  <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{t('home.search.date')}</span>
  <Input
  type="date"
  value={date}
  onChange={(e) => setDate(e.target.value)}
- className="h-8 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-gray-800 outline-none w-full shadow-none cursor-pointer transition-all"
+ className="h-8 p-0 bg-transparent border-none focus:ring-0 text-[18px] font-bold text-gray-800 outline-none w-full shadow-none cursor-pointer transition-all [color-scheme:light]"
  />
  </div>
  </div>
@@ -306,7 +306,7 @@ export function HomePage() {
  <div className="w-full md:hidden h-[1px] bg-gradient-to-r from-transparent via-gray-300 to-transparent my-2"></div>
 
  {/* Passengers */}
- <div className="relative w-full flex-[0.8] group hover:bg-white/60 transition-all duration-300 ] pl-6 pr-4 py-3 cursor-pointer">
+ <div className="relative w-full flex-[0.8] group hover:bg-white/60 transition-all duration-300 rounded-xl pl-6 pr-4 py-3 cursor-pointer">
  <div className="flex flex-col justify-center h-full">
  <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{t('home.search.passengers')}</span>
  <select

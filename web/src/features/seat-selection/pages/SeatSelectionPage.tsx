@@ -17,6 +17,25 @@ interface SeatData {
  price: number;
 }
 
+interface CheckpointData {
+ id: string;
+ type:'PICKUP' |'DROPOFF';
+ time: string;
+ station: { id: string; name: string; city?: { name: string } };
+}
+
+interface TripScheduleDetail {
+ id: string;
+ departureTime: string;
+ arrivalTime: string;
+ trip: {
+ busClass: string;
+ busAgent: { name: string; rating: number; reviewCount: number };
+ route: { departureCity: { name: string }; arrivalCity: { name: string } };
+ };
+ checkpoints: CheckpointData[];
+}
+
 export function SeatSelectionPage() {
  const navigate = useNavigate();
  const { tripScheduleId } = useParams<{ tripScheduleId: string }>();
@@ -27,6 +46,7 @@ export function SeatSelectionPage() {
  const [activeFloor, setActiveFloor] = useState(1);
  const [seats, setSeats] = useState<SeatData[]>([]);
  const [isLoadingSeats, setIsLoadingSeats] = useState(true);
+ const [tripDetail, setTripDetail] = useState<TripScheduleDetail | null>(null);
 
  useEffect(() => {
  if (!tripScheduleId) return;
@@ -38,12 +58,25 @@ export function SeatSelectionPage() {
  setSeats([]);
  })
  .finally(() => setIsLoadingSeats(false));
+
+ api.get(`/trip-schedules/${tripScheduleId}`)
+ .then(res => setTripDetail(res.data.data))
+ .catch(() => setTripDetail(null));
  }, [tripScheduleId]);
 
+ const pickupOptions = tripDetail?.checkpoints.filter(c => c.type ==='PICKUP') || [];
+ const dropoffOptions = tripDetail?.checkpoints.filter(c => c.type ==='DROPOFF') || [];
+
  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
- 
- const [pickupPoint, setPickupPoint] = useState('bx-md');
- const [dropoffPoint, setDropoffPoint] = useState('bx-dl');
+
+ const [pickupPoint, setPickupPoint] = useState('');
+ const [dropoffPoint, setDropoffPoint] = useState('');
+
+ useEffect(() => {
+ if (pickupOptions.length > 0 && !pickupPoint) setPickupPoint(pickupOptions[0].id);
+ if (dropoffOptions.length > 0 && !dropoffPoint) setDropoffPoint(dropoffOptions[0].id);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [tripDetail]);
  
  const [bookerName, setBookerName] = useState('');
  const [bookerPhone, setBookerPhone] = useState('');
@@ -127,6 +160,9 @@ export function SeatSelectionPage() {
  }
 
  // Save to localStorage
+ const pickupInfo = pickupOptions.find(c => c.id === pickupPoint);
+ const dropoffInfo = dropoffOptions.find(c => c.id === dropoffPoint);
+
  const bookingData = {
  tripScheduleId,
  seats: selectedSeats,
@@ -134,6 +170,10 @@ export function SeatSelectionPage() {
  totalAmount: calculateTotal(),
  pickupPoint,
  dropoffPoint,
+ pickupLabel: pickupInfo ? `${pickupInfo.station.name} (${new Date(pickupInfo.time).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })})` :'',
+ dropoffLabel: dropoffInfo ? `${dropoffInfo.station.name} (${new Date(dropoffInfo.time).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })})` :'',
+ routeLabel: tripDetail ? `${tripDetail.trip.route.departureCity.name} → ${tripDetail.trip.route.arrivalCity.name}` :'',
+ busAgentName: tripDetail?.trip.busAgent.name ||'',
  addInsurance,
  insurancePrice,
  needVAT,
@@ -189,22 +229,44 @@ export function SeatSelectionPage() {
  };
 
  const renderBlueprintSeats = (seatsToRender: typeof seats) => {
- const rowNumbers = Array.from(new Set(seatsToRender.map(s => parseInt(s.id.split('-')[1])))).sort((a, b) => a - b);
- 
+ // Seat ids are normally "T{floor}-{row}{A|B|C}" (e.g. "T1-1A"). Some legacy
+ // seeded trips use a flat "A1", "A2"... format instead — group those by
+ // position (chunks of 3) rather than trying to parse a row/col out of the id.
+ const seatIdPattern = /^T\d+-(\d+)([A-Z])$/;
+ const allMatchPattern = seatsToRender.every(s => seatIdPattern.test(s.id));
+
+ const rows: Array<{ key: string; seatA?: typeof seats[number]; seatB?: typeof seats[number]; seatC?: typeof seats[number] }> = [];
+
+ if (allMatchPattern) {
+ const rowNumbers = Array.from(new Set(seatsToRender.map(s => parseInt(s.id.match(seatIdPattern)![1])))).sort((a, b) => a - b);
+ for (const rowNum of rowNumbers) {
+ rows.push({
+ key: `row-${rowNum}`,
+ seatA: seatsToRender.find(s => s.id === `T${activeFloor}-${rowNum}A`),
+ seatB: seatsToRender.find(s => s.id === `T${activeFloor}-${rowNum}B`),
+ seatC: seatsToRender.find(s => s.id === `T${activeFloor}-${rowNum}C`),
+ });
+ }
+ } else {
+ for (let i = 0; i < seatsToRender.length; i += 3) {
+ rows.push({
+ key: `row-idx-${i}`,
+ seatA: seatsToRender[i],
+ seatB: seatsToRender[i + 1],
+ seatC: seatsToRender[i + 2],
+ });
+ }
+ }
+
  return (
  <div className="flex flex-col gap-5 w-full px-4">
- {rowNumbers.map(rowNum => {
- const seatA = seatsToRender.find(s => s.id === `T${activeFloor}-${rowNum}A`);
- const seatB = seatsToRender.find(s => s.id === `T${activeFloor}-${rowNum}B`);
- const seatC = seatsToRender.find(s => s.id === `T${activeFloor}-${rowNum}C`);
- 
- return (
- <div key={`row-${rowNum}`} className="flex justify-between w-full items-center px-4">
+ {rows.map(({ key, seatA, seatB, seatC }) => (
+ <div key={key} className="flex justify-between w-full items-center px-4">
  {/* Cột Trái (A) */}
  <div className="flex justify-center">
  {seatA && <button onClick={() => toggleSeat(seatA.id, seatA.status)} disabled={seatA.status ==='occupied'} className="outline-none"><SeatIcon status={seatA.status} isSelected={selectedSeats.includes(seatA.id)} id={seatA.id} /></button>}
  </div>
- 
+
  {/* Lối đi 1 (Aisle 1) */}
  <div className="w-8 flex justify-center">
  <div className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
@@ -225,8 +287,7 @@ export function SeatSelectionPage() {
  {seatC && <button onClick={() => toggleSeat(seatC.id, seatC.status)} disabled={seatC.status ==='occupied'} className="outline-none"><SeatIcon status={seatC.status} isSelected={selectedSeats.includes(seatC.id)} id={seatC.id} /></button>}
  </div>
  </div>
- )
- })}
+ ))}
  </div>
  );
  };
@@ -261,10 +322,13 @@ export function SeatSelectionPage() {
  </Link>
  <div>
  <h1 className="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-gray-900 dark:text-white">
- Sài Gòn <ArrowLeft className="w-4 h-4 rotate-180" /> Đà Lạt
+ {tripDetail ? (
+ <>{tripDetail.trip.route.departureCity.name} <ArrowLeft className="w-4 h-4 rotate-180" /> {tripDetail.trip.route.arrivalCity.name}</>
+ ) :'Đang tải chuyến xe...'}
  </h1>
  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mt-0.5">
- An Chuyến Premium • 08:30 - 15:30
+ {tripDetail?.trip.busAgent.name}
+ {tripDetail && ` • ${new Date(tripDetail.departureTime).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })} - ${new Date(tripDetail.arrivalTime).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })}`}
  </p>
  </div>
  </div>
@@ -360,46 +424,22 @@ export function SeatSelectionPage() {
  {/* Trip & Driver Info */}
  <Card className="bg-white dark:bg-slate-950 p-6 border-gray-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
  <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-3 transition-colors duration-300">
- Thông tin xe & tài xế
+ Thông tin xe
  </h2>
- <div className="space-y-4">
  <div className="flex items-center gap-4 bg-gray-50 dark:bg-slate-900/50 p-4 border border-gray-100 dark:border-slate-800 rounded-2xl">
  <div className="w-16 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-200 dark:border-slate-700">
  <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=200&auto=format&fit=crop" alt="Bus" className="w-full h-full object-cover" />
  </div>
  <div>
- <div className="font-bold text-gray-900 dark:text-white">Limousine 22 Giường VIP</div>
- <div className="text-sm text-gray-500 dark:text-gray-400">Biển số: 51B - 123.45</div>
- </div>
- </div>
-
- <div className="grid grid-cols-2 gap-4">
- <div className="flex items-start gap-3 bg-white dark:bg-slate-900 p-3 border border-gray-100 dark:border-slate-800 shadow-sm rounded-xl">
- <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden flex-shrink-0 border-2 border-white dark:border-slate-800 shadow-sm">
- <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150&auto=format&fit=crop" alt="Tài xế" className="w-full h-full object-cover" />
- </div>
- <div>
- <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Tài xế</div>
- <div className="font-bold text-gray-900 dark:text-white text-sm">Nguyễn Văn A</div>
+ <div className="font-bold text-gray-900 dark:text-white">{tripDetail?.trip.busAgent.name || 'Đang tải...'}</div>
+ <div className="text-sm text-gray-500 dark:text-gray-400">{tripDetail?.trip.busClass || ''}</div>
+ {tripDetail && (
  <div className="flex items-center gap-1 text-[11px] text-amber-500 mt-0.5">
  <Star className="w-3 h-3 fill-amber-500" />
- <span className="font-bold">4.9</span>
+ <span className="font-bold">{tripDetail.trip.busAgent.rating}</span>
+ <span className="text-gray-400">({tripDetail.trip.busAgent.reviewCount} đánh giá)</span>
  </div>
- </div>
- </div>
-
- <div className="flex items-start gap-3 bg-white dark:bg-slate-900 p-3 border border-gray-100 dark:border-slate-800 shadow-sm rounded-xl">
- <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full overflow-hidden flex-shrink-0 border-2 border-white dark:border-slate-800 shadow-sm">
- <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop" alt="Phụ xe" className="w-full h-full object-cover" />
- </div>
- <div>
- <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Phụ xe</div>
- <div className="font-bold text-gray-900 dark:text-white text-sm">Trần Văn B</div>
- <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
- Đã xác thực
- </div>
- </div>
- </div>
+ )}
  </div>
  </div>
  </Card>
@@ -411,19 +451,21 @@ export function SeatSelectionPage() {
  </h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="space-y-3">
- <label className="font-bold text-gray-800 dark:text-gray-200 text-sm">Điểm đón (Sài Gòn)</label>
+ <label className="font-bold text-gray-800 dark:text-gray-200 text-sm">Điểm đón{tripDetail && ` (${tripDetail.trip.route.departureCity.name})`}</label>
  <select value={pickupPoint} onChange={(e) => setPickupPoint(e.target.value)} className="w-full h-12 px-4 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
- <option value="bx-md">Bến xe Miền Đông (08:30)</option>
- <option value="vp-q1">VP Quận 1 - Phạm Ngũ Lão (09:00)</option>
- <option value="nga4-hm">Ngã 4 Hàng Xanh (09:15)</option>
+ {pickupOptions.length === 0 && <option value="">Không có điểm đón</option>}
+ {pickupOptions.map(cp => (
+ <option key={cp.id} value={cp.id}>{cp.station.name} ({new Date(cp.time).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })})</option>
+ ))}
  </select>
  </div>
  <div className="space-y-3">
- <label className="font-bold text-gray-800 dark:text-gray-200 text-sm">Điểm trả (Đà Lạt)</label>
+ <label className="font-bold text-gray-800 dark:text-gray-200 text-sm">Điểm trả{tripDetail && ` (${tripDetail.trip.route.arrivalCity.name})`}</label>
  <select value={dropoffPoint} onChange={(e) => setDropoffPoint(e.target.value)} className="w-full h-12 px-4 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
- <option value="bx-dl">Bến xe liên tỉnh Đà Lạt (15:30)</option>
- <option value="vp-dl">VP Đà Lạt - Nguyễn Thái Học (15:45)</option>
- <option value="ho-xuan-huong">Hồ Xuân Hương (16:00)</option>
+ {dropoffOptions.length === 0 && <option value="">Không có điểm trả</option>}
+ {dropoffOptions.map(cp => (
+ <option key={cp.id} value={cp.id}>{cp.station.name} ({new Date(cp.time).toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })})</option>
+ ))}
  </select>
  </div>
  </div>

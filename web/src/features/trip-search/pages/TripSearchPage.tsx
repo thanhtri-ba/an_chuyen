@@ -306,7 +306,7 @@ export function TripSearchPage() {
  
  {/* Sidebar Filters */}
  <aside className="hidden md:block w-72 shrink-0 space-y-6">
- <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 ] p-6 shadow-sm sticky top-48">
+ <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-xl p-6 shadow-sm sticky top-48">
  <div className="flex items-center gap-2 font-extrabold text-lg mb-6 pb-4 border-b border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white">
  <Filter className="w-5 h-5 text-primary" /> Bộ lọc nâng cao
  </div>
@@ -443,7 +443,7 @@ export function TripSearchPage() {
  {mobileFilterOpen && (
  <div className="fixed inset-0 z-[100] flex flex-col md:hidden">
  <div className="absolute inset-0 bg-black/50" onClick={() => setMobileFilterOpen(false)} />
- <div className="relative mt-auto bg-white dark:bg-slate-900 w-full h-[85vh] ] flex flex-col shadow-2xl">
+ <div className="relative mt-auto bg-white dark:bg-slate-900 w-full h-[85vh] rounded-t-3xl flex flex-col shadow-2xl">
  <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-800">
  <h2 className="font-extrabold text-lg text-gray-900 dark:text-white flex items-center gap-2">
  <Filter className="w-5 h-5 text-primary" /> Lọc & Sắp xếp
