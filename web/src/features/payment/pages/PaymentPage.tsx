@@ -62,7 +62,9 @@ export function PaymentPage() {
  tripScheduleId: pendingBooking.tripScheduleId,
  seatNumbers: pendingBooking.seats,
  passengers: [{ name: pendingBooking.passengerInfo.name }],
- paymentMethod: selectedMethod
+ paymentMethod: selectedMethod,
+ pickupPointId: pendingBooking.pickupPoint,
+ dropoffPointId: pendingBooking.dropoffPoint
  });
 
  const booking = res.data?.data;

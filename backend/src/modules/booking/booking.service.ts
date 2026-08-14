@@ -10,11 +10,13 @@ interface CreateBookingParams {
   idempotencyKey?: string | null;
   paymentMethod?: string | null;
   totalAmount?: number | null;
+  pickupPointId?: string | null;
+  dropoffPointId?: string | null;
 }
 
 export class BookingService {
   static async createBooking(data: CreateBookingParams) {
-    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod } = data;
+    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId } = data;
 
     // Lớp 3: Idempotency (Chống Spam). 
     // Trong thực tế, có thể lưu idempotencyKey vào một bảng riêng hoặc cột trong Booking để check.
@@ -99,6 +101,8 @@ export class BookingService {
           tripScheduleId,
           totalAmount, // Giá TỰ TÍNH của Backend, tuyệt đối an toàn
           status: 'PENDING_PAYMENT',
+          pickupPointId: pickupPointId || null,
+          dropoffPointId: dropoffPointId || null,
           passengers: {
             create: passengers.map(p => ({
               name: p.name,

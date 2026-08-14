@@ -13,7 +13,7 @@ import api from '../../../lib/api';
 interface SeatData {
   id: string;
   floor: number;
-  status: 'available' | 'occupied';
+  status: 'available' | 'booked' | 'blocked';
   price: number;
 }
 
@@ -109,7 +109,7 @@ export function SeatSelectionPage() {
   const insurancePrice = 20000;
 
   const toggleSeat = (id: string, status: string) => {
-    if (status === 'occupied') return;
+    if (status === 'booked' || status === 'blocked') return;
     if (selectedSeats.includes(id)) {
       setSelectedSeats(selectedSeats.filter(s => s !== id));
     } else {
@@ -197,7 +197,7 @@ export function SeatSelectionPage() {
     let baseStyle = "bg-white border border-slate-200 text-slate-700 shadow-sm hover:border-slate-350 hover:shadow hover:-translate-y-0.5 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:hover:border-slate-700";
     let headrestStyle = "bg-slate-200 dark:bg-slate-800";
     
-    if (status === 'occupied') {
+    if (status === 'booked' || status === 'blocked') {
       baseStyle = "bg-slate-100 border border-slate-200/50 text-slate-400 cursor-not-allowed opacity-60 dark:bg-slate-800/40 dark:border-slate-800/50 dark:text-slate-650";
       headrestStyle = "bg-slate-200/60 dark:bg-slate-800/30";
     } else if (isSelected) {
@@ -216,7 +216,7 @@ export function SeatSelectionPage() {
         {/* Blanket/Footrest */}
         <div className={`absolute bottom-1.5 left-1.5 right-1.5 top-[52px] rounded-xl ${isSelected ? 'bg-white/20' : 'bg-slate-50 dark:bg-slate-900/65'} transition-colors duration-300 shadow-inner border border-white/50 dark:border-white/5`}></div>
 
-        {status === 'occupied' && (
+        {(status === 'booked' || status === 'blocked') && (
           <div className="absolute inset-0 flex items-center justify-center z-20">
             <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-slate-700/50 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <div className="w-4 h-0.5 bg-slate-400 dark:bg-slate-500 rotate-45 absolute"></div>
@@ -261,7 +261,7 @@ export function SeatSelectionPage() {
           <div key={key} className="flex justify-between w-full items-center px-4">
             {/* Cột Trái (A) */}
             <div className="flex justify-center">
-              {seatA && <button onClick={() => toggleSeat(seatA.id, seatA.status)} disabled={seatA.status === 'occupied'} className="outline-none"><SeatIcon status={seatA.status} isSelected={selectedSeats.includes(seatA.id)} id={seatA.id} /></button>}
+              {seatA && <button onClick={() => toggleSeat(seatA.id, seatA.status)} disabled={seatA.status === 'booked' || seatA.status === 'blocked'} className="outline-none"><SeatIcon status={seatA.status} isSelected={selectedSeats.includes(seatA.id)} id={seatA.id} /></button>}
             </div>
 
             {/* Lối đi 1 (Aisle 1) */}
@@ -271,7 +271,7 @@ export function SeatSelectionPage() {
 
             {/* Cột Giữa (B) */}
             <div className="flex justify-center">
-              {seatB && <button onClick={() => toggleSeat(seatB.id, seatB.status)} disabled={seatB.status === 'occupied'} className="outline-none"><SeatIcon status={seatB.status} isSelected={selectedSeats.includes(seatB.id)} id={seatB.id} /></button>}
+              {seatB && <button onClick={() => toggleSeat(seatB.id, seatB.status)} disabled={seatB.status === 'booked' || seatB.status === 'blocked'} className="outline-none"><SeatIcon status={seatB.status} isSelected={selectedSeats.includes(seatB.id)} id={seatB.id} /></button>}
             </div>
 
             {/* Lối đi 2 (Aisle 2) */}
@@ -281,7 +281,7 @@ export function SeatSelectionPage() {
 
             {/* Cột Phải (C) */}
             <div className="flex justify-center">
-              {seatC && <button onClick={() => toggleSeat(seatC.id, seatC.status)} disabled={seatC.status === 'occupied'} className="outline-none"><SeatIcon status={seatC.status} isSelected={selectedSeats.includes(seatC.id)} id={seatC.id} /></button>}
+              {seatC && <button onClick={() => toggleSeat(seatC.id, seatC.status)} disabled={seatC.status === 'booked' || seatC.status === 'blocked'} className="outline-none"><SeatIcon status={seatC.status} isSelected={selectedSeats.includes(seatC.id)} id={seatC.id} /></button>}
             </div>
           </div>
         ))}

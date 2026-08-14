@@ -8,6 +8,8 @@ export interface BookingData {
   tripScheduleId?: string;
   seats: string[];
   seatsTotal: number;
+  pickupPoint?: string;
+  dropoffPoint?: string;
   pickupLabel: string;
   dropoffLabel: string;
   routeLabel: string;

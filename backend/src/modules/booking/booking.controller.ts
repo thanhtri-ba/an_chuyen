@@ -14,6 +14,8 @@ const createBookingSchema = z.object({
     })
   ).min(1),
   idempotencyKey: z.string().uuid().optional(),
+  pickupPointId: z.string().optional(),
+  dropoffPointId: z.string().optional(),
   // Backend BỎ QUA totalAmount nếu client gửi lên
   totalAmount: z.number().optional(),
   paymentMethod: z.string().nullable().optional()

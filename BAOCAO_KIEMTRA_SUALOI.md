@@ -90,3 +90,34 @@
 
 - `npx tsc --noEmit` sạch lỗi cho cả `backend` và `web` sau tất cả các thay đổi.
 - Đã test thủ công toàn bộ luồng: tìm chuyến (ngày có dữ liệu thật) → chọn ghế A1 → điền thông tin hành khách → xác nhận đặt vé (giá đúng 90.000đ, khớp giá chuyến thật) → thanh toán (tổng tiền khớp, đúng luồng) → gọi API tạo booking trả về 401 đúng như kỳ vọng vì chưa đăng nhập (xác nhận cơ chế bảo mật hoạt động đúng sau khi vá lỗ hổng auth bypass).
+
+---
+
+## 7. Cập nhật bổ sung (14/08/2026) - Hoàn thiện Auth & Sơ đồ ghế
+
+### 7.1. Cấu hình JWT & Đăng nhập Admin
+- **Vấn đề:** Lỗi thiếu cấu hình JWT trên production và Frontend/Backend chưa đồng bộ tài khoản admin.
+- **Đã sửa:** 
+  - Khai báo thành công biến môi trường `JWT_SECRET` trong `.env` và Render.
+  - Kiểm tra & cấu hình endpoint login tạo token hợp lệ (`token generation`).
+  - Cấu hình Middleware `verifyAccessToken` chặn các request chưa được cấp quyền.
+  - Tạo sẵn tài khoản `admin@anchuyen.com` / `123456` với phân quyền admin và test thành công (API trả về JWT token).
+
+### 7.2. Lỗi API và UI sơ đồ chọn ghế (Seat Map)
+- **Vấn đề:** 
+  - Backend trả về trạng thái ghế (`available`, `occupied`) không khớp yêu cầu của UI (`available`, `booked`, `blocked`).
+  - Dữ liệu ghế trong database bị sai định dạng (`A1`, `A2` thay vì `T1-1A`) khiến hàm phân loại tầng bị lỗi và gom toàn bộ ghế về Tầng 1.
+- **Đã sửa:** 
+  - Chạy script chuẩn hoá tên ghế trong Database về đúng chuẩn `T<tầng>-<hàng><cột>` (VD: `T1-1A`, `T2-1A`).
+  - Sửa query API `/trip-schedules/{tripId}/seats` để trả về đúng trạng thái `available`, `booked`, `blocked`.
+  - Cập nhật UI (`SeatSelectionPage.tsx`) để nhận diện đúng các trạng thái `booked` / `blocked`, thay đổi màu ghế và ngăn chặn người dùng bấm chọn (hiển thị UI realtime).
+  - Tầng Dưới & Tầng Trên giờ đây hiển thị chính xác danh sách và số lượng ghế trống nhờ định dạng ghế đã được chuẩn hoá.
+
+### 7.3. Động bộ Điểm Đón & Điểm Trả Khách
+- **Vấn đề:** 
+  - Các trang `SeatSelectionPage`, `BookingReviewPage`, `PaymentPage` cần hiển thị đúng thông tin Điểm đón và Điểm trả từ cơ sở dữ liệu thay vì dữ liệu cứng.
+  - Phải lấy dữ liệu này từ người dùng, lưu lại và truyền cho Backend khi thanh toán/tạo Booking.
+- **Đã sửa:** 
+  - Trang chọn ghế (`SeatSelectionPage`) lấy `tripId`, gọi API `/api/trip-schedules/{tripId}` để nạp danh sách `checkpoints`, hiển thị linh động dropdown Điểm đón & Điểm trả và lưu lựa chọn vào `sessionStorage`.
+  - Trang thanh toán (`PaymentPage`) đọc dữ liệu điểm đón/trả từ `sessionStorage` và đóng gói gửi kèm payload `pickupPointId`, `dropoffPointId` vào request POST `/bookings/create`.
+  - Backend cập nhật thêm 2 field `pickupPointId` và `dropoffPointId` vào cấu trúc Zod Validation và DB Prisma, sau đó lưu trực tiếp điểm đón và điểm trả vào bảng `bookings` an toàn và đầy đủ dữ liệu.

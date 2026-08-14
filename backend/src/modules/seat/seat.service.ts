@@ -82,10 +82,14 @@ export class SeatService {
       const floor = floorMatch ? parseInt(floorMatch[1], 10) : 1;
       const vip = isVipSeat(seat.seatNumber);
 
+      let mappedStatus = 'available';
+      if (seat.status === SeatStatus.BOOKED) mappedStatus = 'booked';
+      if (seat.status === SeatStatus.LOCKED) mappedStatus = 'blocked';
+
       return {
         id: seat.seatNumber,
         floor,
-        status: seat.status === SeatStatus.AVAILABLE ? 'available' : 'occupied',
+        status: mappedStatus,
         price: vip ? vipPrice : ecoPrice
       };
     });
