@@ -561,6 +561,20 @@ model Banner {
   @@map("banners")
 }
 
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("events")
+}
+
 model AppConfig {
   id          String   @id @default(uuid())
   key         String   @unique

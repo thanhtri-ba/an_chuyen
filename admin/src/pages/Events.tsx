@@ -30,7 +30,7 @@ const Events = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('Event')
+        .from('events')
         .select('*')
         .order('createdAt', { ascending: false });
         
@@ -59,13 +59,13 @@ const Events = () => {
       let error;
       if (editingId) {
         const result = await supabase
-          .from('Event')
+          .from('events')
           .update({ ...eventData, updatedAt: new Date().toISOString() })
           .eq('id', editingId);
         error = result.error;
       } else {
         const result = await supabase
-          .from('Event')
+          .from('events')
           .insert({
             ...eventData,
             id: crypto.randomUUID(),
@@ -116,7 +116,7 @@ const Events = () => {
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('Event')
+        .from('events')
         .update({ isActive: !currentStatus })
         .eq('id', id);
       if (error) throw error;
@@ -131,7 +131,7 @@ const Events = () => {
     if (!window.confirm('Are you sure you want to delete this event?')) return;
     try {
       const { error } = await supabase
-        .from('Event')
+        .from('events')
         .delete()
         .eq('id', id);
       if (error) throw error;

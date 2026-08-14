@@ -20,7 +20,6 @@ const AdminPaymentPage = () => {
         .select(`
           *,
           booking:bookings(
-            bookingCode,
             totalAmount,
             userId,
             tripScheduleId
@@ -129,7 +128,6 @@ const AdminPaymentPage = () => {
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Booking ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Booking Code</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Số Tiền</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ngày Đặt</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trạng Thái</th>
@@ -140,7 +138,6 @@ const AdminPaymentPage = () => {
                   {payments.map((payment) => (
                     <tr key={payment.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-gray-100">{payment.bookingId.slice(0, 8)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-gray-100">{payment.booking?.bookingCode || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">{payment.amount.toLocaleString('vi-VN')} VND</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{new Date(payment.createdAt).toLocaleDateString('vi-VN')}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
