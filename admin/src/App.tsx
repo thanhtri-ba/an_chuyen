@@ -16,6 +16,7 @@ import Banners from './pages/Banners';
 import Reviews from './pages/Reviews';
 import Events from './pages/Events';
 import Login from './pages/Login';
+import AdminPaymentPage from './pages/AdminPaymentPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (localStorage.getItem('admin_auth') !== 'true') {
@@ -39,6 +40,7 @@ const App = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="bookings" element={<Bookings />} />
+          <Route path="payments" element={<AdminPaymentPage />} />
           <Route path="trips" element={<Trips />} />
           <Route path="buses" element={<Buses />} />
           <Route path="cities" element={<Cities />} />

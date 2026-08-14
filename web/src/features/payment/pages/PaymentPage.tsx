@@ -262,17 +262,22 @@ export function PaymentPage() {
  </label>
 
  {/* Thanh toán tại quầy */}
- <label className={`flex flex-col p-4 border-2 cursor-pointer transition-all ${selectedMethod ==='counter' ?'border-primary bg-primary/5' :'border-border hover:border-primary/50'}`}>
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
- <Ticket className="w-5 h-5" />
+ <label className={`flex flex-col p-4 border-2 cursor-pointer transition-all ${selectedMethod ==='cod' ?'border-primary bg-primary/5' :'border-border hover:border-primary/50'}`}>
+ <div className="flex items-center gap-3">
+ <input
+ type="radio"
+ name="payment"
+ value="cod"
+ checked={selectedMethod === 'cod'}
+ onChange={() => setSelectedMethod('cod')}
+ className="w-4 h-4 text-primary focus:ring-primary"
+ />
+ <div className="flex items-center gap-2">
+ <CreditCard className="w-5 h-5" />
+ <span className="font-bold">Thanh toán tiền mặt tại quầy (COD)</span>
  </div>
- <span className="font-bold">Thanh toán tiền mặt tại quầy</span>
  </div>
- <input type="radio" name="payment" checked={selectedMethod ==='counter'} onChange={() => setSelectedMethod('counter')} className="w-5 h-5 text-primary" />
- </div>
- {selectedMethod ==='counter' && (
+ {selectedMethod ==='cod' && (
  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height:'auto' }} className="mt-4 pt-4 border-t">
  <div className="flex gap-3 bg-orange-50 p-4 border border-orange-100">
  <Info className="w-5 h-5 text-orange-600 shrink-0" />

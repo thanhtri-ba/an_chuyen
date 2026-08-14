@@ -117,14 +117,17 @@ enum TransactionType {
 model Payment {
   id            String        @id @default(uuid())
   bookingId     String        @unique
-  method        String // WALLET, VNPAY, MOMO
+  method        String // WALLET, VNPAY, MOMO, COD
   gateway       String? // Cổng thanh toán (VNPay, Stripe)
   transactionId String?       @unique // ID giao dịch từ Gateway
   status        PaymentStatus @default(PENDING)
   amount        Float
+
   paymentUrl    String? // Link thanh toán (nếu pending)
   errorCode     String? // Lỗi từ gateway
   webhookLog    String? // Log response từ webhook
+  confirmedBy   String? // Email admin xác nhận (dành cho COD)
+  confirmedAt   DateTime? // Thời điểm admin xác nhận (dành cho COD)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Map, Bus, Tag, Building, Route, LogOut, Search, Bell, Settings, Gift, ImageIcon, Star, MessageSquare, BarChart3, Palette, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, Map, Bus, Tag, Building, Route, LogOut, Search, Bell, Settings, Gift, ImageIcon, Star, MessageSquare, BarChart3, Palette, Calendar, CreditCard } from 'lucide-react';
 import { useLanguage } from '../lib/i18n';
 
 const AdminLayout = () => {
@@ -63,6 +63,7 @@ const AdminLayout = () => {
           {isCompact && <div style={{ height: '1rem' }} />}
           <NavItem to="/users" icon={<Users size={18} />} label={t('sidebar', 'users')} isCompact={isCompact} />
           <NavItem to="/bookings" icon={<Tag size={18} />} label={t('sidebar', 'bookings')} isCompact={isCompact} />
+          <NavItem to="/payments" icon={<CreditCard size={18} />} label="Thanh Toán" isCompact={isCompact} />
           <NavItem to="/trips" icon={<Map size={18} />} label={t('sidebar', 'trips')} isCompact={isCompact} />
           <NavItem to="/buses" icon={<Bus size={18} />} label={t('sidebar', 'fleet')} isCompact={isCompact} />
           
