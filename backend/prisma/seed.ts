@@ -20,6 +20,7 @@ async function main() {
   await prisma.bookingTimeline.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.booking.deleteMany();
+  await prisma.review.deleteMany();
   await prisma.user.deleteMany();
   await prisma.seat.deleteMany();
   await prisma.tripPrice.deleteMany();

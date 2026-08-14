@@ -122,19 +122,19 @@ export function Header() {
  initial={{ opacity: 0, y: 10, scale: 0.95 }}
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: 10, scale: 0.95 }}
- className="absolute right-0 mt-2 w-32 bg-white shadow-xl border border-gray-100 overflow-hidden text-sm"
+ className="absolute right-0 mt-3 w-40 bg-white shadow-2xl rounded-xl border border-gray-100 overflow-hidden text-sm z-50 p-1.5"
  >
  <button
  onClick={() => { i18n.changeLanguage('vi'); setLangOpen(false); }}
- className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors ${i18n.language ==='vi' ?'font-bold text-primary bg-blue-50/30' :'text-gray-700'}`}
+ className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors ${i18n.language ==='vi' ?'font-bold text-primary bg-primary/5' :'text-gray-700 font-medium'}`}
  >
- Tiếng Việt (VI)
+ <span className="text-lg">🇻🇳</span> Tiếng Việt (VI)
  </button>
  <button
  onClick={() => { i18n.changeLanguage('en'); setLangOpen(false); }}
- className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors ${i18n.language ==='en' ?'font-bold text-primary bg-blue-50/30' :'text-gray-700'}`}
+ className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors ${i18n.language ==='en' ?'font-bold text-primary bg-primary/5' :'text-gray-700 font-medium'}`}
  >
- English (EN)
+ <span className="text-lg">🇬🇧</span> English (EN)
  </button>
  </motion.div>
  )}
