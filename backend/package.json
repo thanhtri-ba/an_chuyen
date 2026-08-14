@@ -11,6 +11,7 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "seed": "tsx prisma/seed.ts",
+    "trips:refresh-dates": "tsx prisma/refresh-trip-dates.ts",
     "test": "jest",
     "load:test": "tsx src/load-test/load-test.ts"
   },
