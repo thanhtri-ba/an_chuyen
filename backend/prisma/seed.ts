@@ -66,11 +66,11 @@ async function main() {
     { name: 'Sapa', image:'https://tse2.mm.bing.net/th/id/OIP.fkagTKFfO5iW-5KXUeCoBAHaEo?r=0&rs=1&pid=ImgDetMain&o=7&rm=3', sub: 'Thành phố trong sương', isPopular: false },
     { name: 'Hội An', image: 'https://www.agoda.com/wp-content/uploads/2024/05/hoi-an.jpg', sub: 'Phố cổ trầm mặc', isPopular: false },
     { name: 'Phú Quốc', image: 'https://tse2.mm.bing.net/th/id/OIP.ag6C4a8BHZ0b1lywLMPahwHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3', sub: 'Đảo Ngọc', isPopular: false },
-    { name: 'Hải Phòng', image: 'https://ik.imagekit.io/tvlk/blog/2022/10/kinh-nghiem-du-lich-hai-phong-1.jpg', sub: 'Thành phố Hoa phượng đỏ', isPopular: false },
-    { name: 'Hạ Long', image: 'https://tse1.mm.bing.net/th/id/OIP.o4fD-o_L6VnFz32fLz2z2gHaE8?rs=1&pid=ImgDetMain', sub: 'Kỳ quan thế giới', isPopular: false },
-    { name: 'Huế', image: 'https://tse4.mm.bing.net/th/id/OIP.aA6s7d2tG3J8o4L5Y5o7kAHaEK?rs=1&pid=ImgDetMain', sub: 'Cố đô cổ kính', isPopular: false },
-    { name: 'Ninh Bình', image: 'https://tse4.mm.bing.net/th/id/OIP.c62v8k3H2h4A9x7U9f4zRgHaE8?rs=1&pid=ImgDetMain', sub: 'Vịnh Hạ Long trên cạn', isPopular: false },
-    { name: 'Buôn Ma Thuột', image: 'https://tse4.mm.bing.net/th/id/OIP.wB9o5g3y0h8L6t5u4u1pYAHaE8?rs=1&pid=ImgDetMain', sub: 'Thủ phủ cà phê', isPopular: false },
+    { name: 'Hải Phòng', image: 'https://picsum.photos/seed/haiphong-vn/800/600', sub: 'Thành phố Hoa phượng đỏ', isPopular: false },
+    { name: 'Hạ Long', image: 'https://picsum.photos/seed/halong-vn/800/600', sub: 'Kỳ quan thế giới', isPopular: false },
+    { name: 'Huế', image: 'https://picsum.photos/seed/hue-vn/800/600', sub: 'Cố đô cổ kính', isPopular: false },
+    { name: 'Ninh Bình', image: 'https://picsum.photos/seed/ninhbinh-vn/800/600', sub: 'Vịnh Hạ Long trên cạn', isPopular: false },
+    { name: 'Buôn Ma Thuột', image: 'https://picsum.photos/seed/buonmathuot-vn/800/600', sub: 'Thủ phủ cà phê', isPopular: false },
   ];
   const cities = [];
   for (const c of cityConfigs) {

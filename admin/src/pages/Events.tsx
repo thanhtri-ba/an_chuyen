@@ -5,6 +5,7 @@ import { useLanguage } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { ActionButtons } from '../components/ActionButtons';
+import { IMAGE_PLACEHOLDER } from '../lib/placeholder';
 
 const Events = () => {
   const { t } = useLanguage();
@@ -149,7 +150,7 @@ const Events = () => {
   const columns = [
     { key: 'imageUrl', label: t('events', 'image'), render: (val: string) => (
       <img 
-        src={val || 'https://via.placeholder.com/150x80'} 
+        src={val || IMAGE_PLACEHOLDER}
         alt="Event" 
         style={{ width: '120px', height: '60px', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} 
       />

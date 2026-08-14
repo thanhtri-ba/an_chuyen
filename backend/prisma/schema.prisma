@@ -19,7 +19,7 @@ model User {
   password        String?
   fullName        String
   role            String    @default("user")
-  avatar          String?   @default("https://avatar.iran.liara.run/public")
+  avatar          String?   @default("https://ui-avatars.com/api/?background=0D8ABC&color=fff")
   gender          Gender?
   isPhoneVerified Boolean   @default(false)
   isEmailVerified Boolean   @default(false)

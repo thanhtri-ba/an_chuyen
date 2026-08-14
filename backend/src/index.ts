@@ -38,8 +38,8 @@ import adminRoutes from './admin.routes';
 import authRoutes from './auth.routes';
 import { loyaltyRoutes } from './modules/loyalty/loyalty.routes';
 import { rentalRoutes } from './modules/rental/rental.routes';
-// import { tourRoutes } from './modules/tour/tour.routes';
-// import { eventRoutes } from './modules/event/event.routes';
+import { tourRoutes } from './modules/tour/tour.routes';
+import { eventRoutes } from './modules/event/event.routes';
 import { deliveryRoutes } from './modules/delivery/delivery.routes';
 import seatRoutes from './modules/seat/seat.routes';
 
@@ -51,8 +51,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/rentals', rentalRoutes);
-// app.use('/api/tours', tourRoutes);
-// app.use('/api/events', eventRoutes);
+app.use('/api/tours', tourRoutes);
+app.use('/api/events', eventRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/trip-schedules', seatRoutes);
 

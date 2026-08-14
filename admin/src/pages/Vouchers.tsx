@@ -5,6 +5,7 @@ import { useLanguage } from '../lib/i18n';
 import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { ActionButtons } from '../components/ActionButtons';
+import { IMAGE_PLACEHOLDER } from '../lib/placeholder';
 
 const Vouchers = () => {
   const { t } = useLanguage();
@@ -152,7 +153,7 @@ const Vouchers = () => {
   const columns = [
     { key: 'logoPath', label: t('banners', 'image'), render: (val: string) => (
       <img 
-        src={val || 'https://via.placeholder.com/60x60'} 
+        src={val || IMAGE_PLACEHOLDER}
         alt="Voucher" 
         style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} 
       />
