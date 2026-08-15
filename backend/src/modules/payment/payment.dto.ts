@@ -15,15 +15,15 @@ export enum PaymentStatus {
   REFUNDED = 'REFUNDED'
 }
 
-export class CreatePaymentDTO {
+export interface CreatePaymentDTO {
   bookingId: string;
   method: PaymentMethod;
   amount: number;
-  currency?: string = 'VND';
+  currency?: string;
   description?: string;
 }
 
-export class UpdatePaymentDTO {
+export interface UpdatePaymentDTO {
   status?: PaymentStatus;
   transactionId?: string;
   paymentUrl?: string;
@@ -31,7 +31,7 @@ export class UpdatePaymentDTO {
   confirmedBy?: string;
 }
 
-export class PaymentResponseDTO {
+export interface PaymentResponseDTO {
   id: string;
   bookingId: string;
   method: string;
@@ -44,7 +44,7 @@ export class PaymentResponseDTO {
   updatedAt: Date;
 }
 
-export class ConfirmPaymentDTO {
+export interface ConfirmPaymentDTO {
   paymentId: string;
   adminEmail: string;
   notes?: string;

@@ -29,7 +29,7 @@ export class PaymentService {
         bookingId: dto.bookingId,
         method: dto.method,
         amount: dto.amount,
-        status: PaymentStatus.PENDING,
+        status: 'PENDING' as any,
       },
     });
 
@@ -58,21 +58,21 @@ export class PaymentService {
     return payment;
   }
 
-  async updatePaymentStatus(paymentId: string, status: PaymentStatus, transactionId?: string) {
+  async updatePaymentStatus(paymentId: string, status: string, transactionId?: string) {
     const payment = await this.prisma.payment.update({
       where: { id: paymentId },
       data: {
-        status,
+        status: status as any,
         transactionId,
         updatedAt: new Date(),
       },
     });
 
     // If payment is completed, update booking status
-    if (status === PaymentStatus.COMPLETED) {
+    if (status === 'COMPLETED') {
       await this.prisma.booking.update({
         where: { id: payment.bookingId },
-        data: { status: 'CONFIRMED' },
+        data: { status: 'CONFIRMED' as any },
       });
     }
 
@@ -83,7 +83,7 @@ export class PaymentService {
     const payment = await this.prisma.payment.update({
       where: { id: dto.paymentId },
       data: {
-        status: PaymentStatus.COMPLETED,
+        status: 'COMPLETED' as any,
         confirmedBy: dto.adminEmail,
         confirmedAt: new Date(),
         updatedAt: new Date(),
@@ -93,7 +93,7 @@ export class PaymentService {
     // Update booking status
     await this.prisma.booking.update({
       where: { id: payment.bookingId },
-      data: { status: 'CONFIRMED' },
+      data: { status: 'CONFIRMED' as any },
     });
 
     return payment;
@@ -101,7 +101,7 @@ export class PaymentService {
 
   async listPendingPayments() {
     return this.prisma.payment.findMany({
-      where: { status: PaymentStatus.PENDING },
+      where: { status: 'PENDING' as any },
       include: {
         booking: {
           include: {
