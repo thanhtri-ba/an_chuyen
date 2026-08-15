@@ -6,12 +6,12 @@ export enum PaymentMethod {
   MOMO = 'MOMO'
 }
 
+// Mirrors the live Postgres "PaymentStatus" enum (backend/prisma/schema.prisma).
 export enum PaymentStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
+  PAID = 'PAID',
   FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
   REFUNDED = 'REFUNDED'
 }
 

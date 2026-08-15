@@ -68,8 +68,8 @@ export class PaymentService {
       },
     });
 
-    // If payment is completed, update booking status
-    if (status === 'COMPLETED') {
+    // If payment succeeded, update booking status
+    if (status === 'PAID') {
       await this.prisma.booking.update({
         where: { id: payment.bookingId },
         data: { status: 'CONFIRMED' as any },
@@ -83,7 +83,7 @@ export class PaymentService {
     const payment = await this.prisma.payment.update({
       where: { id: dto.paymentId },
       data: {
-        status: 'COMPLETED' as any,
+        status: 'PAID' as any,
         confirmedBy: dto.adminEmail,
         confirmedAt: new Date(),
         updatedAt: new Date(),
