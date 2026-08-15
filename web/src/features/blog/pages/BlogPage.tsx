@@ -1,89 +1,116 @@
-import { motion } from'framer-motion';
-import { Calendar, User, ArrowRight, BookOpen } from'lucide-react';
-import { Link } from'react-router-dom';
+import { motion } from 'framer-motion';
+import { Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const BLOG_POSTS = [
- {
- id: 1,
- title:'Top 5 quán cafe view hồ tuyệt đẹp ở Đà Lạt',
- excerpt:'Khám phá những góc check-in sống ảo cực chill không thể bỏ lỡ khi đến thành phố ngàn hoa...',
- image:'https://images.unsplash.com/photo-1549488344-c7c4e532bbf2?q=80&w=800&auto=format&fit=crop',
- author:'Minh Tùng',
- date:'12 Thg 8, 2026',
- category:'Cẩm nang du lịch'
- },
- {
- id: 2,
- title:'Kinh nghiệm đi xe đêm đường dài không bị say',
- excerpt:'Những mẹo nhỏ nhưng có võ giúp bạn có một chuyến đi xa thật khỏe khoắn và an toàn...',
- image:'https://images.unsplash.com/photo-1521747116042-5a810fda9664?q=80&w=800&auto=format&fit=crop',
- author:'Hải Yến',
- date:'08 Thg 8, 2026',
- category:'Kinh nghiệm'
- },
- {
- id: 3,
- title:'Lịch trình khám phá Nha Trang 3 ngày 2 đêm',
- excerpt:'Ăn gì, chơi đâu, ở đâu? Tất tần tật kinh nghiệm du lịch Nha Trang tự túc siêu tiết kiệm...',
- image:'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?q=80&w=800&auto=format&fit=crop',
- author:'An Chuyến Team',
- date:'01 Thg 8, 2026',
- category:'Lịch trình'
- }
+const CATEGORIES = [
+  {
+    id: 1,
+    title: 'Kinh nghiệm du lịch',
+    image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: 2,
+    title: 'Ẩm thực địa phương',
+    image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: 3,
+    title: 'Mẹo đặt vé',
+    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: 4,
+    title: 'Điểm đến hot',
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800&auto=format&fit=crop',
+  }
 ];
 
 export function BlogPage() {
- return (
- <div className="bg-gray-50 min-h-screen pt-24 pb-20">
- <div className="container px-4 lg:px-8 max-w-7xl mx-auto">
- {/* Header Section */}
- <div className="text-center mb-12">
- <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-bold text-sm mb-4">
- <BookOpen className="w-4 h-4" /> Cẩm nang Du lịch
- </motion.div>
- <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
- Khám phá thế giới cùng An Chuyến
- </motion.h1>
- <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-gray-500 font-medium text-lg max-w-2xl mx-auto">
- Những bài viết chia sẻ kinh nghiệm, địa điểm du lịch hấp dẫn và mẹo đi xe cực hữu ích dành riêng cho bạn.
- </motion.p>
- </div>
+  return (
+    <div className="bg-white min-h-screen pt-24 pb-20 relative">
+      {/* Dot Pattern Background */}
+      <div 
+        className="absolute inset-0 z-0 opacity-[0.15]" 
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, var(--color-primary) 1px, transparent 0)',
+          backgroundSize: '32px 32px'
+        }}
+      />
+      
+      <div className="container px-4 lg:px-8 max-w-6xl mx-auto relative z-10">
+        
+        {/* Hero Section */}
+        <div className="text-center mt-12 mb-20">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="text-4xl md:text-5xl font-bold text-[#0f2c59] tracking-tight mb-6"
+          >
+            Bạn muốn đi đâu hôm nay?
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: 0.1 }} 
+            className="text-gray-500 font-medium text-base md:text-lg max-w-2xl mx-auto mb-10"
+          >
+            Khám phá những điểm đến tuyệt vời, kinh nghiệm du lịch quý báu và mẹo đặt vé rẻ nhất cùng An Chuyến.
+          </motion.p>
 
- {/* Blog Grid */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
- {BLOG_POSTS.map((post, idx) => (
- <motion.div 
- key={post.id}
- initial={{ opacity: 0, y: 30 }}
- animate={{ opacity: 1, y: 0 }}
- transition={{ delay: idx * 0.1 + 0.3 }}
- className="bg-white overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group flex flex-col h-full"
- >
- <div className="relative h-56 overflow-hidden">
- <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
- <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold text-gray-800 shadow-sm">
- {post.category}
- </div>
- </div>
- <div className="p-6 flex flex-col flex-1">
- <div className="flex items-center gap-4 text-xs font-semibold text-gray-400 mb-3">
- <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {post.date}</span>
- <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {post.author}</span>
- </div>
- <h3 className="text-xl font-bold text-gray-900 mb-3 leading-snug group-hover:text-primary transition-colors line-clamp-2">
- {post.title}
- </h3>
- <p className="text-gray-600 text-sm leading-relaxed mb-6 flex-1 line-clamp-3">
- {post.excerpt}
- </p>
- <Link to="#" className="inline-flex items-center gap-2 text-primary font-bold text-sm hover:gap-3 transition-all mt-auto w-fit">
- Đọc tiếp <ArrowRight className="w-4 h-4" />
- </Link>
- </div>
- </motion.div>
- ))}
- </div>
- </div>
- </div>
- );
+          {/* Search Bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.2 }}
+            className="max-w-2xl mx-auto"
+          >
+            <div className="relative flex items-center bg-white rounded-full shadow-lg border border-gray-100 overflow-hidden pl-4 pr-1.5 py-1.5">
+              <Search className="w-5 h-5 text-gray-400 shrink-0" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm điểm đến, bài viết..." 
+                className="w-full bg-transparent border-none outline-none px-4 py-3 text-gray-700 placeholder-gray-400 font-medium"
+              />
+              <button className="bg-[#0f2c59] hover:bg-[#1a4b96] text-white font-bold py-3 px-8 rounded-full transition-colors flex-shrink-0">
+                Tìm
+              </button>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Featured Categories */}
+        <div className="mb-20">
+          <h2 className="text-2xl font-bold text-[#0f2c59] mb-8">Danh mục nổi bật</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {CATEGORIES.map((category, idx) => (
+              <motion.div 
+                key={category.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 + 0.3 }}
+              >
+                <Link to="#" className="group relative block w-full aspect-square rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                  <img 
+                    src={category.image} 
+                    alt={category.title} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" 
+                  />
+                  {/* Dark Gradient Overlay at bottom */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f2c59]/90 via-black/20 to-transparent"></div>
+                  
+                  {/* Title */}
+                  <div className="absolute bottom-0 left-0 w-full p-6">
+                    <h3 className="text-white font-bold text-xl leading-tight">
+                      {category.title}
+                    </h3>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
 }

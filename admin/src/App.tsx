@@ -15,6 +15,7 @@ import Vouchers from './pages/Vouchers';
 import Banners from './pages/Banners';
 import Reviews from './pages/Reviews';
 import Events from './pages/Events';
+import RevenueDetails from './pages/RevenueDetails';
 import Login from './pages/Login';
 import AdminPaymentPage from './pages/AdminPaymentPage';
 
@@ -52,6 +53,7 @@ const App = () => {
           <Route path="banners" element={<Banners />} />
           <Route path="events" element={<Events />} />
           <Route path="reviews" element={<Reviews />} />
+          <Route path="revenue-details" element={<RevenueDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>

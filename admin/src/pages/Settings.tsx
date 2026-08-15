@@ -57,68 +57,94 @@ const Settings = () => {
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* Theme Settings */}
-        <div className="pro-panel" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'themeMode')}</h2>
-          <div style={{ display: 'flex', gap: '1.25rem' }}>
-            <ThemeCard active={theme === 'light'} onClick={() => setTheme('light')} label={t('settings', 'lightMode')} />
-            <ThemeCard active={theme === 'dark'} onClick={() => setTheme('dark')} label={t('settings', 'darkMode')} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+        {/* ===== User: Personal Preferences ===== */}
+        <SettingsSection title={t('settings', 'personalSection')} description={t('settings', 'personalSectionDesc')}>
+          {/* Theme Settings */}
+          <div className="pro-panel" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'themeMode')}</h2>
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              <ThemeCard active={theme === 'light'} onClick={() => setTheme('light')} label={t('settings', 'lightMode')} />
+              <ThemeCard active={theme === 'dark'} onClick={() => setTheme('dark')} label={t('settings', 'darkMode')} />
+            </div>
           </div>
-        </div>
 
-        {/* Language Settings */}
-        <div className="pro-panel" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'language')}</h2>
-          <div style={{ display: 'flex', gap: '1.25rem' }}>
-            {languages.map(lang => (
-              <div
-                key={lang.code}
-                onClick={() => setLanguage(lang.code)}
-                style={{
-                  width: '160px', height: '90px', borderRadius: 'var(--radius-lg)',
-                  border: language === lang.code ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  backgroundColor: 'var(--color-bg-elevated)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                  fontWeight: '600', cursor: 'pointer', position: 'relative',
-                  boxShadow: language === lang.code ? '0 5px 15px rgba(0,0,0,0.05)' : 'none',
-                  transition: 'all 0.2s'
-                }}>
-                <span style={{ fontSize: '1.75rem' }}>{lang.flag}</span>
-                <span style={{ fontSize: '0.8125rem', textAlign: 'center' }}>{lang.name}</span>
-                {language === lang.code && <div style={{ position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px', backgroundColor: 'var(--color-primary)', borderRadius: '50%', border: '3px solid var(--color-bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckCircle2 color="white" size={12} /></div>}
-              </div>
-            ))}
+          {/* Language Settings */}
+          <div className="pro-panel" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'language')}</h2>
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              {languages.map(lang => (
+                <div
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  style={{
+                    width: '160px', height: '90px', borderRadius: 'var(--radius-lg)',
+                    border: language === lang.code ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-bg-elevated)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                    fontWeight: '600', cursor: 'pointer', position: 'relative',
+                    boxShadow: language === lang.code ? '0 5px 15px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.2s'
+                  }}>
+                  <span style={{ fontSize: '1.75rem' }}>{lang.flag}</span>
+                  <span style={{ fontSize: '0.8125rem', textAlign: 'center' }}>{lang.name}</span>
+                  {language === lang.code && <div style={{ position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px', backgroundColor: 'var(--color-primary)', borderRadius: '50%', border: '3px solid var(--color-bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckCircle2 color="white" size={12} /></div>}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* System Toggles */}
-        <div className="pro-panel" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'systemToggles')}</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
-            <ToggleItem
-              title={t('settings', 'compactSidebar')}
-              description={t('settings', 'compactSidebarDesc')}
-              active={compactSidebar}
-              onToggle={setCompactSidebar}
-            />
-            <ToggleItem
-              title={t('settings', 'showAnimations')}
-              description={t('settings', 'showAnimationsDesc')}
-              active={showAnimations}
-              onToggle={setShowAnimations}
-            />
-            <ToggleItem
-              title={t('settings', 'soundEffects')}
-              description={t('settings', 'soundEffectsDesc')}
-              active={soundEffects}
-              onToggle={setSoundEffects}
-            />
+          {/* Display Settings */}
+          <div className="pro-panel" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'displayTitle')}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
+              <ToggleItem
+                title={t('settings', 'compactSidebar')}
+                description={t('settings', 'compactSidebarDesc')}
+                active={compactSidebar}
+                onToggle={setCompactSidebar}
+                last
+              />
+            </div>
           </div>
-        </div>
+        </SettingsSection>
+
+        {/* ===== System: Behavior & Notifications ===== */}
+        <SettingsSection title={t('settings', 'systemSection')} description={t('settings', 'systemSectionDesc')}>
+          <div className="pro-panel" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.25rem' }}>{t('settings', 'systemToggles')}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
+              <ToggleItem
+                title={t('settings', 'showAnimations')}
+                description={t('settings', 'showAnimationsDesc')}
+                active={showAnimations}
+                onToggle={setShowAnimations}
+              />
+              <ToggleItem
+                title={t('settings', 'soundEffects')}
+                description={t('settings', 'soundEffectsDesc')}
+                active={soundEffects}
+                onToggle={setSoundEffects}
+                last
+              />
+            </div>
+          </div>
+        </SettingsSection>
       </div>
     </div>
   );
 };
+
+const SettingsSection = ({ title, description, children }: { title: string, description: string, children: React.ReactNode }) => (
+  <div>
+    <div style={{ marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
+      <h2 style={{ fontSize: '0.8125rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}>{title}</h2>
+      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>{description}</p>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {children}
+    </div>
+  </div>
+);
 
 const ThemeCard = ({ active, onClick, label, disabled = false }: { active: boolean, onClick: () => void, label: string, disabled?: boolean }) => (
   <div
@@ -138,9 +164,9 @@ const ThemeCard = ({ active, onClick, label, disabled = false }: { active: boole
   </div>
 );
 
-const ToggleItem = ({ title, description, active, onToggle }: { title: string, description: string, active: boolean, onToggle: (val: boolean) => void }) => {
+const ToggleItem = ({ title, description, active, onToggle, last }: { title: string, description: string, active: boolean, onToggle: (val: boolean) => void, last?: boolean }) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: last ? 0 : '0.75rem', borderBottom: last ? 'none' : '1px solid var(--color-border)' }}>
       <div>
         <p style={{ fontWeight: '600', marginBottom: '0.125rem', fontSize: '0.875rem' }}>{title}</p>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>{description}</p>

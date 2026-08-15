@@ -69,10 +69,14 @@ model DeviceSession {
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  address   String?
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  address        String?
+  dob            String?
+  emergencyPhone String?
+  nationality    String?
+  occupation     String?
+  updatedAt      DateTime  @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
@@ -158,7 +162,7 @@ model Loyalty {
   id        String   @id @default(uuid())
   userId    String   @unique
   points    Int      @default(0)
-  tier      String   @default("Silver") // Silver, Gold, Platinum
+  tier      String   @default("Member") // Member, Silver, Gold, Platinum
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

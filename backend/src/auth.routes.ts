@@ -142,7 +142,27 @@ router.get('/profile', verifyAccessToken as any, async (req: any, res: any) => {
         email: true,
         phone: true,
         fullName: true,
+        gender: true,
+        avatar: true,
         role: true,
+        profile: {
+          select: {
+            address: true,
+            dob: true,
+            emergencyPhone: true,
+            nationality: true,
+            occupation: true,
+          }
+        },
+        wallet: {
+          select: { balance: true }
+        },
+        loyalty: {
+          select: { points: true, tier: true }
+        },
+        _count: {
+          select: { bookings: true }
+        }
       }
     });
     res.json({ success: true, data: user });
@@ -156,16 +176,39 @@ router.put('/profile', verifyAccessToken as any, async (req: any, res: any) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    const { fullName, phone } = req.body;
+    const { fullName, phone, gender, address, dob, emergencyPhone, nationality, occupation } = req.body;
+    
+    // Update user info and upsert profile address
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { fullName, phone },
+      data: { 
+        fullName, 
+        phone, 
+        gender,
+        profile: (address !== undefined || dob !== undefined || emergencyPhone !== undefined || nationality !== undefined || occupation !== undefined) ? {
+          upsert: {
+            create: { address, dob, emergencyPhone, nationality, occupation },
+            update: { address, dob, emergencyPhone, nationality, occupation }
+          }
+        } : undefined
+      },
       select: {
         id: true,
         email: true,
         phone: true,
         fullName: true,
+        gender: true,
+        avatar: true,
         role: true,
+        profile: {
+          select: {
+            address: true,
+            dob: true,
+            emergencyPhone: true,
+            nationality: true,
+            occupation: true,
+          }
+        }
       }
     });
     res.json({ success: true, data: user });

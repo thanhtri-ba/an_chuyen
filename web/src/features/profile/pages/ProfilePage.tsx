@@ -10,41 +10,80 @@ import { Card } from'../../../design-system/components/Card';
 import api from'../../../lib/api';
 
 const TIER_CONFIG = {
- Silver: {
- label:'Silver Member',
- color:'from-slate-400 to-slate-600',
- textColor:'text-slate-500',
- bgColor:'bg-slate-100',
- next:'Gold',
- pointsNeeded: 5000,
- currentPoints: 2450,
- icon:'🥈',
- },
- Gold: {
- label:'Gold Member',
- color:'from-yellow-400 to-amber-600',
- textColor:'text-amber-600',
- bgColor:'bg-amber-100',
- next:'Platinum',
- pointsNeeded: 15000,
- currentPoints: 2450,
- icon:'🥇',
- },
+  Member: {
+    label: 'Thành viên mới',
+    color: 'from-gray-400 to-gray-600',
+    textColor: 'text-gray-600',
+    bgColor: 'bg-gray-100',
+    next: 'Bạc',
+    pointsNeeded: 5000,
+    currentPoints: 0,
+    icon: '🌱',
+  },
+  Silver: {
+    label: 'Thành viên Bạc',
+    color: 'from-slate-400 to-slate-600',
+    textColor: 'text-slate-500',
+    bgColor: 'bg-slate-100',
+    next: 'Vàng',
+    pointsNeeded: 15000,
+    currentPoints: 2450,
+    icon: '🥈',
+  },
+  Gold: {
+    label: 'Thành viên Vàng',
+    color: 'from-yellow-400 to-amber-600',
+    textColor: 'text-amber-600',
+    bgColor: 'bg-amber-100',
+    next: 'Kim Cương',
+    pointsNeeded: 50000,
+    currentPoints: 2450,
+    icon: '🥇',
+  },
+  Platinum: {
+    label: 'Thành viên Kim Cương',
+    color: 'from-purple-400 to-indigo-600',
+    textColor: 'text-indigo-600',
+    bgColor: 'bg-indigo-100',
+    next: 'Tối đa',
+    pointsNeeded: 999999,
+    currentPoints: 2450,
+    icon: '💎',
+  },
 };
 
 export function ProfilePage() {
  const { user, logout, isLoading } = useAuth();
  const [fullName, setFullName] = useState('');
  const [phone, setPhone] = useState('');
+ const [gender, setGender] = useState<'MALE'|'FEMALE'|'OTHER'|''>('');
+ const [address, setAddress] = useState('');
+ const [dob, setDob] = useState('');
+ const [emergencyPhone, setEmergencyPhone] = useState('');
+ const [nationality, setNationality] = useState('');
+ const [occupation, setOccupation] = useState('');
  const [isSaving, setIsSaving] = useState(false);
  const [message, setMessage] = useState('');
 
- const tier = TIER_CONFIG['Silver'];
+  const currentTierStr = user?.loyalty?.tier || 'Member';
+  const tier = { ...TIER_CONFIG[currentTierStr as keyof typeof TIER_CONFIG] } || { ...TIER_CONFIG['Member'] };
+  const currentPoints = user?.loyalty?.points || 0;
+  tier.currentPoints = currentPoints;
+  const progressPercent = Math.min((currentPoints / tier.pointsNeeded) * 100, 100);
+
+  const balance = user?.wallet?.balance || 0;
+  const bookingsCount = user?._count?.bookings || 0;
 
  useEffect(() => {
  if (user) {
  setFullName(user.fullName ||'');
  setPhone(user.phone ||'');
+ setGender(user.gender || '');
+ setAddress(user.profile?.address || '');
+ setDob(user.profile?.dob || '');
+ setEmergencyPhone(user.profile?.emergencyPhone || '');
+ setNationality(user.profile?.nationality || '');
+ setOccupation(user.profile?.occupation || '');
  }
  }, [user]);
 
@@ -55,7 +94,16 @@ export function ProfilePage() {
  e.preventDefault();
  setIsSaving(true);
  try {
- await api.put('/auth/profile', { fullName, phone });
+ await api.put('/auth/profile', { 
+   fullName, 
+   phone,
+   gender: gender || undefined,
+   address,
+   dob: dob || undefined,
+   emergencyPhone,
+   nationality,
+   occupation
+ });
  setMessage('Lưu thành công!');
  toast.success('Lưu hồ sơ thành công!');
  } catch {
@@ -65,8 +113,6 @@ export function ProfilePage() {
  setIsSaving(false);
  }
  };
-
- const progressPercent = Math.min((tier.currentPoints / tier.pointsNeeded) * 100, 100);
 
  return (
  <div className="min-h-screen bg-gray-50 pt-24 pb-8">
@@ -115,9 +161,9 @@ export function ProfilePage() {
  {/* Quick Stats */}
  <div className="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100 bg-gray-50/50">
  {[
- { label:'Chuyến đi', value:'0' },
- { label:'Điểm', value:'2,450' },
- { label:'Hạng', value:'Silver' },
+ { label:'Chuyến đi', value: bookingsCount.toString() },
+ { label:'Điểm', value: currentPoints.toLocaleString() },
+ { label:'Hạng', value: tier.label.split(' ')[0] },
  ].map((stat, i) => (
  <div key={i} className="flex flex-col items-center py-4 px-2">
  <div className="font-extrabold text-gray-900 text-base">{stat.value}</div>
@@ -166,7 +212,7 @@ export function ProfilePage() {
  </div>
  <div className="text-right">
  <div className="text-white/60 text-xs">{fullName}</div>
- <div className="text-white/50 text-xs mt-0.5">**** 2450</div>
+ <div className="text-white/50 text-xs mt-0.5">**** {currentPoints}</div>
  </div>
  </div>
  </div>
@@ -185,7 +231,7 @@ export function ProfilePage() {
  <div className="text-xs text-gray-400">Số dư khả dụng</div>
  </div>
  </div>
- <div className="text-3xl font-extrabold text-indigo-700 mb-4">500.000<span className="text-xl text-indigo-400">đ</span></div>
+ <div className="text-3xl font-extrabold text-indigo-700 mb-4">{balance.toLocaleString('vi-VN')}<span className="text-xl text-indigo-400">đ</span></div>
  <div className="grid grid-cols-2 gap-2">
  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10">Nạp tiền</Button>
  <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-600 font-bold h-10 hover:bg-indigo-50">Lịch sử</Button>
@@ -267,8 +313,7 @@ export function ProfilePage() {
  />
  </div>
  </div>
- </div>
-
+ 
  <div className="space-y-2">
  <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Email (Không thể thay đổi)</label>
  <div className="relative">
@@ -281,6 +326,93 @@ export function ProfilePage() {
  />
  </div>
  </div>
+
+ <div className="space-y-2">
+    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Giới tính</label>
+    <div className="flex gap-4 items-center h-12">
+      {['MALE', 'FEMALE', 'OTHER'].map(g => (
+        <label key={g} className="flex items-center gap-2 cursor-pointer">
+          <input 
+            type="radio" 
+            name="gender" 
+            value={g} 
+            checked={gender === g}
+            onChange={(e) => setGender(e.target.value as any)}
+            className="text-primary focus:ring-primary h-4 w-4"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            {g === 'MALE' ? 'Nam' : g === 'FEMALE' ? 'Nữ' : 'Khác'}
+          </span>
+        </label>
+      ))}
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Ngày sinh</label>
+    <div className="relative">
+      <Input 
+        type="date" 
+        value={dob} 
+        onChange={(e) => setDob(e.target.value)} 
+        className="h-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary font-medium text-gray-900 transition-all" 
+      />
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">SĐT Khẩn cấp</label>
+    <div className="relative">
+      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <Input 
+        type="text" 
+        value={emergencyPhone} 
+        onChange={(e) => setEmergencyPhone(e.target.value)} 
+        className="pl-11 h-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary font-medium text-gray-900 transition-all" 
+        placeholder="Số điện thoại người thân"
+      />
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Quốc tịch</label>
+    <div className="relative">
+      <Input 
+        type="text" 
+        value={nationality} 
+        onChange={(e) => setNationality(e.target.value)} 
+        className="h-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary font-medium text-gray-900 transition-all px-4" 
+        placeholder="Vd: Việt Nam"
+      />
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Nghề nghiệp</label>
+    <div className="relative">
+      <Input 
+        type="text" 
+        value={occupation} 
+        onChange={(e) => setOccupation(e.target.value)} 
+        className="h-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary font-medium text-gray-900 transition-all px-4" 
+        placeholder="Vd: Nhân viên văn phòng"
+      />
+    </div>
+  </div>
+
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Địa chỉ liên hệ</label>
+    <div className="relative">
+      <textarea
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary font-medium text-gray-900 transition-all min-h-[100px] resize-none"
+        placeholder="Nhập địa chỉ của bạn"
+      ></textarea>
+    </div>
+  </div>
 
  <div className="flex gap-3 pt-2">
  <Button 
@@ -337,8 +469,8 @@ export function ProfilePage() {
  </h3>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
  {[
- { label:'Tổng chuyến đi', value:'0', icon:'🚌', color:'text-primary' },
- { label:'Điểm tích lũy', value:'2,450', icon:'⭐', color:'text-yellow-600' },
+ { label:'Tổng chuyến đi', value: bookingsCount.toString(), icon:'🚌', color:'text-primary' },
+ { label:'Điểm tích lũy', value: currentPoints.toLocaleString(), icon:'⭐', color:'text-yellow-600' },
  { label:'Km đã đi', value:'0 km', icon:'📍', color:'text-emerald-600' },
  { label:'Đã tiết kiệm', value:'0đ', icon:'💰', color:'text-secondary' },
  ].map((stat, i) => (
