@@ -1,237 +1,317 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Ticket, Calendar, Clock, Download, ChevronRight, TrendingUp, Wallet } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Card } from '../../../design-system/components/Card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../design-system/components/Tabs';
+import { Ticket, Calendar, Clock, Download, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import type { Booking } from '../../../types';
 
+/* ─── STATUS ─── */
+const STATUS_MAP: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
+  CONFIRMED:       { label: 'Đã xác nhận',    color: '#4ade80', icon: CheckCircle },
+  PENDING:         { label: 'Chờ xác nhận',   color: '#d4af37', icon: AlertCircle },
+  PENDING_PAYMENT: { label: 'Chờ thanh toán', color: '#d4af37', icon: CreditCard },
+  COMPLETED:       { label: 'Hoàn thành',     color: 'rgba(240,237,230,0.3)', icon: CheckCircle },
+  CANCELLED:       { label: 'Đã hủy',         color: '#f87171', icon: XCircle },
+  REFUNDING:       { label: 'Đang hoàn tiền', color: '#60a5fa', icon: RotateCcw },
+  REFUNDED:        { label: 'Đã hoàn tiền',   color: 'rgba(240,237,230,0.3)', icon: RotateCcw },
+};
+
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; classes: string }> = {
-    CONFIRMED: { label: 'Đã xác nhận', classes: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/10 dark:text-emerald-400 dark:border-emerald-900/30' },
-    PENDING: { label: 'Chờ xác nhận', classes: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/10 dark:text-amber-400 dark:border-amber-900/30' },
-    PENDING_PAYMENT: { label: 'Chờ thanh toán', classes: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/10 dark:text-amber-400 dark:border-amber-900/30' },
-    COMPLETED: { label: 'Đã hoàn thành', classes: 'bg-slate-50 text-slate-650 border-slate-100 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800' },
-    CANCELLED: { label: 'Đã hủy', classes: 'bg-red-50 text-red-650 border-red-100 dark:bg-red-950/10 dark:text-red-400 dark:border-red-900/30' },
-    REFUNDING: { label: 'Đang hoàn tiền', classes: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/10 dark:text-blue-400 dark:border-blue-900/30' },
-    REFUNDED: { label: 'Đã hoàn tiền', classes: 'bg-slate-50 text-slate-650 border-slate-100 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800' },
-  };
-  const c = config[status] || config['PENDING'];
+  const s = STATUS_MAP[status] || STATUS_MAP['PENDING'];
+  const Icon = s.icon;
   return (
-    <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${c.classes}`}>{c.label}</span>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: s.color, fontFamily: 'system-ui' }}>
+      <Icon size={10} /> {s.label}
+    </div>
   );
 }
 
+/* ─── TICKET CARD ─── */
 function TicketCard({ booking, index }: { booking: Booking; index: number }) {
   const depTime = booking.tripSchedule?.departureTime;
   const departureDate = depTime ? new Date(depTime) : new Date(booking.createdAt);
-  
-  const depCityName = booking.tripSchedule?.trip?.route?.departureCity?.name || 'Điểm đi';
-  const arrCityName = booking.tripSchedule?.trip?.route?.arrivalCity?.name || 'Điểm đến';
-  const agentName = booking.tripSchedule?.trip?.busAgent?.name || 'Chuyến đi';
+  const depCity = booking.tripSchedule?.trip?.route?.departureCity?.name || 'Điểm đi';
+  const arrCity = booking.tripSchedule?.trip?.route?.arrivalCity?.name || 'Điểm đến';
+  const agentName = booking.tripSchedule?.trip?.busAgent?.name || 'An Chuyến';
+  const isPaid = booking.paymentStatus === 'PAID';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08 }}
+      transition={{ delay: index * 0.07, duration: 0.45 }}
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        overflow: 'hidden',
+        transition: 'border-color 0.3s',
+      }}
+      whileHover={{ borderColor: 'rgba(212,175,55,0.25)' }}
     >
-      <Card className="overflow-visible bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-805 p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 relative group rounded-2xl">
-        {/* Top and Bottom Ticket Notches */}
-        <div className="absolute -top-3 left-[140px] w-6 h-6 rounded-full bg-gray-50 dark:bg-slate-900 border border-slate-100/80 dark:border-slate-800 z-10 hidden sm:block"></div>
-        <div className="absolute -bottom-3 left-[140px] w-6 h-6 rounded-full bg-gray-50 dark:bg-slate-900 border border-slate-100/80 dark:border-slate-800 z-10 hidden sm:block"></div>
+      {/* Top accent line based on status */}
+      <div style={{ height: 2, background: STATUS_MAP[booking.status]?.color || '#d4af37', opacity: 0.6 }} />
 
-        <div className="flex flex-col sm:flex-row gap-6">
-          {/* Date Column */}
-          <div className="sm:w-32 flex-shrink-0 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0 sm:pr-6 sm:border-r border-dashed border-slate-150 dark:border-slate-800">
-            <div className="bg-slate-50 dark:bg-slate-900 p-3 text-center min-w-[80px] rounded-xl border border-slate-100/70 dark:border-slate-800/80">
-              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+      <div style={{ padding: '28px 28px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '88px 1px 1fr', gap: 0, alignItems: 'stretch' }}>
+
+          {/* Date column */}
+          <div style={{ paddingRight: 24, paddingBottom: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(240,237,230,0.35)', fontFamily: 'system-ui', marginBottom: 4 }}>
                 {departureDate.toLocaleDateString('vi-VN', { month: 'short' })}
               </div>
-              <div className="text-3xl font-black text-slate-800 dark:text-slate-100 leading-none mt-1">
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '3rem', fontWeight: 700, color: '#f0ede6', lineHeight: 1 }}>
                 {departureDate.getDate()}
               </div>
+              <div style={{ fontSize: 9, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', marginTop: 4 }}>
+                {departureDate.getFullYear()}
+              </div>
             </div>
-            <div className="sm:mt-4">
-              <StatusBadge status={booking.status} />
-            </div>
+            <StatusBadge status={booking.status} />
           </div>
 
-          {/* Trip Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-col md:flex-row justify-between items-start gap-3 mb-4">
+          {/* Divider — dashed */}
+          <div style={{ background: 'none', borderLeft: '1px dashed rgba(255,255,255,0.1)', position: 'relative' }}>
+            {/* Notch top */}
+            <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: '#0e1111', border: '1px dashed rgba(255,255,255,0.1)' }} />
+            {/* Notch bottom */}
+            <div style={{ position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: '#0e1111', border: '1px dashed rgba(255,255,255,0.1)' }} />
+          </div>
+
+          {/* Trip info */}
+          <div style={{ padding: '0 0 28px 24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg leading-tight">{agentName} <span className="text-sm font-bold text-slate-400">#{booking.id.slice(0, 8)}</span></h3>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2.5 text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                  <div className="flex items-center gap-1.5">
-                    <Ticket className="w-4 h-4 text-slate-400" />
-                    Ghế: {booking.seatNumbers ? booking.seatNumbers.join(', ') : 'Chưa xếp'}
-                  </div>
-                  {depTime && (
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      Giờ chạy: {new Date(depTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  )}
+                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.35rem', fontWeight: 500, color: '#f0ede6', margin: '0 0 6px', lineHeight: 1.2 }}>
+                  {agentName}
+                </h3>
+                <div style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                  #{booking.id.slice(0, 8).toUpperCase()}
                 </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-2xl font-extrabold text-secondary tracking-tight">{new Intl.NumberFormat('vi-VN').format(booking.totalAmount)}đ</div>
-                <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-1">{booking.paymentStatus === 'PAID' ? '✅ Đã thanh toán' : '⏳ Chưa thanh toán'}</div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                  {new Intl.NumberFormat('vi-VN').format(booking.totalAmount)}₫
+                </div>
+                <div style={{ fontSize: 10, color: isPaid ? '#4ade80' : '#d4af37', fontFamily: 'system-ui', fontWeight: 700, marginTop: 4, letterSpacing: '0.05em' }}>
+                  {isPaid ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'}
+                </div>
               </div>
             </div>
 
-            {/* Route Visualization */}
-            <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-100/30 dark:border-slate-800/30">
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-                <div className="w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/10"></div>
-                {depCityName}
-              </div>
-              <div className="flex-1 flex items-center">
-                <div className="flex-1 h-0.5 border-t border-dashed border-slate-350 dark:border-slate-700"></div>
-                <ChevronRight className="w-4 h-4 text-slate-350 dark:text-slate-655 flex-shrink-0" />
-              </div>
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-                {arrCityName}
-                <div className="w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-secondary/10"></div>
-              </div>
+            {/* Route row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 14 }}>
+              <MapPin size={11} style={{ color: '#d4af37', flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#f0ede6', fontFamily: 'system-ui' }}>{depCity}</span>
+              <div style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(to right, rgba(212,175,55,0.3) 0, rgba(212,175,55,0.3) 4px, transparent 4px, transparent 8px)' }} />
+              <ArrowRight size={11} style={{ color: '#d4af37', flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#f0ede6', fontFamily: 'system-ui' }}>{arrCity}</span>
+            </div>
+
+            {/* Meta */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, fontSize: 11, color: 'rgba(240,237,230,0.35)', fontFamily: 'system-ui' }}>
+              {booking.seatNumbers?.length > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Ticket size={10} /> Ghế: {booking.seatNumbers.join(', ')}
+                </span>
+              )}
+              {depTime && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Clock size={10} /> {new Date(depTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-900">
-          <button className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white font-bold px-3 py-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 rounded-lg transition-colors border border-slate-100/50 dark:border-slate-800">
-            <Download className="w-3.5 h-3.5" /> Tải vé
-          </button>
-          <button className="flex items-center gap-1.5 text-xs text-white font-bold px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-850 dark:hover:bg-slate-800 rounded-lg transition-colors border-none">
-            Xem chi tiết <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </Card>
+      {/* Actions */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '14px 28px', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+        <button style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          background: 'none', border: '1px solid rgba(255,255,255,0.1)',
+          color: 'rgba(240,237,230,0.5)', padding: '8px 18px', cursor: 'pointer',
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+          fontFamily: 'system-ui', transition: 'all 0.2s',
+        }}>
+          <Download size={11} /> Tải vé
+        </button>
+        <button style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          background: '#d4af37', border: 'none',
+          color: '#0e1111', padding: '8px 20px', cursor: 'pointer',
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+          fontFamily: 'system-ui',
+        }}>
+          Chi tiết <ArrowRight size={11} />
+        </button>
+      </div>
     </motion.div>
   );
 }
 
+/* ─── EMPTY ─── */
 function EmptyState({ type }: { type: 'upcoming' | 'past' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center justify-center py-20 text-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      style={{ textAlign: 'center', padding: '80px 0' }}
     >
-      <div className="w-24 h-24 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-5 border border-slate-100/50 dark:border-slate-850">
-        {type === 'upcoming' ? <Calendar className="w-10 h-10 text-slate-400" /> : <Clock className="w-10 h-10 text-slate-400" />}
+      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '5rem', color: 'rgba(212,175,55,0.15)', marginBottom: 24 }}>
+        {type === 'upcoming' ? '✦' : '◇'}
       </div>
-      <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+      <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 400, color: 'rgba(240,237,230,0.5)', margin: '0 0 12px' }}>
         {type === 'upcoming' ? 'Chưa có chuyến đi sắp tới' : 'Lịch sử chuyến đi trống'}
       </h3>
-      <p className="text-slate-450 dark:text-slate-500 font-semibold max-w-xs leading-relaxed text-sm">
-        {type === 'upcoming' 
+      <p style={{ fontSize: 13, color: 'rgba(240,237,230,0.25)', fontFamily: 'system-ui', maxWidth: 340, margin: '0 auto' }}>
+        {type === 'upcoming'
           ? 'Hãy đặt vé ngay để trải nghiệm dịch vụ xe khách cao cấp của An Chuyến!'
-          : 'Các chuyến đi đã hoàn thành hoặc đã hủy sẽ hiển thị ở đây.'
-        }
+          : 'Các chuyến đi đã hoàn thành hoặc đã hủy sẽ hiển thị ở đây.'}
       </p>
     </motion.div>
   );
 }
 
+/* ─── PAGE ─── */
 export function MyBookingsPage() {
   const { user, isLoading } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   useEffect(() => {
     if (user) {
       api.get('/bookings')
         .then(res => setBookings(res.data.data || []))
-        .catch(err => {
-          console.error(err);
-          toast.error('Lỗi tải danh sách vé. Vui lòng thử lại.');
-        })
+        .catch(() => toast.error('Không thể tải danh sách vé.'))
         .finally(() => setLoading(false));
     }
   }, [user]);
 
-  if (isLoading) return <div className="p-12 text-center text-slate-500">Đang tải...</div>;
+  if (isLoading) return (
+    <div style={{ background: '#0e1111', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>
+      Đang tải...
+    </div>
+  );
   if (!user) return <Navigate to="/auth" />;
 
-  const upcoming = bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING' || b.status === 'PENDING_PAYMENT');
-  const past = bookings.filter(b => b.status === 'COMPLETED' || b.status === 'CANCELLED' || b.status === 'REFUNDED' || b.status === 'REFUNDING');
-  const totalSpent = bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const upcoming = bookings.filter(b => ['CONFIRMED', 'PENDING', 'PENDING_PAYMENT'].includes(b.status));
+  const past = bookings.filter(b => ['COMPLETED', 'CANCELLED', 'REFUNDED', 'REFUNDING'].includes(b.status));
+  const totalSpent = bookings.filter(b => b.paymentStatus === 'PAID').reduce((s, b) => s + (b.totalAmount || 0), 0);
+  const shown = activeTab === 'upcoming' ? upcoming : past;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-20 pb-16">
-      {/* Page Header */}
-      <div className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 py-6 mb-8 sticky top-0 md:top-20 z-30 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.02)]">
-        <div className="container px-4">
-          <h1 className="text-3xl font-black text-slate-800 dark:text-slate-150 mb-1 tracking-tight">Quản lý chuyến đi</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm">Xem lại và quản lý tất cả các chuyến đi của bạn</p>
-        </div>
+    <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh', paddingTop: 100 }}>
+
+      {/* ─── HEADER ─── */}
+      <div style={{ padding: '0 8% 56px' }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          {/* Eyebrow */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 24, height: 1, background: '#d4af37' }} />
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
+              Tài khoản
+            </span>
+          </div>
+
+          <h1 style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 'clamp(2.2rem, 3.5vw, 4rem)',
+            fontWeight: 400, color: '#f0ede6', lineHeight: 1.1, margin: '0 0 40px',
+          }}>
+            Chuyến đi <em style={{ color: '#d4af37' }}>của tôi</em>
+          </h1>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: 0 }}>
+            {[
+              { label: 'Tổng chuyến đi', value: bookings.length, icon: Ticket },
+              { label: 'Sắp khởi hành', value: upcoming.length, icon: Calendar },
+              { label: 'Tổng chi tiêu', value: totalSpent > 0 ? new Intl.NumberFormat('vi-VN').format(totalSpent) + '₫' : '—', icon: CreditCard },
+            ].map((stat, i) => (
+              <div key={i} style={{
+                flex: 1, padding: '20px 28px',
+                borderRight: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                borderTop: '1px solid rgba(255,255,255,0.07)',
+                borderBottom: '1px solid rgba(255,255,255,0.07)',
+                borderLeft: i === 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+              }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', marginBottom: 8 }}>
+                  {stat.label}
+                </div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.8rem', fontWeight: 600, color: i === 2 ? '#d4af37' : '#f0ede6', lineHeight: 1 }}>
+                  {stat.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
 
-      <div className="container px-4 max-w-4xl">
-        {/* Stats Summary */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+      {/* ─── GOLD DIVIDER ─── */}
+      <div style={{ margin: '0 8%', height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.4), transparent)' }} />
+
+      {/* ─── TABS + CONTENT ─── */}
+      <div style={{ padding: '0 8% 100px' }}>
+
+        {/* Tab bar */}
+        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', margin: '40px 0 40px' }}>
           {[
-            { icon: Ticket, label:'Tổng chuyến đi', value: bookings.length, color:'text-primary', bg:'bg-orange-50 dark:bg-orange-950/20' },
-            { icon: TrendingUp, label:'Sắp khởi hành', value: upcoming.length, color:'text-emerald-600 dark:text-emerald-400', bg:'bg-emerald-50 dark:bg-emerald-950/20' },
-            { icon: Wallet, label:'Tổng chi tiêu', value: new Intl.NumberFormat('vi-VN').format(totalSpent) +'đ', color:'text-secondary', bg:'bg-orange-50 dark:bg-orange-950/20' },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white dark:bg-slate-950 p-4 border border-slate-100 dark:border-slate-805 shadow-[0_4px_20px_rgba(0,0,0,0.01)] rounded-2xl flex items-center gap-4 hover:shadow-[0_10px_25px_rgba(0,0,0,0.04)] transition-all duration-300">
-              <div className={`w-11 h-11 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[11px] text-slate-450 dark:text-slate-500 font-bold truncate tracking-wide">{stat.label}</div>
-                <div className={`font-extrabold text-base ${stat.color} truncate mt-0.5`}>{stat.value}</div>
-              </div>
-            </div>
+            { key: 'upcoming', label: 'Sắp khởi hành', count: upcoming.length },
+            { key: 'past', label: 'Lịch sử', count: past.length },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as 'upcoming' | 'past')}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                padding: '14px 28px',
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                fontFamily: 'system-ui', display: 'flex', alignItems: 'center', gap: 8,
+                color: activeTab === tab.key ? '#d4af37' : 'rgba(240,237,230,0.3)',
+                borderBottom: activeTab === tab.key ? '2px solid #d4af37' : '2px solid transparent',
+                transition: 'all 0.2s',
+              }}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span style={{
+                  background: activeTab === tab.key ? '#d4af37' : 'rgba(255,255,255,0.1)',
+                  color: activeTab === tab.key ? '#0e1111' : 'rgba(240,237,230,0.4)',
+                  fontSize: 9, fontWeight: 900, padding: '2px 7px',
+                  borderRadius: 2, fontFamily: 'system-ui',
+                }}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
           ))}
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="upcoming" className="w-full">
-          <TabsList className="mb-6 bg-slate-100/80 dark:bg-slate-900 p-1 border border-slate-200/50 dark:border-slate-800 rounded-full shadow-inner w-full flex justify-between">
-            <TabsTrigger value="upcoming" className="flex-1 font-bold rounded-full py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-800 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all text-sm text-slate-500">
-              Sắp khởi hành {upcoming.length > 0 && <span className="ml-1.5 bg-[#ff4525] text-white px-2 py-0.5 rounded-full text-[10px] font-bold">{upcoming.length}</span>}
-            </TabsTrigger>
-            <TabsTrigger value="past" className="flex-1 font-bold rounded-full py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-800 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all text-sm text-slate-500">
-              Lịch sử chuyến đi
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="upcoming">
+        {/* Cards */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+          >
             {loading ? (
-              <div className="space-y-4">
-                {[1, 2].map(i => <div key={i} className="h-40 bg-white animate-pulse border border-slate-100 rounded-2xl" />)}
-              </div>
-            ) : upcoming.length === 0 ? (
-              <EmptyState type="upcoming" />
+              Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} style={{ height: 180, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
+              ))
+            ) : shown.length === 0 ? (
+              <EmptyState type={activeTab} />
             ) : (
-              <div className="space-y-4">
-                {upcoming.map((b, i) => <TicketCard key={b.id} booking={b} index={i} />)}
-              </div>
+              shown.map((b, i) => <TicketCard key={b.id} booking={b} index={i} />)
             )}
-          </TabsContent>
-          
-          <TabsContent value="past">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2].map(i => <div key={i} className="h-40 bg-white animate-pulse border border-slate-100 rounded-2xl" />)}
-              </div>
-            ) : past.length === 0 ? (
-              <EmptyState type="past" />
-            ) : (
-              <div className="space-y-4">
-                {past.map((b, i) => <TicketCard key={b.id} booking={b} index={i} />)}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
