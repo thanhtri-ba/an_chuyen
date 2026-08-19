@@ -1,0 +1,799 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// AUTH & USER MODULE
+// ==========================================
+
+model User {
+  id              String    @id @default(uuid())
+  email           String?   @unique // Có thể null nếu đăng nhập bằng SĐT thuần
+  phone           String    @unique // Bắt buộc cho App
+  password        String?
+  fullName        String
+  role            String    @default("user")
+  avatar          String?   @default("https://ui-avatars.com/api/?background=0D8ABC&color=fff")
+  gender          Gender?
+  isPhoneVerified Boolean   @default(false)
+  isEmailVerified Boolean   @default(false)
+  isBanned        Boolean   @default(false)
+  socialId        String? // Dành cho Google/Apple Login
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? // Soft delete
+
+  bookings             Booking[]
+  contacts             Contact[]
+  reviews              Review[]
+  loyalty              Loyalty?
+  loyaltyHistories     LoyaltyHistory[]
+  profile              Profile?
+  searchHistories      SearchHistory[]
+  paymentMethods       UserPaymentMethod[]
+  wallet               Wallet?
+  walletTransactions   WalletTransaction[]
+  sessions             DeviceSession[] // NEW: Sessions cho App
+  supportConversations SupportConversation[]
+  supportMessages      SupportMessage[]
+  parcels              Parcel[]
+  rentalBookings       RentalBooking[]
+  tourBookings         TourBooking[]
+  deliveryOrders       DeliveryOrder[]
+
+  @@map("users")
+}
+
+model DeviceSession {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceToken  String? // FCM Push Notification Token
+  refreshToken String   @unique
+  deviceInfo   String? // Thông tin OS, Model
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("device_sessions")
+}
+
+model Profile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  address        String?
+  dob            String?
+  emergencyPhone String?
+  nationality    String?
+  occupation     String?
+  updatedAt      DateTime  @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ==========================================
+// WALLET & PAYMENT MODULE
+// ==========================================
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Float    @default(0.0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id          String          @id @default(uuid())
+  userId      String
+  amount      Float
+  type        TransactionType // NẠP, RÚT, MUA_VÉ, HOÀN_TIỀN
+  description String?
+  referenceId String? // ID Booking hoặc Payment
+  createdAt   DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("wallet_transactions")
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+  PAYMENT
+  REFUND
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique
+  method        String // WALLET, VNPAY, MOMO, COD
+  gateway       String? // Cổng thanh toán (VNPay, Stripe)
+  transactionId String?       @unique // ID giao dịch từ Gateway
+  status        PaymentStatus @default(PENDING)
+  amount        Float
+
+  paymentUrl    String? // Link thanh toán (nếu pending)
+  errorCode     String? // Lỗi từ gateway
+  webhookLog    String? // Log response từ webhook
+  confirmedBy   String? // Email admin xác nhận (dành cho COD)
+  confirmedAt   DateTime? // Thời điểm admin xác nhận (dành cho COD)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@map("payments")
+}
+
+model UserPaymentMethod {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String // CREDIT_CARD, BANK_ACCOUNT
+  info      String // Masked number, Bank Name
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_payment_methods")
+}
+
+// ==========================================
+// LOYALTY & PROMOTION
+// ==========================================
+
+model Loyalty {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  tier      String   @default("Member") // Member, Silver, Gold, Platinum
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty")
+}
+
+model LoyaltyHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  points    Int
+  reason    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_histories")
+}
+
+model Promotion {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  title       String
+  subtitle    String?
+  logoPath    String?
+  discountPct Float
+  maxDiscount Float?
+  validUntil  DateTime
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  vouchers    Voucher[]
+
+  @@index([isActive, validUntil])
+  @@map("promotions")
+}
+
+model Voucher {
+  id          String    @id @default(uuid())
+  promotionId String
+  userId      String?
+  isUsed      Boolean   @default(false)
+  usedAt      DateTime?
+  promotion   Promotion @relation(fields: [promotionId], references: [id])
+
+  @@map("vouchers")
+}
+
+// ==========================================
+// CORE DOMAIN: ROUTE & SCHEDULE
+// ==========================================
+
+model Province {
+  id     String @id @default(uuid())
+  name   String
+  cities City[]
+
+  @@map("provinces")
+}
+
+model City {
+  id         String  @id @default(uuid())
+  name       String
+  provinceId String
+  image      String?
+  isPopular  Boolean @default(false)
+  subtitle   String?
+
+  routesTo   Route[]   @relation("ArrivalCity")
+  routesFrom Route[]   @relation("DepartureCity")
+  province   Province  @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  stations   Station[]
+
+  @@map("cities")
+}
+
+model Station {
+  id        String  @id @default(uuid())
+  name      String
+  cityId    String
+  isPopular Boolean @default(false)
+  latitude  Float?
+  longitude Float?
+
+  checkpoints Checkpoint[]
+  city        City         @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@index([cityId])
+  @@map("stations")
+}
+
+model Route {
+  id              String  @id @default(uuid())
+  departureCityId String
+  arrivalCityId   String
+  basePrice       Int?
+  color           String?
+  durationMins    Int?
+  isPopular       Boolean @default(false)
+
+  arrivalCity   City   @relation("ArrivalCity", fields: [arrivalCityId], references: [id])
+  departureCity City   @relation("DepartureCity", fields: [departureCityId], references: [id])
+  trips         Trip[]
+
+  @@unique([departureCityId, arrivalCityId]) // Chống trùng route
+  @@map("routes")
+}
+
+model BusAgent {
+  id          String  @id @default(uuid())
+  name        String
+  logo        String?
+  rating      Float   @default(0.0)
+  reviewCount Int     @default(0)
+
+  images   BusImage[]
+  policies CancellationPolicy[]
+  trips    Trip[]
+  buses    Bus[]
+
+  @@map("bus_agents")
+}
+
+model Bus {
+  id              String    @id @default(uuid())
+  busAgentId      String?
+  plateNumber     String    @unique
+  type            String
+  capacity        Int
+  status          String    @default("Active")
+  nextMaintenance DateTime?
+
+  busAgent      BusAgent?      @relation(fields: [busAgentId], references: [id])
+  tripSchedules TripSchedule[]
+
+  @@map("buses")
+}
+
+model BusImage {
+  id         String   @id @default(uuid())
+  url        String
+  busAgentId String
+  busAgent   BusAgent @relation(fields: [busAgentId], references: [id], onDelete: Cascade)
+
+  @@map("bus_images")
+}
+
+model Facility {
+  id    String        @id @default(uuid())
+  name  String
+  icon  String?
+  buses BusFacility[]
+
+  @@map("facilities")
+}
+
+model BusFacility {
+  id         String   @id @default(uuid())
+  facilityId String
+  tripId     String
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  trip       Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([facilityId, tripId])
+  @@map("bus_facilities")
+}
+
+model Trip {
+  id         String    @id @default(uuid())
+  busAgentId String
+  routeId    String
+  busClass   SeatClass @default(EXECUTIVE)
+
+  facilities BusFacility[]
+  seatTypes  SeatType[]
+  schedules  TripSchedule[]
+
+  busAgent BusAgent @relation(fields: [busAgentId], references: [id], onDelete: Cascade)
+  route    Route    @relation(fields: [routeId], references: [id])
+
+  @@index([routeId])
+  @@index([busAgentId])
+  @@map("trips")
+}
+
+model TripSchedule {
+  id            String   @id @default(uuid())
+  tripId        String
+  departureTime DateTime
+  arrivalTime   DateTime
+  durationMins  Int
+  busId         String?
+
+  bus         Bus?         @relation(fields: [busId], references: [id])
+  bookings    Booking[]
+  checkpoints Checkpoint[]
+  seats       Seat[]
+  prices      TripPrice[]
+  parcels     Parcel[]
+  trip        Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([departureTime])
+  @@index([tripId, departureTime]) // Index quan trọng cho Search
+  @@map("trip_schedules")
+}
+
+model Checkpoint {
+  id             String   @id @default(uuid())
+  stationId      String
+  tripScheduleId String
+  type           String // PICKUP, DROPOFF
+  time           DateTime
+
+  station      Station      @relation(fields: [stationId], references: [id])
+  tripSchedule TripSchedule @relation(fields: [tripScheduleId], references: [id], onDelete: Cascade)
+
+  @@index([tripScheduleId])
+  @@map("checkpoints")
+}
+
+model TripPrice {
+  id             String    @id @default(uuid())
+  tripScheduleId String
+  seatClass      SeatClass
+  price          Float
+
+  tripSchedule TripSchedule @relation(fields: [tripScheduleId], references: [id], onDelete: Cascade)
+
+  @@map("trip_prices")
+}
+
+model SeatType {
+  id     String    @id @default(uuid())
+  tripId String
+  type   SeatClass
+  layout String // 1x1x1, 2x2
+  trip   Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("seat_types")
+}
+
+model Seat {
+  id             String     @id @default(uuid())
+  tripScheduleId String
+  seatNumber     String
+  status         SeatStatus @default(AVAILABLE)
+
+  tripSchedule TripSchedule  @relation(fields: [tripScheduleId], references: [id], onDelete: Cascade)
+  bookings     SeatBooking[]
+
+  @@unique([tripScheduleId, seatNumber]) // Không thể trùng ghế trên 1 chuyến
+  @@map("seats")
+}
+
+// ==========================================
+// BOOKING & TICKETING
+// ==========================================
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String
+  tripScheduleId  String
+  status          BookingStatus @default(PENDING_PAYMENT)
+  totalAmount     Float
+  isRoundTrip     Boolean       @default(false)
+  returnBookingId String?
+  pickupPointId   String?
+  dropoffPointId  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime? // Soft Delete
+
+  tripSchedule TripSchedule      @relation(fields: [tripScheduleId], references: [id])
+  user         User              @relation(fields: [userId], references: [id])
+  passengers   Passenger[]
+  payment      Payment?
+  seatBookings SeatBooking[]
+  tickets      Ticket[]
+  timelines    BookingTimeline[]
+
+  @@index([userId])
+  @@index([tripScheduleId])
+  @@map("bookings")
+}
+
+model BookingTimeline {
+  id        String        @id @default(uuid())
+  bookingId String
+  status    BookingStatus
+  note      String?
+  createdAt DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("booking_timelines")
+}
+
+model SeatBooking {
+  id        String    @id @default(uuid())
+  seatId    String
+  bookingId String
+  lockedAt  DateTime? // Dành cho cơ chế lock ghế 10 phút
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  seat    Seat    @relation(fields: [seatId], references: [id])
+
+  @@map("seat_bookings")
+}
+
+model Passenger {
+  id        String  @id @default(uuid())
+  bookingId String
+  name      String
+  idCard    String?
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ticket  Ticket?
+
+  @@map("passengers")
+}
+
+model Ticket {
+  id          String   @id @default(uuid())
+  bookingId   String
+  passengerId String   @unique
+  qrCode      String?
+  status      String   @default("ACTIVE") // ACTIVE, USED, CANCELLED
+  createdAt   DateTime @default(now())
+
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  passenger Passenger @relation(fields: [passengerId], references: [id])
+
+  @@map("tickets")
+}
+
+model CancellationPolicy {
+  id          String @id @default(uuid())
+  busAgentId  String
+  hoursBefore Int
+  refundPct   Float
+
+  busAgent BusAgent @relation(fields: [busAgentId], references: [id], onDelete: Cascade)
+
+  @@map("cancellation_policies")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String
+  tripId     String
+  rating     Int
+  comment    String?
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+// ==========================================
+// OTHER APP MODULES
+// ==========================================
+
+model Contact {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  phone     String
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("contacts")
+}
+
+model SearchHistory {
+  id             String   @id @default(uuid())
+  userId         String
+  route          String
+  date           DateTime
+  passengerCount Int
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("search_histories")
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  targetUrl String?
+  platform  String   @default("app") // 'app', 'web', 'all'
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("banners")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("events")
+}
+
+model AppConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("app_configs")
+}
+
+// Parcel, Rental, Tour, Delivery, Support, AI...
+model Parcel {
+  id             String       @id @default(uuid())
+  trackingCode   String       @unique
+  senderId       String
+  tripScheduleId String
+  receiverName   String
+  receiverPhone  String
+  weightKg       Float
+  price          Float
+  note           String?
+  status         ParcelStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  sender       User         @relation(fields: [senderId], references: [id])
+  tripSchedule TripSchedule @relation(fields: [tripScheduleId], references: [id])
+
+  @@map("parcels")
+}
+
+model SupportConversation {
+  id        String           @id @default(uuid())
+  userId    String
+  status    String           @default("OPEN")
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  SupportMessage[]
+
+  @@index([userId])
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  id             String              @id @default(uuid())
+  conversationId String
+  senderId       String
+  text           String
+  isRead         Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User                @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("support_messages")
+}
+
+// ==========================================
+// RENTAL & TOURS & EVENTS
+// ==========================================
+model RentalCar {
+  id           String          @id @default(uuid())
+  name         String
+  description  String?
+  type         String // e.g. SUV, Hatchback
+  seats        Int             @default(4)
+  transmission String          @default("Automatic") // Automatic, Manual
+  energyType   String          @default("Gasoline") // Gasoline, Electric, Hybrid
+  pricePerDay  Float
+  imageUrl     String?
+  isBestValue  Boolean         @default(false)
+  insuranceInc Boolean         @default(true)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  bookings     RentalBooking[]
+
+  @@map("rental_cars")
+}
+
+model RentalBooking {
+  id             String        @id @default(uuid())
+  userId         String
+  carId          String
+  pickupLocation String
+  pickupTime     DateTime
+  dropoffTime    DateTime
+  driveType      String // Self-drive, With Driver
+  status         BookingStatus @default(PENDING_PAYMENT)
+  totalAmount    Float
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user User      @relation(fields: [userId], references: [id])
+  car  RentalCar @relation(fields: [carId], references: [id])
+
+  @@map("rental_bookings")
+}
+
+model Tour {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  duration    String // e.g. 3N2Đ
+  price       Float
+  imageUrl    String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  bookings    TourBooking[]
+
+  @@map("tours")
+}
+
+model TourBooking {
+  id          String        @id @default(uuid())
+  userId      String
+  tourId      String
+  startDate   DateTime
+  pax         Int           @default(1)
+  status      BookingStatus @default(PENDING_PAYMENT)
+  totalAmount Float
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  tour Tour @relation(fields: [tourId], references: [id])
+
+  @@map("tour_bookings")
+}
+
+model DeliveryOrder {
+  id              String   @id @default(uuid())
+  userId          String?
+  vehicleId       String
+  driverId        String?
+  packageType     String // Document, Parcel, Heavy Goods
+  pickupLocation  String
+  dropoffLocation String
+  totalAmount     Float
+  status          String   @default("PENDING") // PENDING, ACCEPTED, DELIVERING, COMPLETED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    User?           @relation(fields: [userId], references: [id])
+  vehicle DeliveryVehicle @relation(fields: [vehicleId], references: [id])
+
+  @@map("delivery_orders")
+}
+
+model DeliveryVehicle {
+  id             String          @id @default(uuid())
+  name           String
+  description    String // e.g., "Up to 10kg • Fast"
+  price          Float // Base price
+  imageUrl       String?
+  isActive       Boolean         @default(true)
+  capacityWeight Float? // max weight
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orders         DeliveryOrder[]
+
+  @@map("delivery_vehicles")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// Mở rộng Booking Status cho App
+enum BookingStatus {
+  DRAFT
+  PENDING_PAYMENT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  REFUNDING
+  REFUNDED
+}
+
+// Status tương ứng từ Gateway
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum SeatStatus {
+  AVAILABLE
+  LOCKED
+  BOOKED
+}
+
+enum SeatClass {
+  ECONOMY
+  EXECUTIVE
+  SUPER_EXECUTIVE
+  VIP
+  SLEEPER
+}
+
+enum ParcelStatus {
+  PENDING
+  ACCEPTED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}

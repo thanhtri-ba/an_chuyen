@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: busz-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - AI_PROVIDER=${AI_PROVIDER:-gemini}
+      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - SENTRY_DSN=${SENTRY_DSN}
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+    networks:
+      - busz-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web Frontend (Customer)
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: busz-web
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://backend:3000}
+    env_file:
+      - ./web/.env
+    depends_on:
+      - backend
+    networks:
+      - busz-network
+
+  # Admin Dashboard
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: busz-admin
+    ports:
+      - "5174:5173"
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://backend:3000}
+      - VITE_SUPABASE_URL=${SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    env_file:
+      - ./admin/.env
+    depends_on:
+      - backend
+    networks:
+      - busz-network
+
+  # PostgreSQL Database (optional - if running locally)
+  # Uncomment if not using Supabase cloud
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: busz-db
+  #   environment:
+  #     POSTGRES_USER: ${DB_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+  #     POSTGRES_DB: ${DB_NAME:-busz}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - busz-network
+
+  # Placeholder for db service (Supabase cloud)
+  db:
+    image: busybox
+    container_name: busz-db-placeholder
+    command: echo "Using Supabase cloud database"
+    networks:
+      - busz-network
+
+networks:
+  busz-network:
+    driver: bridge
+
+# Uncomment if using local PostgreSQL
+# volumes:
+#   postgres_data:
+#     driver: local
