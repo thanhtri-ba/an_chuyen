@@ -71,8 +71,50 @@ export function HomePage() {
     setDestination(origin);
   };
 
-  return (
-    <div style={{ background: '#0e1111', color: '#f0ede6', fontFamily: "'Outfit', sans-serif", minHeight: '100vh', overflowX: 'hidden' }}>
+        <style>{`
+          .responsive-padding { padding: 60px 5%; }
+          @media (min-width: 1024px) { .responsive-padding { padding: 120px 8%; } }
+          
+          .search-grid { display: flex; flex-direction: column; }
+          .search-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 0; }
+          .search-swap-btn { transform: rotate(90deg); margin: -10px auto; z-index: 10; position: relative; }
+          @media (min-width: 1024px) {
+            .search-grid { display: grid; grid-template-columns: 1fr auto 1fr 1px 1fr 1px minmax(100px,auto) auto; align-items: center; }
+            .search-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.1); margin: 0 4px; }
+            .search-swap-btn { transform: rotate(0deg); margin: 0; }
+          }
+          
+          .store-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          @media (min-width: 1024px) { .store-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 20px; } }
+          
+          .editorial-grid { display: grid; grid-template-columns: 1fr; gap: 60px; min-height: auto; align-items: stretch; }
+          .editorial-left { padding: 60px 0 0; border-right: none; padding-right: 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 60px; }
+          .editorial-right { padding-left: 0; padding-bottom: 60px; display: flex; align-items: center; justify-content: center; }
+          @media (min-width: 1024px) {
+            .editorial-grid { grid-template-columns: 1fr 1fr; min-height: 700px; }
+            .editorial-left { padding: 100px 0; border-right: 1px solid rgba(255,255,255,0.06); padding-right: 80px; border-bottom: none; padding-bottom: 100px; }
+            .editorial-right { padding-left: 80px; padding-bottom: 0; }
+          }
+          
+          .routes-grid { display: grid; grid-template-columns: 1fr; grid-auto-rows: 240px; gap: 16px; }
+          .route-item { grid-column: span 1; grid-row: span 1; }
+          @media (min-width: 768px) {
+            .routes-grid { grid-template-columns: repeat(2, 1fr); }
+          }
+          @media (min-width: 1024px) {
+            .routes-grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 340px; gap: 24px; }
+            .route-item-0 { grid-column: span 2; grid-row: span 2; }
+            .route-item-1 { grid-column: span 2; grid-row: span 1; }
+            .route-item-2 { grid-column: span 1; grid-row: span 1; }
+            .route-item-3 { grid-column: span 1; grid-row: span 1; }
+          }
+          
+          .routes-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+          @media (min-width: 768px) { .routes-header { flex-direction: row; align-items: flex-end; } }
+          
+          .store-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+          @media (min-width: 768px) { .store-header { flex-direction: row; align-items: flex-end; } }
+        `}</style>
 
       {/* ===== HERO SECTION — Lumora style ===== */}
       <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', background: '#000' }}>
@@ -109,7 +151,7 @@ export function HomePage() {
             </p>
 
             {/* Video switcher */}
-            <div style={{ display: 'flex', gap: 24, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
               {heroVideos.map((v, i) => (
                 <button key={i} onClick={() => handleVideoSwitch(i)}
                   style={{
@@ -138,13 +180,14 @@ export function HomePage() {
             </div>
           </div>
           <form onSubmit={handleSearch}>
-            <div className="liquid-glass" style={{ borderRadius: '0 12px 12px 12px', display: 'grid', gridTemplateColumns: '1fr auto 1fr 1px 1fr 1px minmax(100px,auto) auto', alignItems: 'center', padding: '0 6px 0 0' }}>
+            <div className="liquid-glass search-grid" style={{ borderRadius: '0 12px 12px 12px', padding: '0 6px 0 0' }}>
               <div style={{ padding: '18px 24px' }}>
                 <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 6, fontFamily: 'system-ui, sans-serif' }}>{t('home.searchBar.origin')}</div>
                 <input value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder={t('home.searchBar.originPlaceholder')}
                   style={{ background: 'none', border: 'none', outline: 'none', color: '#ffffff', fontSize: 15, fontWeight: 300, width: '100%', fontFamily: 'system-ui, sans-serif' }} />
               </div>
               <button type="button" onClick={swapLocations}
+                className="search-swap-btn"
                 style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', flexShrink: 0 }}>
                 <ArrowRightLeft size={13} />
               </button>
@@ -153,13 +196,13 @@ export function HomePage() {
                 <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder={t('home.searchBar.destinationPlaceholder')}
                   style={{ background: 'none', border: 'none', outline: 'none', color: '#ffffff', fontSize: 15, fontWeight: 300, width: '100%', fontFamily: 'system-ui, sans-serif' }} />
               </div>
-              <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+              <div className="search-divider" />
               <div style={{ padding: '18px 24px' }}>
                 <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 6, fontFamily: 'system-ui, sans-serif' }}>{t('home.searchBar.date')}</div>
                 <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
                   style={{ background: 'none', border: 'none', outline: 'none', color: '#ffffff', fontSize: 15, fontWeight: 300, width: '100%', fontFamily: 'system-ui, sans-serif', colorScheme: 'dark' }} />
               </div>
-              <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+              <div className="search-divider" />
               <div style={{ padding: '18px 20px' }}>
                 <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 6, fontFamily: 'system-ui, sans-serif' }}>{t('home.searchBar.passengers')}</div>
                 <select value={passengers} onChange={(e) => setPassengers(Number(e.target.value))}
@@ -168,7 +211,7 @@ export function HomePage() {
                 </select>
               </div>
               <button type="submit"
-                style={{ background: 'linear-gradient(135deg, #d4af37, #f0c94a)', color: '#0e1111', border: 'none', borderRadius: 8, padding: '14px 28px', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', gap: 8, margin: 6, whiteSpace: 'nowrap', boxShadow: '0 4px 20px rgba(212,175,55,0.35)' }}>
+                style={{ background: 'linear-gradient(135deg, #d4af37, #f0c94a)', color: '#0e1111', border: 'none', borderRadius: 8, padding: '14px 28px', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: 6, whiteSpace: 'nowrap', boxShadow: '0 4px 20px rgba(212,175,55,0.35)' }}>
                 <Search size={14} /> {t('home.searchBar.search')}
               </button>
             </div>
@@ -177,14 +220,14 @@ export function HomePage() {
       </section>
 
       {/* ===== SECTION 2: STORE ===== */}
-      <section style={{ background: '#0e1111', padding: '120px 8%', position: 'relative', overflow: 'hidden' }}>
+      <section className="responsive-padding" style={{ background: '#0e1111', position: 'relative', overflow: 'hidden' }}>
         {/* Decorative large text */}
-        <div style={{ position: 'absolute', bottom: -20, right: '5%', fontFamily: "'Cormorant Garamond', serif", fontSize: '17rem', fontWeight: 700, color: 'rgba(126, 149, 153, 1)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none', letterSpacing: '-0.04em' }}>STORE</div>
+        <div style={{ position: 'absolute', bottom: -20, right: '5%', fontFamily: "'Cormorant Garamond', serif", fontSize: '17rem', fontWeight: 700, color: 'rgba(126, 149, 153, 0.5)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none', letterSpacing: '-0.04em' }}>STORE</div>
 
         <div style={{ maxWidth: 1400, margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 64 }}>
+          <div className="store-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 64 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
                 <div style={{ width: 32, height: 1, background: '#d4af37' }} />
@@ -199,8 +242,8 @@ export function HomePage() {
             </button>
           </div>
 
-          {/* Bento grid — 1 featured large + 3 smaller */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gridTemplateRows: 'auto', gap: 20 }}>
+          {/* Bento grid */}
+          <div className="store-grid">
             {[
               { name: t('home.store.pillow'),   price: '350.000Đ', img: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=800&auto=format&fit=crop', tag: 'Best seller', featured: true },
               { name: t('home.store.sleepSet'), price: '150.000Đ', img: 'https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?q=80&w=600&auto=format&fit=crop' },
@@ -221,17 +264,17 @@ export function HomePage() {
 
                   {/* Tag */}
                   {product.tag && (
-                    <div style={{ position: 'absolute', top: 16, left: 16, background: '#d4af37', color: '#0e1111', fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '5px 12px', borderRadius: 100, fontFamily: 'system-ui' }}>
+                    <div style={{ position: 'absolute', top: 16, left: 16, background: '#d4af37', color: '#0e1111', fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '5px 12px', borderRadius: 100, fontFamily: 'system-ui', zIndex: 2 }}>
                       {product.tag}
                     </div>
                   )}
 
                   {/* Info overlay at bottom */}
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: product.featured ? '28px 24px' : '20px 18px' }}>
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: product.featured ? '28px 24px' : '20px 18px', zIndex: 2 }}>
                     <h3 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: product.featured ? '1.6rem' : '1.2rem', color: '#ffffff', margin: '0 0 12px', fontWeight: 500, lineHeight: 1.2 }}>
                       {product.name}
                     </h3>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                       <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: product.featured ? '1.4rem' : '1.1rem', color: '#d4af37', fontWeight: 600 }}>{product.price}</span>
                       <button
                         style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)', padding: '7px 18px', borderRadius: 100, fontSize: 9, cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', transition: 'all 0.25s', fontFamily: 'system-ui', backdropFilter: 'blur(8px)' }}
@@ -254,15 +297,15 @@ export function HomePage() {
         {/* Subtle grain texture */}
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.04\'/%3E%3C/svg%3E")', opacity: 0.4, pointerEvents: 'none', zIndex: 0 }} />
 
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 8%', position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 5%', position: 'relative', zIndex: 1 }}>
 
           {/* Top rule */}
           <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.4), transparent)', marginBottom: 0 }} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 700, alignItems: 'stretch' }}>
+          <div className="editorial-grid">
 
             {/* LEFT — Text + Features */}
-            <div style={{ padding: '100px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 40, borderRight: '1px solid rgba(255,255,255,0.06)', paddingRight: 80 }}>
+            <div className="editorial-left" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 40 }}>
 
               {/* Eyebrow */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -272,7 +315,7 @@ export function HomePage() {
 
               {/* Headline */}
               <div>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: 'clamp(3rem, 5vw, 5.5rem)', fontWeight: 300, color: '#f0ede6', lineHeight: 1, margin: 0, letterSpacing: '-0.02em' }}>
+                <h2 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: 'clamp(2.5rem, 5vw, 5.5rem)', fontWeight: 300, color: '#f0ede6', lineHeight: 1, margin: 0, letterSpacing: '-0.02em' }}>
                   <em style={{ color: '#d4af37', fontStyle: 'italic' }}>{t('home.details.headlineItalic')}</em><br />
                   <span style={{ fontWeight: 600 }}>{t('home.details.headlineLine1')}</span><br />
                   <span style={{ fontWeight: 600 }}>{t('home.details.headlineLine2')}</span>
@@ -304,15 +347,15 @@ export function HomePage() {
             </div>
 
             {/* RIGHT — Image editorial */}
-            <div style={{ position: 'relative', paddingLeft: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="editorial-right" style={{ position: 'relative' }}>
 
               {/* Large decorative number */}
-              <div style={{ position: 'absolute', top: 40, right: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: '14rem', fontWeight: 700, color: 'rgba(212,175,55,0.04)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>03</div>
+              <div style={{ position: 'absolute', top: 0, right: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: '10rem', fontWeight: 700, color: 'rgba(212,175,55,0.06)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>03</div>
 
               {/* Image stack */}
               <div style={{ position: 'relative', width: '100%', maxWidth: 480 }}>
                 {/* Behind card */}
-                <div style={{ position: 'absolute', top: 24, left: 24, right: -24, bottom: -24, border: '1px solid rgba(212,175,55,0.2)', borderRadius: 24 }} />
+                <div style={{ position: 'absolute', top: 16, left: 16, right: -16, bottom: -16, border: '1px solid rgba(212,175,55,0.2)', borderRadius: 24 }} />
 
                 {/* Main image */}
                 <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', aspectRatio: '4/5' }}>
@@ -325,16 +368,16 @@ export function HomePage() {
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(14,17,17,0.9) 0%, transparent 50%)' }} />
 
                   {/* Bottom caption */}
-                  <div style={{ position: 'absolute', bottom: 32, left: 32, right: 32 }}>
+                  <div style={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
                     <div style={{ fontSize: 10, letterSpacing: '0.25em', color: '#d4af37', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'system-ui' }}>{t('home.details.captionLabel')}</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: '1.8rem', color: '#ffffff', fontWeight: 500, lineHeight: 1.2 }}>{t('home.features.quality')}</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: '1.5rem', color: '#ffffff', fontWeight: 500, lineHeight: 1.2 }}>{t('home.features.quality')}</div>
                   </div>
                 </div>
 
                 {/* Floating stat card */}
-                <div style={{ position: 'absolute', top: -28, right: -28, background: '#d4af37', color: '#0e1111', padding: '20px 24px', borderRadius: 16, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', zIndex: 3 }}>
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.5rem', fontWeight: 700, lineHeight: 1 }}>1M+</div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4, opacity: 0.8 }}>{t('home.details.statLabel')}</div>
+                <div style={{ position: 'absolute', top: -16, right: -16, background: '#d4af37', color: '#0e1111', padding: '16px 20px', borderRadius: 16, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', zIndex: 3 }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', fontWeight: 700, lineHeight: 1 }}>1M+</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4, opacity: 0.8 }}>{t('home.details.statLabel')}</div>
                 </div>
               </div>
             </div>
@@ -346,9 +389,8 @@ export function HomePage() {
       </section>
 
       {/* ===== SECTION 4: PROJECTS / ROUTES (BENTO GLASSMORPHISM) ===== */}
-      <section style={{ 
+      <section className="responsive-padding" style={{ 
         position: 'relative', 
-        padding: '140px 8%',
         background: 'url(https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2000&auto=format&fit=crop) center/cover fixed',
         color: '#ffffff'
       }}>
@@ -358,13 +400,13 @@ export function HomePage() {
 
         <div style={{ position: 'relative', zIndex: 10, maxWidth: 1400, margin: '0 auto' }}>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 60 }}>
+          <div className="routes-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 60 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ height: 1, width: 40, background: '#d4af37' }}></div>
                 <span style={{ color: '#d4af37', letterSpacing: '0.2em', fontSize: 12, textTransform: 'uppercase', fontWeight: 700 }}>{t('home.routes.eyebrow')}</span>
               </div>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '4.5rem', fontWeight: 400, color: '#ffffff', lineHeight: 1, letterSpacing: '0.02em' }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(3rem, 5vw, 4.5rem)', fontWeight: 400, color: '#ffffff', lineHeight: 1, letterSpacing: '0.02em', margin: 0 }}>
                 {t('home.routes.headingLine1')}<br /><span style={{ fontStyle: 'italic', color: '#f0ede6' }}>{t('home.routes.headingLine2')}</span>
               </h2>
             </div>
@@ -374,7 +416,7 @@ export function HomePage() {
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: '340px', gap: 24 }}>
+          <div className="routes-grid">
             {[
               { from: 'Sài Gòn', to: 'Đà Lạt', dist: '300 KM', price: '350.000 Đ', img: 'https://bloganchoi.com/wp-content/uploads/2021/11/review-da-lat-toan-canh-dat-lat-trong-suong-mu-som-mai-1.jpg', type: 'image', col: 2, row: 2 },
               { from: 'Hà Nội', to: 'Sapa', dist: '320 KM', price: '450.000 Đ', img: '', type: 'glass', col: 2, row: 1, desc: 'Sương mù giăng lối, bản làng ẩn hiện. Khám phá vẻ đẹp Tây Bắc qua từng khung cửa sổ.' },
@@ -385,10 +427,8 @@ export function HomePage() {
               if (route.type === 'glass') {
                 return (
                   <div key={i} onClick={() => navigate(searchUrl)} style={{
-                    gridColumn: `span ${route.col}`, 
-                    gridRow: `span ${route.row}`, 
                     borderRadius: 32, 
-                    padding: '40px',
+                    padding: '30px',
                     background: 'rgba(255,255,255,0.03)',
                     backdropFilter: 'blur(24px)',
                     WebkitBackdropFilter: 'blur(24px)',
@@ -399,21 +439,21 @@ export function HomePage() {
                     justifyContent: 'space-between',
                     cursor: 'pointer',
                     transition: 'all 0.4s'
-                  }} className="hover:-translate-y-2 hover:bg-[rgba(255,255,255,0.08)]">
+                  }} className={`route-item route-item-${i} hover:-translate-y-2 hover:bg-[rgba(255,255,255,0.08)]`}>
                     <div>
-                      <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '3rem', color: '#d4af37', margin: 0, lineHeight: 1.1 }}>
-                        <span style={{ fontSize: '4.5rem', float: 'left', lineHeight: 0.8, marginRight: 8 }}>{route.to.charAt(0)}</span>
+                      <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#d4af37', margin: 0, lineHeight: 1.1 }}>
+                        <span style={{ fontSize: 'clamp(3rem, 6vw, 4.5rem)', float: 'left', lineHeight: 0.8, marginRight: 8 }}>{route.to.charAt(0)}</span>
                         {route.to.slice(1)}
                       </h3>
-                      <p style={{ color: 'rgba(255,255,255,0.7)', marginTop: 24, lineHeight: 1.6, fontSize: '0.95rem', clear: 'both' }}>{route.desc}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.7)', marginTop: 24, lineHeight: 1.6, fontSize: '0.95rem', clear: 'both', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{route.desc}</p>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 16 }}>
                       <div>
                         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('home.routes.departureFrom')}</span>
                         <div style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '0.05em' }}>{route.from}</div>
                       </div>
-                      <div style={{ background: '#ffffff', color: '#0e1111', padding: '12px 24px', borderRadius: 100, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      <div style={{ background: '#ffffff', color: '#0e1111', padding: '10px 16px', borderRadius: 100, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>
                         {route.price}
                       </div>
                     </div>
@@ -423,25 +463,23 @@ export function HomePage() {
 
               return (
                 <div key={i} onClick={() => navigate(searchUrl)} style={{
-                  gridColumn: `span ${route.col}`,
-                  gridRow: `span ${route.row}`, 
                   borderRadius: 32, 
                   overflow: 'hidden',
                   position: 'relative',
                   cursor: 'pointer'
-                }} className="group">
+                }} className={`route-item route-item-${i} group`}>
                   <img src={route.img} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.7s ease' }} className="group-hover:scale-110" />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)' }}></div>
                   
                   {/* Glass Tag inside image card */}
-                  <div style={{ position: 'absolute', bottom: 24, left: 24, right: 24, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 24, padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.4s' }} className="group-hover:bg-[rgba(255,255,255,0.15)] group-hover:border-[rgba(212,175,55,0.4)]">
+                  <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 24, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.4s' }} className="group-hover:bg-[rgba(255,255,255,0.15)] group-hover:border-[rgba(212,175,55,0.4)]">
                     <div>
-                      <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '2rem', color: '#ffffff', margin: 0 }}>{route.to}</h3>
-                      <div style={{ color: '#d4af37', fontSize: 11, letterSpacing: '0.1em', marginTop: 8, textTransform: 'uppercase', fontWeight: 700 }}>◆ {route.dist}</div>
+                      <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>{route.to}</h3>
+                      <div style={{ color: '#d4af37', fontSize: 10, letterSpacing: '0.1em', marginTop: 4, textTransform: 'uppercase', fontWeight: 700 }}>◆ {route.dist}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{t('home.routes.priceFrom')}</div>
-                      <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff' }}>{route.price}</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>{t('home.routes.priceFrom')}</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>{route.price}</div>
                     </div>
                   </div>
                 </div>

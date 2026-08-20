@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import { chatWithAi } from './ai.controller';
-import { restrictToApp } from '../../middleware/app-only.middleware';
 
 const router = Router();
 
-// Endpoint for AI chat (only accessible from the mobile app)
-router.post('/chat', restrictToApp, chatWithAi);
+// Endpoint for AI chat
+router.post('/chat', chatWithAi);
 
 export default router;
