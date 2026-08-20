@@ -17,6 +17,7 @@ export interface BookingData {
   addInsurance: boolean;
   insurancePrice: number;
   needVAT: boolean;
+  notes?: string;
   passengerInfo: ContactInfo;
   bookerInfo: ContactInfo;
   totalAmount?: number;

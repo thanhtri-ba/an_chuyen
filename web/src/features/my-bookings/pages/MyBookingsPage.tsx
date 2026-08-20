@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Ticket, Calendar, Clock, Download, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle } from 'lucide-react';
+import { Ticket, Calendar, Clock, Download, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle, Ban } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import type { Booking } from '../../../types';
@@ -29,13 +29,29 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /* ─── TICKET CARD ─── */
-function TicketCard({ booking, index }: { booking: Booking; index: number }) {
+function TicketCard({ booking, index, onCancel }: { booking: Booking; index: number; onCancel: (id: string) => void }) {
   const depTime = booking.tripSchedule?.departureTime;
   const departureDate = depTime ? new Date(depTime) : new Date(booking.createdAt);
   const depCity = booking.tripSchedule?.trip?.route?.departureCity?.name || 'Điểm đi';
   const arrCity = booking.tripSchedule?.trip?.route?.arrivalCity?.name || 'Điểm đến';
   const agentName = booking.tripSchedule?.trip?.busAgent?.name || 'An Chuyến';
   const isPaid = booking.paymentStatus === 'PAID';
+  const canCancel = booking.status === 'CONFIRMED' || booking.status === 'PENDING' || booking.status === 'PENDING_PAYMENT';
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!confirm('Bạn có chắc muốn hủy vé này không?')) return;
+    setIsCancelling(true);
+    try {
+      await api.post(`/bookings/${booking.id}/cancel`);
+      toast.success('Hủy vé thành công');
+      onCancel(booking.id);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Không thể hủy vé. Vui lòng thử lại.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   return (
     <motion.div
@@ -128,25 +144,44 @@ function TicketCard({ booking, index }: { booking: Booking; index: number }) {
       </div>
 
       {/* Actions */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '14px 28px', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'none', border: '1px solid rgba(255,255,255,0.1)',
-          color: 'rgba(240,237,230,0.5)', padding: '8px 18px', cursor: 'pointer',
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-          fontFamily: 'system-ui', transition: 'all 0.2s',
-        }}>
-          <Download size={11} /> Tải vé
-        </button>
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: '#d4af37', border: 'none',
-          color: '#0e1111', padding: '8px 20px', cursor: 'pointer',
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-          fontFamily: 'system-ui',
-        }}>
-          Chi tiết <ArrowRight size={11} />
-        </button>
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <div>
+          {canCancel && (
+            <button
+              onClick={handleCancel}
+              disabled={isCancelling}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'none', border: '1px solid rgba(248,113,113,0.3)',
+                color: '#f87171', padding: '8px 18px', cursor: isCancelling ? 'not-allowed' : 'pointer',
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                fontFamily: 'system-ui', transition: 'all 0.2s', opacity: isCancelling ? 0.5 : 1,
+              }}
+            >
+              <Ban size={11} /> {isCancelling ? 'Đang hủy...' : 'Hủy vé'}
+            </button>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(240,237,230,0.5)', padding: '8px 18px', cursor: 'pointer',
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+            fontFamily: 'system-ui', transition: 'all 0.2s',
+          }}>
+            <Download size={11} /> Tải vé
+          </button>
+          <button style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: '#d4af37', border: 'none',
+            color: '#0e1111', padding: '8px 20px', cursor: 'pointer',
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+            fontFamily: 'system-ui',
+          }}>
+            Chi tiết <ArrowRight size={11} />
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -190,6 +225,12 @@ export function MyBookingsPage() {
         .finally(() => setLoading(false));
     }
   }, [user]);
+
+  const handleCancelBooking = (bookingId: string) => {
+    setBookings(prev => prev.map(b =>
+      b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
+    ));
+  };
 
   if (isLoading) return (
     <div style={{ background: '#0e1111', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>
@@ -308,7 +349,7 @@ export function MyBookingsPage() {
             ) : shown.length === 0 ? (
               <EmptyState type={activeTab} />
             ) : (
-              shown.map((b, i) => <TicketCard key={b.id} booking={b} index={i} />)
+              shown.map((b, i) => <TicketCard key={b.id} booking={b} index={i} onCancel={handleCancelBooking} />)
             )}
           </motion.div>
         </AnimatePresence>

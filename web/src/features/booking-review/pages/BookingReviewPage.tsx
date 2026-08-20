@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, MapPin, Shield, FileText, CheckCircle2, Clock, Tag, CreditCard, Smartphone } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Shield, FileText, CheckCircle2, Clock, Tag } from 'lucide-react';
 import { Button } from '../../../design-system/components/Button';
 import { Card } from '../../../design-system/components/Card';
 import api from '../../../lib/api';
@@ -17,8 +17,8 @@ export function BookingReviewPage() {
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [isInsuranceEnabled, setIsInsuranceEnabled] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('qr');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     // Cuộn lên đầu trang khi vào
@@ -75,7 +75,7 @@ export function BookingReviewPage() {
   const handleProceedToPayment = () => {
     if (!termsAccepted) return;
     // Cập nhật lại bookingData với các tùy chọn mới nhất nếu cần thiết
-    const updatedBooking = { ...bookingData, addInsurance: isInsuranceEnabled, totalAmount: finalTotalAmount };
+    const updatedBooking = { ...bookingData, addInsurance: isInsuranceEnabled, totalAmount: finalTotalAmount, notes };
     sessionStorage.setItem('pending_booking', JSON.stringify(updatedBooking));
     
     // Chuyển tới trang thanh toán thực sự
@@ -231,7 +231,9 @@ export function BookingReviewPage() {
                     <label className="text-xs text-slate-450 font-bold mb-2.5 uppercase tracking-wider flex items-center gap-1.5">
                       <FileText className="w-4 h-4 text-slate-400" /> Ghi chú cho nhà xe (Tùy chọn)
                     </label>
-                    <textarea 
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
                       placeholder="VD: Có trẻ em đi cùng, xin xếp ghế cạnh nhau; Đón ở cổng số 2..."
                       className="w-full bg-white border border-slate-200 p-4 text-sm text-slate-800 focus:border-slate-900 rounded-2xl outline-none resize-none h-24 transition-all"
                     ></textarea>
@@ -302,34 +304,6 @@ export function BookingReviewPage() {
                   <Button onClick={handleApplyPromo} className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-5 font-bold shadow-none h-11 text-xs border-none">
                     Áp dụng
                   </Button>
-                </div>
-              </Card>
-
-              {/* Payment Methods */}
-              <Card className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
-                <p className="text-xs font-bold text-slate-800 mb-4 uppercase tracking-wider">Phương thức thanh toán</p>
-                <div className="space-y-3">
-                  <label className={`flex items-center gap-4 p-4 border-2 rounded-2xl cursor-pointer transition-all ${paymentMethod === 'qr' ? 'border-[#ff4525] bg-orange-50/10 shadow-sm' : 'border-slate-50 hover:border-slate-150'}`}>
-                    <input type="radio" name="payment" value="qr" checked={paymentMethod === 'qr'} onChange={() => setPaymentMethod('qr')} className="hidden" />
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${paymentMethod === 'qr' ? 'bg-[#ff4525] text-white shadow-sm' : 'bg-slate-50 text-slate-500'}`}>
-                      <Smartphone className="w-5 h-5" />
-                    </div>
-                    <span className="font-bold text-slate-800 text-sm flex-1">Chuyển khoản QR (VietQR)</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentMethod === 'qr' ? 'border-[#ff4525]' : 'border-slate-300'}`}>
-                      {paymentMethod === 'qr' && <div className="w-2.5 h-2.5 rounded-full bg-[#ff4525]"></div>}
-                    </div>
-                  </label>
-                  
-                  <label className={`flex items-center gap-4 p-4 border-2 rounded-2xl cursor-pointer transition-all ${paymentMethod === 'card' ? 'border-[#ff4525] bg-orange-50/10 shadow-sm' : 'border-slate-50 hover:border-slate-150'}`}>
-                    <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="hidden" />
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${paymentMethod === 'card' ? 'bg-[#ff4525] text-white shadow-sm' : 'bg-slate-50 text-slate-500'}`}>
-                      <CreditCard className="w-5 h-5" />
-                    </div>
-                    <span className="font-bold text-slate-800 text-sm flex-1">Thẻ ATM / Visa / Mastercard</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentMethod === 'card' ? 'border-[#ff4525]' : 'border-slate-300'}`}>
-                      {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-[#ff4525]"></div>}
-                    </div>
-                  </label>
                 </div>
               </Card>
 

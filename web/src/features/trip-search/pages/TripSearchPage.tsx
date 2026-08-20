@@ -159,7 +159,10 @@ export function TripSearchPage() {
       r = r.filter(t => {
         const h = parseInt(t.depTime.split(':')[0]) + (t.depTime.includes('PM') && !t.depTime.startsWith('12') ? 12 : 0);
         return selectedTimes.some(id =>
-          id === 't1' ? h < 6 : id === 't2' ? h < 12 : id === 't3' ? h < 18 : h < 24
+          id === 't1' ? h >= 0 && h < 6
+          : id === 't2' ? h >= 6 && h < 12
+          : id === 't3' ? h >= 12 && h < 18
+          : h >= 18
         );
       });
     }

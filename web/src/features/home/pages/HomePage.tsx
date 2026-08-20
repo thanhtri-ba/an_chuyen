@@ -5,11 +5,16 @@ import { MapPin, Search, ArrowRightLeft, Ticket, Zap, Sparkles, Star, ChevronRig
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 const heroVideos = [
-  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_092026_dd05b805-ea0f-40b2-8c52-332b88502592.mp4', label: 'Mặt hồ' },
-  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081127_0992a171-d3c6-4978-8213-0ec5df8b6d63.mp4', label: 'Bình minh' },
-  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081042_df7202bf-bd80-4b2b-bbc6-1f09ba2870e9.mp4', label: 'Rừng xanh' },
-  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_080959_4cac5234-3573-464e-a5b7-76b94b8a7d61.mp4', label: 'Bình minh tĩnh' },
-  { url :'https://cdn.pixabay.com/video/2023/07/10/171009-844444293_medium.mp4?download',label :'Hoàng Hôn'}
+  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_092026_dd05b805-ea0f-40b2-8c52-332b88502592.mp4',
+    label: 'Mặt hồ',       theme: { tint: 'rgba(14,60,80,0.28)',  accent: '#5ecfcf', border: 'rgba(94,207,207,0.45)' } },
+  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081127_0992a171-d3c6-4978-8213-0ec5df8b6d63.mp4',
+    label: 'Bình minh',    theme: { tint: 'rgba(90,40,0,0.28)',   accent: '#f5a84a', border: 'rgba(245,168,74,0.45)'  } },
+  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081042_df7202bf-bd80-4b2b-bbc6-1f09ba2870e9.mp4',
+    label: 'Rừng xanh',    theme: { tint: 'rgba(10,50,16,0.28)',  accent: '#72c472', border: 'rgba(114,196,114,0.45)' } },
+  { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_080959_4cac5234-3573-464e-a5b7-76b94b8a7d61.mp4',
+    label: 'Bình minh tĩnh', theme: { tint: 'rgba(50,14,80,0.28)', accent: '#b48ee0', border: 'rgba(180,142,224,0.45)' } },
+  { url: 'https://cdn.pixabay.com/video/2023/07/10/171009-844444293_medium.mp4?download',
+    label: 'Hoàng Hôn',    theme: { tint: 'rgba(100,24,4,0.28)',  accent: '#e8703a', border: 'rgba(232,112,58,0.45)'  } },
 ];
 
 import { Button } from '../../../design-system/components/Button';
@@ -31,6 +36,20 @@ export function HomePage() {
     setActiveVideo(index);
     setTimeout(() => setIsTransitioning(false), 1000);
   };
+
+  // Sync hero theme → CSS vars for Header to pick up
+  useEffect(() => {
+    const { tint, accent, border } = heroVideos[activeVideo].theme;
+    const root = document.documentElement;
+    root.style.setProperty('--hero-bar-tint', tint);
+    root.style.setProperty('--hero-bar-accent', accent);
+    root.style.setProperty('--hero-bar-border', border);
+    return () => {
+      root.style.removeProperty('--hero-bar-tint');
+      root.style.removeProperty('--hero-bar-accent');
+      root.style.removeProperty('--hero-bar-border');
+    };
+  }, [activeVideo]);
 
   // Set default date to today
   const today = new Date().toISOString().split('T')[0];
@@ -93,7 +112,15 @@ export function HomePage() {
             <div style={{ display: 'flex', gap: 24, marginTop: 8 }}>
               {heroVideos.map((v, i) => (
                 <button key={i} onClick={() => handleVideoSwitch(i)}
-                  style={{ background: 'none', border: 'none', borderBottom: `2px solid ${activeVideo === i ? '#ffffff' : 'transparent'}`, color: '#ffffff', opacity: activeVideo === i ? 1 : 0.45, fontFamily: 'system-ui, sans-serif', fontSize: 12, paddingBottom: 4, cursor: 'pointer', transition: 'opacity 300ms, border-color 300ms' }}>
+                  style={{
+                    background: 'none', border: 'none',
+                    borderBottom: `2px solid ${activeVideo === i ? v.theme.accent : 'transparent'}`,
+                    color: activeVideo === i ? v.theme.accent : '#ffffff',
+                    opacity: activeVideo === i ? 1 : 0.45,
+                    fontFamily: 'system-ui, sans-serif', fontSize: 12, paddingBottom: 4,
+                    cursor: 'pointer', transition: 'opacity 400ms, border-color 400ms, color 400ms',
+                    textShadow: activeVideo === i ? `0 0 12px ${v.theme.accent}80` : 'none',
+                  }}>
                   {v.label}
                 </button>
               ))}
@@ -354,9 +381,10 @@ export function HomePage() {
               { from: 'Đà Nẵng', to: 'Hội An', dist: '30 KM', price: '120.000 Đ', img: 'https://www.agoda.com/wp-content/uploads/2024/07/Thu-Bon-River-at-Hoi-An-Ancient-Town-Vietnam.jpg', type: 'image', col: 1, row: 1 },
               { from: 'Sài Gòn', to: 'Nha Trang', dist: '400 KM', price: '400.000 Đ', img: '', type: 'glass', col: 1, row: 1, desc: 'Biển xanh vẫy gọi.' }
             ].map((route, i) => {
+              const searchUrl = `/search?origin=${encodeURIComponent(route.from)}&destination=${encodeURIComponent(route.to)}&date=${today}`;
               if (route.type === 'glass') {
                 return (
-                  <div key={i} onClick={() => navigate('/search')} style={{ 
+                  <div key={i} onClick={() => navigate(searchUrl)} style={{
                     gridColumn: `span ${route.col}`, 
                     gridRow: `span ${route.row}`, 
                     borderRadius: 32, 
@@ -394,8 +422,8 @@ export function HomePage() {
               }
 
               return (
-                <div key={i} onClick={() => navigate('/search')} style={{ 
-                  gridColumn: `span ${route.col}`, 
+                <div key={i} onClick={() => navigate(searchUrl)} style={{
+                  gridColumn: `span ${route.col}`,
                   gridRow: `span ${route.row}`, 
                   borderRadius: 32, 
                   overflow: 'hidden',

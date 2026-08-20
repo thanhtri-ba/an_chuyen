@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from'react';
-import { Link, useNavigate } from'react-router-dom';
+import { useNavigate } from'react-router-dom';
 import { ArrowLeft, CreditCard, Wallet, QrCode, ShieldCheck, Ticket, CheckCircle2, Loader2, Info } from'lucide-react';
 import { motion } from'framer-motion';
 
@@ -36,16 +36,26 @@ export function PaymentPage() {
  .catch(() => setAvailablePoints(0));
  }, []);
 
- const baseTotal = pendingBooking?.totalAmount || 0;
- const insuranceTotal = pendingBooking?.addInsurance ? (pendingBooking.seats.length * pendingBooking.insurancePrice) : 0;
- const pointsDiscount = availablePoints * 10;
- const voucherDiscount = voucherApplied ? 50000 : 0;
- const finalTotal = Math.max(0, baseTotal - (usePoints ? pointsDiscount : 0) - voucherDiscount);
+ const [voucherDiscount, setVoucherDiscount] = useState(0);
 
- const handleApplyVoucher = () => {
- if (voucherCode.toUpperCase() ==='BUSZVIP') {
+ // seatsTotal chỉ tính tiền ghế, tránh double-count insurance từ trang trước
+ const baseTotal = pendingBooking?.seatsTotal || 0;
+ const insuranceTotal = pendingBooking?.addInsurance ? (pendingBooking.seats.length * (pendingBooking.insurancePrice || 20000)) : 0;
+ const pointsDiscount = availablePoints * 10;
+ const finalTotal = Math.max(0, baseTotal + insuranceTotal - (usePoints ? pointsDiscount : 0) - voucherDiscount);
+
+ const handleApplyVoucher = async () => {
+ try {
+ const res = await api.post('/vouchers/validate', { code: voucherCode.toUpperCase() });
+ if (res.data?.discount) {
+ setVoucherDiscount(res.data.discount);
  setVoucherApplied(true);
  } else {
+ setVoucherDiscount(0);
+ alert('Mã không hợp lệ hoặc đã hết hạn.');
+ }
+ } catch {
+ setVoucherDiscount(0);
  alert('Mã không hợp lệ hoặc đã hết hạn.');
  }
  };
@@ -64,7 +74,8 @@ export function PaymentPage() {
  passengers: [{ name: pendingBooking.passengerInfo.name }],
  paymentMethod: selectedMethod,
  pickupPointId: pendingBooking.pickupPoint,
- dropoffPointId: pendingBooking.dropoffPoint
+ dropoffPointId: pendingBooking.dropoffPoint,
+ notes: pendingBooking.notes || '',
  });
 
  const booking = res.data?.data;
@@ -93,9 +104,12 @@ export function PaymentPage() {
  {/* Header Info */}
  <div className="bg-white text-gray-900 py-4 sticky top-0 md:top-20 z-30 shadow-sm border-b border-gray-200">
  <div className="container flex items-center gap-4">
- <Link to="/seat-selection" className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors border border-gray-200 text-gray-600">
+ <button
+ onClick={() => navigate(`/seat-selection/${pendingBooking?.tripScheduleId || ''}`)}
+ className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors border border-gray-200 text-gray-600"
+ >
  <ArrowLeft className="w-5 h-5" />
- </Link>
+ </button>
  <div>
  <h1 className="text-xl md:text-2xl font-extrabold">Thanh toán an toàn</h1>
  <p className="text-gray-500 text-xs md:text-sm font-medium mt-0.5">Mã đơn hàng: #BZ882910</p>
@@ -131,7 +145,7 @@ export function PaymentPage() {
  <Input 
  value={voucherCode}
  onChange={(e) => setVoucherCode(e.target.value)}
- placeholder="Nhập mã khuyến mãi (Thử: BUSZVIP)" 
+ placeholder="Nhập mã khuyến mãi"
  disabled={voucherApplied}
  className="h-12 pl-12 bg-muted/30 uppercase font-bold" 
  />
@@ -148,7 +162,7 @@ export function PaymentPage() {
  </div>
  {voucherApplied && (
  <div className="flex items-center gap-2 text-emerald-600 text-sm font-bold bg-emerald-50 p-3 border border-emerald-100">
- <CheckCircle2 className="w-4 h-4" /> Tuyệt vời! Bạn được giảm 50.000đ
+ <CheckCircle2 className="w-4 h-4" /> Tuyệt vời! Bạn được giảm {new Intl.NumberFormat('vi-VN').format(voucherDiscount)}đ
  </div>
  )}
  </div>
@@ -327,8 +341,8 @@ export function PaymentPage() {
  )}
  {voucherApplied && (
  <div className="flex justify-between items-center text-secondary">
- <span className="text-sm font-semibold">Mã khuyến mãi (BUSZVIP)</span>
- <span className="font-bold">-50.000đ</span>
+ <span className="text-sm font-semibold">Mã khuyến mãi ({voucherCode.toUpperCase()})</span>
+ <span className="font-bold">-{new Intl.NumberFormat('vi-VN').format(voucherDiscount)}đ</span>
  </div>
  )}
  </div>

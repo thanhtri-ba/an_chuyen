@@ -36,7 +36,9 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isTransparent = isHomePage && !scrolled && !mobileMenuOpen;
+  // Trên homepage: luôn dùng theme color (transparent khi chưa scroll, đục hơn khi đã scroll)
+  // Trang khác: dùng #0e1111 cố định
+  const isTransparent = isHomePage && !mobileMenuOpen;
 
   const handleLogout = () => {
     logout();
@@ -48,14 +50,38 @@ export function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isTransparent ? 'bg-transparent text-white' : 'bg-[#0e1111] shadow-sm text-foreground border-b border-white/10'}`}>
-        <div className="w-full flex h-20 items-center justify-between px-4 lg:px-8">
+      <header
+        className={`fixed top-0 w-full z-50 transition-all duration-[500ms] text-white ${!isTransparent ? 'bg-[#0e1111] shadow-sm border-b border-white/10' : ''}`}
+        style={isTransparent ? {
+          background: 'rgba(10,12,12,0.93)',
+          borderBottom: '1px solid var(--hero-bar-border, rgba(255,255,255,0.12))',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          boxShadow: '0 2px 24px rgba(0,0,0,0.55)',
+        } : {}}
+      >
+        {/* Colored tint overlay — subtle hue per video theme */}
+        {isTransparent && (
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none transition-colors duration-700"
+            style={{ background: 'var(--hero-bar-tint, transparent)', zIndex: 0 }}
+          />
+        )}
+        <div className="w-full flex h-20 items-center justify-between px-4 lg:px-8 relative z-10">
           
           {/* Logo + Nav */}
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center group">
-              <span className={`text-2xl italic transition-colors ${isTransparent ? 'text-white' : 'text-[#d4af37]'}`}
-                style={{ fontFamily: "'Instrument Serif', serif", letterSpacing: '-0.01em' }}>
+              <span
+                className="text-2xl italic transition-all duration-500"
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  letterSpacing: '-0.01em',
+                  color: isTransparent ? 'var(--hero-bar-accent, #ffffff)' : '#d4af37',
+                  textShadow: isTransparent ? '0 0 20px var(--hero-bar-accent, transparent)' : 'none',
+                }}
+              >
                 2QO Travle
               </span>
             </Link>
@@ -65,21 +91,26 @@ export function Header() {
                 {t('header.home')}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
               </Link> */}
-              <Link to="/search" className={`relative group transition-opacity ${isTransparent ? 'text-white/90' : 'text-gray-300 hover:text-[#d4af37]'}`}>
-                {t('header.search')}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
-              </Link>
-              <Link to="/offers" className={`relative group transition-opacity flex items-center gap-1 ${isTransparent ? 'text-white/90' : 'text-gray-300 hover:text-[#d4af37]'}`}>
-                {t('header.offers')} <span className="bg-red-500 text-white text-[6px] font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-sm">{t('header.hot')}</span>
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
-              </Link>
-              <Link to="/blog" className={`relative group transition-opacity ${isTransparent ? 'text-white/90' : 'text-gray-300 hover:text-[#d4af37]'}`}>
-                {t('header.blog')}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
-              </Link>
-              <Link to="/about" className={`relative group transition-opacity ${isTransparent ? 'text-white/90' : 'text-gray-300 hover:text-[#d4af37]'}`}>
-                {t('header.about')}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all group-hover:w-full rounded-full"></span>
+              {[
+                { to: '/search', label: t('header.search') },
+                { to: '/blog',   label: t('header.blog') },
+                { to: '/about',  label: t('header.about') },
+              ].map(({ to, label }) => (
+                <Link key={to} to={to} className={`relative group transition-all duration-300 ${isTransparent ? 'text-white/85 hover:text-white' : 'text-gray-300 hover:text-[#d4af37]'}`}>
+                  {label}
+                  <span
+                    className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full rounded-full"
+                    style={{ background: isTransparent ? 'var(--hero-bar-accent, #ffffff)' : '#d4af37' }}
+                  />
+                </Link>
+              ))}
+              <Link to="/offers" className={`relative group transition-all duration-300 flex items-center gap-1 ${isTransparent ? 'text-white/85 hover:text-white' : 'text-gray-300 hover:text-[#d4af37]'}`}>
+                {t('header.offers')}
+                <span className="bg-red-500 text-white text-[6px] font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-sm">{t('header.hot')}</span>
+                <span
+                  className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full rounded-full"
+                  style={{ background: isTransparent ? 'var(--hero-bar-accent, #ffffff)' : '#d4af37' }}
+                />
               </Link>
             </nav>
           </div>
@@ -90,7 +121,8 @@ export function Header() {
             {/* Language pill */}
             <button
               onClick={() => setRightDrawerOpen(true)}
-              className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-semibold transition-all duration-200 ${isTransparent ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/8'}`}
+              className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-semibold transition-all duration-300 ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-400 hover:text-white hover:bg-white/8'}`}
+              style={isTransparent ? { ['--tw-ring-color' as string]: 'var(--hero-bar-accent)' } : {}}
             >
               <Globe className="w-4 h-4" />
               <span>{i18n.language.toUpperCase()}</span>
@@ -99,16 +131,22 @@ export function Header() {
             {/* Bell */}
             <button
               onClick={() => setRightDrawerOpen(true)}
-              className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isTransparent ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/8'}`}
+              className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300 ${isTransparent ? 'text-white/80 hover:text-white' : 'text-gray-400 hover:text-white hover:bg-white/8'}`}
             >
               <Bell className="w-4.5 h-4.5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#d4af37] rounded-full" />
+                <span
+                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full transition-all duration-500"
+                  style={{ background: isTransparent ? 'var(--hero-bar-accent, #d4af37)' : '#d4af37' }}
+                />
               )}
             </button>
 
             {/* Divider */}
-            <div className={`w-px h-5 mx-1 ${isTransparent ? 'bg-white/20' : 'bg-white/10'}`} />
+            <div
+              className="w-px h-5 mx-1 transition-all duration-500"
+              style={{ background: isTransparent ? 'var(--hero-bar-accent, rgba(255,255,255,0.2))' : 'rgba(255,255,255,0.1)', opacity: 0.4 }}
+            />
 
             {/* Account */}
             <button
