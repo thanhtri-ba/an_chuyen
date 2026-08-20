@@ -1,9 +1,7 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, User, MapPin, Shield, FileText, CheckCircle2, Clock, Tag } from 'lucide-react';
-import { Button } from '../../../design-system/components/Button';
-import { Card } from '../../../design-system/components/Card';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Clock, Tag, Shield, FileText, Check, MapPin, User, ChevronRight, X } from 'lucide-react';
 import api from '../../../lib/api';
 import type { BookingData } from '../../../types';
 import { toast } from 'sonner';
@@ -11,388 +9,418 @@ import { toast } from 'sonner';
 export function BookingReviewPage() {
   const navigate = useNavigate();
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
-
-  // New States
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [timeLeft, setTimeLeft] = useState(570);
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [promoApplied, setPromoApplied] = useState(false);
   const [isInsuranceEnabled, setIsInsuranceEnabled] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [notes, setNotes] = useState('');
+  const [promoFocused, setPromoFocused] = useState(false);
 
   useEffect(() => {
-    // Cuộn lên đầu trang khi vào
     window.scrollTo(0, 0);
-    
-    // Lấy dữ liệu từ sessionStorage
-    const savedData = sessionStorage.getItem('pending_booking');
-    if (savedData) {
+    const saved = sessionStorage.getItem('pending_booking');
+    if (saved) {
       try {
-        const parsed = JSON.parse(savedData);
+        const parsed = JSON.parse(saved);
         setBookingData(parsed);
-        setIsInsuranceEnabled(parsed.addInsurance);
-      } catch (e) {
-        console.error("Lỗi khi đọc dữ liệu booking", e);
-        navigate('/'); // Nếu lỗi, về trang chủ
-      }
-    } else {
-      // Nếu không có dữ liệu, quay lại trang trước
-      navigate(-1);
-    }
+        setIsInsuranceEnabled(parsed.addInsurance || false);
+        setNotes(parsed.notes || '');
+      } catch { navigate('/'); }
+    } else { navigate(-1); }
   }, [navigate]);
 
-  // Timer Effect
   useEffect(() => {
-    if (!bookingData) return;
-    if (timeLeft <= 0) return;
-    const timerId = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-    return () => clearInterval(timerId);
+    if (!bookingData || timeLeft <= 0) return;
+    const t = setInterval(() => setTimeLeft(p => p - 1), 1000);
+    return () => clearInterval(t);
   }, [timeLeft, bookingData]);
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    try {
+      const res = await api.post('/vouchers/validate', { code: promoCode.toUpperCase() });
+      if (res.data?.discount) {
+        setDiscount(res.data.discount);
+        setPromoApplied(true);
+        toast.success(`Giảm ${fmt(res.data.discount)}đ`);
+      } else { toast.error('Mã không hợp lệ hoặc đã hết hạn'); }
+    } catch { toast.error('Mã không hợp lệ hoặc đã hết hạn'); }
+  };
+
+  const handleProceedToPayment = () => {
+    if (!termsAccepted) { toast.error('Vui lòng đồng ý với điều khoản'); return; }
+    const updated = { ...bookingData, addInsurance: isInsuranceEnabled, totalAmount: finalTotal, notes };
+    sessionStorage.setItem('pending_booking', JSON.stringify(updated));
+    navigate('/payment');
   };
 
   if (!bookingData) return null;
 
-  const {
-    seats,
-    seatsTotal,
-    pickupLabel,
-    dropoffLabel,
-    routeLabel,
-    busAgentName,
-    addInsurance,
-    needVAT,
-    passengerInfo,
-    bookerInfo
-  } = bookingData;
+  const { seats, seatsTotal, pickupLabel, dropoffLabel, routeLabel, busAgentName, needVAT, passengerInfo, bookerInfo } = bookingData;
+  const insuranceFee = isInsuranceEnabled ? seats.length * 20000 : 0;
+  const finalTotal = Math.max(0, seatsTotal + insuranceFee - discount);
+  const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n);
+  const timerPct = (timeLeft / 570) * 100;
+  const timerUrgent = timeLeft < 120;
 
-  const handleProceedToPayment = () => {
-    if (!termsAccepted) return;
-    // Cập nhật lại bookingData với các tùy chọn mới nhất nếu cần thiết
-    const updatedBooking = { ...bookingData, addInsurance: isInsuranceEnabled, totalAmount: finalTotalAmount, notes };
-    sessionStorage.setItem('pending_booking', JSON.stringify(updatedBooking));
-    
-    // Chuyển tới trang thanh toán thực sự
-    navigate('/payment');
-  };
-
-  const handleApplyPromo = async () => {
-    try {
-      const res = await api.post('/vouchers/validate', { code: promoCode.toUpperCase() });
-      if (res.data && res.data.discount) {
-        setDiscount(res.data.discount);
-        toast.success(`Áp dụng mã giảm giá thành công! Giảm ${new Intl.NumberFormat('vi-VN').format(res.data.discount)}đ`);
-      } else {
-        setDiscount(0);
-        toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn!');
-      }
-    } catch (error) {
-      setDiscount(0);
-      toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn!');
-    }
-  };
-
-  const basePrice = seatsTotal;
-  const insurancePrice = isInsuranceEnabled ? seats.length * 20000 : 0;
-  const finalTotalAmount = basePrice + insurancePrice - discount;
+  const [routeFrom, routeTo] = routeLabel?.split(' → ') || ['—', '—'];
 
   return (
-    <div className="bg-gray-50 min-h-[calc(100vh-4rem)] pt-20 pb-32 font-sans text-slate-800 transition-colors duration-300">
-      
-      {/* Header Info */}
-      <div className="bg-white/80 backdrop-blur-md py-4 sticky top-0 md:top-20 z-30 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] border-b border-slate-100/80 transition-all duration-300">
-        <div className="container max-w-5xl mx-auto px-4 flex items-center gap-4">
-          <button 
-            onClick={() => navigate(-1)}
-            className="p-2 bg-white rounded-full hover:bg-slate-50 transition-all border border-slate-100 text-slate-700 shadow-sm hover:scale-105"
-          >
-            <ArrowLeft className="w-5 h-5" />
+    <div style={{ background: '#080a0a', minHeight: '100vh', color: '#f0ede6', fontFamily: 'system-ui' }}>
+
+      {/* ── TOPBAR ── */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(8,10,10,0.97)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 28px', height: 60, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, background: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', flexShrink: 0 }}>
+            <ArrowLeft size={14} />
           </button>
-          <h1 className="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
-            Xác nhận thông tin đặt vé
-          </h1>
+          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {[
+              { l: 'Chọn ghế', done: true },
+              { l: 'Xác nhận', done: false, active: true },
+              { l: 'Thanh toán', done: false },
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                {i > 0 && <div style={{ width: 24, height: 1, background: s.done || i === 1 ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.08)', margin: '0 4px' }} />}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: s.active ? 1 : s.done ? 0.7 : 0.3 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: s.active ? '#d4af37' : s.done ? 'rgba(212,175,55,0.15)' : 'transparent', border: `1px solid ${s.active ? '#d4af37' : s.done ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: s.active ? '#080a0a' : s.done ? '#d4af37' : 'rgba(255,255,255,0.3)' }}>
+                    {s.done ? <Check size={9} strokeWidth={3} /> : i + 1}
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: s.active ? '#f0ede6' : 'rgba(255,255,255,0.35)' }}>{s.l}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="container max-w-5xl mx-auto px-4 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Info Column */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Trip Info */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-              <Card className="relative overflow-visible bg-white border border-slate-100 rounded-[32px] p-6 shadow-[0_4px_25px_rgba(0,0,0,0.015)]">
-                {/* Left and Right Ticket Notches */}
-                <div className="absolute -left-3 top-[108px] w-6 h-6 rounded-full bg-gray-50 border border-slate-100/80 z-10 hidden sm:block"></div>
-                <div className="absolute -right-3 top-[108px] w-6 h-6 rounded-full bg-gray-50 border border-slate-100/80 z-10 hidden sm:block"></div>
-                
-                {/* Brand Gradient Header block */}
-                <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-6 mb-5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-md">
-                      <MapPin className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">{routeLabel || 'Đang tải...'}</h2>
-                      <div className="text-slate-300 font-semibold text-xs mt-1 uppercase tracking-wider">{busAgentName}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Points details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-slate-50/50 p-4 border border-slate-100 rounded-2xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Điểm đón</span>
-                    <span className="font-extrabold text-slate-800 text-base leading-tight block">{pickupLabel || 'Chưa chọn điểm đón'}</span>
-                  </div>
-                  <div className="bg-slate-50/50 p-4 border border-slate-100 rounded-2xl md:text-right">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Điểm trả</span>
-                    <span className="font-extrabold text-slate-800 text-base leading-tight block">{dropoffLabel || 'Chưa chọn điểm trả'}</span>
-                  </div>
-                </div>
-                
-                {/* Ticket footer details */}
-                <div className="flex flex-wrap gap-4 justify-between items-center mt-6 pt-5 border-t border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-450 uppercase tracking-wider">Ghế đã chọn:</span>
-                    <span className="font-black text-lg bg-orange-50 text-[#ff4525] border border-orange-100 px-3.5 py-1 rounded-xl tracking-tight">{seats.join(', ')}</span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-600 font-bold text-xs rounded-full border border-slate-100">
-                      <Shield className="w-3.5 h-3.5 text-slate-400" /> Hủy miễn phí
-                    </span>
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-600 font-bold text-xs rounded-full border border-slate-100">
-                      Hành lý 20kg
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+      {/* ── BODY ── */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 28px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
 
-            {/* Contact Info */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
-              <Card className="bg-white border border-slate-100 rounded-[32px] p-6 md:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.015)]">
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-450 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-md shadow-emerald-500/10">
-                    <User className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-800 tracking-tight">Thông tin liên hệ</h2>
-                    <p className="text-slate-400 text-xs font-semibold mt-0.5">Chi tiết người đi & người đặt</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 border border-slate-100 rounded-2xl">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Hành khách</span>
-                      <p className="font-extrabold text-slate-800 text-base">{passengerInfo.name || 'Không xác định'}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Số điện thoại</span>
-                      <p className="font-extrabold text-slate-800 text-base">{passengerInfo.phone || 'Không xác định'}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Email nhận vé</span>
-                      <p className="font-extrabold text-slate-800 text-base break-all">{passengerInfo.email || 'Không xác định'}</p>
-                    </div>
-                  </div>
-                  
-                  {bookerInfo && (
-                    <div className="pt-2">
-                      <div className="bg-slate-50/80 p-5 border border-slate-100 rounded-2xl">
-                        <p className="text-[10px] text-slate-450 font-bold mb-4 uppercase tracking-wider flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Người đặt hộ
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <div>
-                            <span className="text-xs text-slate-400 font-semibold block mb-0.5">Tên người đặt</span>
-                            <p className="font-bold text-slate-800 text-base">{bookerInfo.name}</p>
-                          </div>
-                          <div>
-                            <span className="text-xs text-slate-400 font-semibold block mb-0.5">Số điện thoại</span>
-                            <p className="font-bold text-slate-800 text-base">{bookerInfo.phone}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+        {/* ══ LEFT ══ */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-                  <div className="pt-2">
-                    <label className="text-xs text-slate-450 font-bold mb-2.5 uppercase tracking-wider flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-slate-400" /> Ghi chú cho nhà xe (Tùy chọn)
-                    </label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="VD: Có trẻ em đi cùng, xin xếp ghế cạnh nhau; Đón ở cổng số 2..."
-                      className="w-full bg-white border border-slate-200 p-4 text-sm text-slate-800 focus:border-slate-900 rounded-2xl outline-none resize-none h-24 transition-all"
-                    ></textarea>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-
-            {/* Extras */}
-            {(isInsuranceEnabled || needVAT) && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
-                <Card className="bg-gradient-to-br from-emerald-50/20 to-teal-50/20 rounded-[24px] p-5 border border-emerald-100/50 shadow-sm flex flex-col gap-4">
-                  {isInsuranceEnabled && (
-                    <div className="flex items-center gap-4 bg-white p-4 border border-emerald-100 rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.01)]">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-450 to-teal-500 rounded-xl flex items-center justify-center text-white">
-                        <Shield className="w-5 h-5" />
-                      </div>
-                      <span className="font-bold text-emerald-800 text-base">Đã bao gồm Bảo hiểm chuyến đi</span>
-                    </div>
-                  )}
-                  {needVAT && (
-                    <div className="flex items-center gap-4 bg-white p-4 border border-slate-100 rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.01)]">
-                      <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <span className="font-bold text-slate-800 text-base">Đã đăng ký xuất Hóa đơn VAT</span>
-                    </div>
-                  )}
-                </Card>
-              </motion.div>
-            )}
-
+          {/* Page title */}
+          <div>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 38, fontWeight: 600, margin: 0, lineHeight: 1, letterSpacing: '-0.01em' }}>Xác nhận đặt vé</h1>
+            <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Kiểm tra lại thông tin trước khi thanh toán</p>
           </div>
-          
-          {/* Summary Column */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}>
-            <div className="sticky top-28 space-y-6">
-              
-              {/* Countdown Timer */}
-              <div className="bg-orange-50 border border-orange-200/50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                    <Clock className="w-5 h-5" />
+
+          {/* ── Trip card ── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.018) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+
+              {/* Route header */}
+              <div style={{ background: 'linear-gradient(135deg, rgba(16,24,28,0.9) 0%, rgba(10,18,24,0.95) 100%)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '22px 24px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, background: 'radial-gradient(circle, rgba(212,175,55,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <MapPin size={18} color="#d4af37" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-orange-950 leading-tight">Thời gian giữ ghế</p>
-                    <p className="text-[11px] text-orange-700 font-semibold mt-0.5">Vui lòng thanh toán sớm</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, letterSpacing: '0.02em' }}>{routeFrom}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 18, height: 1, background: 'rgba(212,175,55,0.5)' }} />
+                        <div style={{ width: 5, height: 5, background: '#d4af37', transform: 'rotate(45deg)' }} />
+                        <div style={{ width: 18, height: 1, background: 'rgba(212,175,55,0.5)' }} />
+                      </div>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, letterSpacing: '0.02em' }}>{routeTo}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{busAgentName}</div>
                   </div>
-                </div>
-                <div className="text-2xl font-black text-orange-650 tabular-nums tracking-tight">
-                  {formatTime(timeLeft)}
                 </div>
               </div>
 
-              {/* Promo Code */}
-              <Card className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
-                <p className="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <Tag className="w-4 h-4 text-orange-500" /> Mã giảm giá / Ưu đãi
-                </p>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="MÃ GIẢM GIÁ" 
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs uppercase font-bold focus:border-slate-900 outline-none transition-all"
-                  />
-                  <Button onClick={handleApplyPromo} className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-5 font-bold shadow-none h-11 text-xs border-none">
-                    Áp dụng
-                  </Button>
-                </div>
-              </Card>
+              {/* Pickup/dropoff */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                {[
+                  { label: 'Điểm đón', value: pickupLabel || 'Chưa chọn điểm đón', icon: '🟢' },
+                  { label: 'Điểm trả', value: dropoffLabel || 'Chưa chọn điểm trả', icon: '🔴' },
+                ].map((item, i) => (
+                  <div key={i} style={{ padding: '16px 24px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>{item.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#f0ede6', lineHeight: 1.4 }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
 
-              {/* Total Summary */}
-              <Card className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-[0_12px_40px_rgba(0,0,0,0.06)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                
-                <h3 className="text-xl font-extrabold mb-6 flex items-center gap-3 relative text-slate-800 tracking-tight">
-                  <div className="w-10 h-10 bg-[#ff4525]/10 rounded-xl flex items-center justify-center text-[#ff4525]">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  Tóm tắt chi phí
-                </h3>
-                
-                <div className="space-y-4 mb-6 relative">
-                  <div className="flex justify-between items-center font-semibold text-sm p-3 bg-slate-50/50 border border-slate-100/50 rounded-xl">
-                    <span className="text-slate-500">Giá vé ({seats.length} ghế)</span>
-                    <span className="text-slate-800 font-bold">{new Intl.NumberFormat('vi-VN').format(basePrice)}đ</span>
-                  </div>
-                  
-                  {/* Toggleable Insurance */}
-                  <div className={`flex justify-between items-center font-semibold text-sm p-3 cursor-pointer rounded-xl border transition-colors ${isInsuranceEnabled ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' : 'bg-slate-50/50 border-slate-100/50 hover:bg-slate-100/50 text-slate-800'}`} onClick={() => setIsInsuranceEnabled(!isInsuranceEnabled)}>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 flex items-center justify-center border rounded transition-colors ${isInsuranceEnabled ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 text-transparent'}`}>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                      </div>
-                      <span className={isInsuranceEnabled ? 'text-emerald-700 font-bold' : 'text-slate-500 font-semibold'}>Bảo hiểm chuyến đi</span>
-                    </div>
-                    <span className={isInsuranceEnabled ? 'text-emerald-700 font-bold' : 'text-slate-400 line-through'}>
-                      {new Intl.NumberFormat('vi-VN').format(seats.length * 20000)}đ
-                    </span>
-                  </div>
-                  
-                  {discount > 0 && (
-                    <div className="flex justify-between items-center font-semibold text-sm p-3 bg-orange-50 border border-orange-100 text-orange-850 rounded-xl">
-                      <span className="font-bold flex items-center gap-1.5">
-                        <Tag className="w-4 h-4" /> Giảm giá
-                      </span>
-                      <span className="font-bold">
-                        -{new Intl.NumberFormat('vi-VN').format(discount)}đ
-                      </span>
-                    </div>
-                  )}
-                  
-                  {needVAT && (
-                    <div className="flex justify-between items-center font-semibold text-xs px-3">
-                      <span className="text-slate-400">Thuế VAT (8%)</span>
-                      <span className="text-slate-655 font-bold">Đã bao gồm trong giá vé</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="bg-gradient-to-r from-orange-50/80 to-red-50/80 p-5 mb-5 rounded-2xl border border-orange-100/50 relative overflow-hidden">
-                  <div className="flex justify-between items-end relative">
-                    <span className="text-orange-950 font-extrabold text-xs uppercase tracking-wider mb-1">Tổng thanh toán</span>
-                    <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ff4525] to-[#ff7d1a] tracking-tight">{new Intl.NumberFormat('vi-VN').format(finalTotalAmount)}đ</span>
+              {/* Seat chips + amenities */}
+              <div style={{ padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>Ghế đã chọn</span>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    {seats.map((seat: string) => {
+                      const p = seat.match(/^T(\d+)-(\d+)([A-Z]+)$/);
+                      const label = p ? `${p[3]}${p[2]}` : seat;
+                      return (
+                        <span key={seat} style={{ fontSize: 12, fontWeight: 800, color: '#d4af37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 6, padding: '4px 10px', letterSpacing: '0.04em' }}>{label}</span>
+                      );
+                    })}
                   </div>
                 </div>
-
-                {/* Terms Acceptance */}
-                <div className="mb-6 flex items-start gap-3">
-                  <button 
-                    onClick={() => setTermsAccepted(!termsAccepted)}
-                    className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center border transition-all ${termsAccepted ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-300 text-transparent hover:border-slate-500'}`}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                  </button>
-                  <p className="text-[11px] text-slate-450 leading-relaxed cursor-pointer font-medium" onClick={() => setTermsAccepted(!termsAccepted)}>
-                    Tôi đã đọc và đồng ý với <a href="#" className="text-slate-700 underline font-bold" onClick={(e) => e.stopPropagation()}>Điều khoản dịch vụ</a> và <a href="#" className="text-slate-700 underline font-bold" onClick={(e) => e.stopPropagation()}>Chính sách bảo mật</a> của LunaTravel Business.
-                  </p>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { icon: <Shield size={11} />, label: 'Hủy miễn phí' },
+                    { icon: null, label: 'Hành lý 20kg' },
+                  ].map((a, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 99, padding: '4px 10px' }}>
+                      {a.icon && <span style={{ color: 'rgba(212,175,55,0.5)' }}>{a.icon}</span>}
+                      {a.label}
+                    </div>
+                  ))}
                 </div>
-                
-                <Button 
-                  onClick={handleProceedToPayment}
-                  disabled={!termsAccepted}
-                  className={`w-full h-14 font-extrabold text-base text-white border-none rounded-2xl transition-all duration-350 ${termsAccepted ? 'bg-gradient-to-r from-[#ff4525] to-[#ff7d1a] hover:from-[#e03d20] hover:to-[#e06e17] shadow-md shadow-orange-500/10 hover:shadow-lg hover:shadow-orange-500/20 active:scale-[0.99]' : 'bg-slate-200 cursor-not-allowed opacity-50'}`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    Tiến hành thanh toán
-                    {termsAccepted && (
-                      <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    )}
-                  </span>
-                </Button>
-              </Card>
+              </div>
             </div>
           </motion.div>
+
+          {/* ── Passenger info ── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
+            <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '22px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <User size={16} color="#d4af37" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>Thông tin hành khách</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Người đi & người đặt vé</div>
+                </div>
+              </div>
+
+              {/* Passenger row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: bookerInfo ? 12 : 0 }}>
+                {[
+                  { label: 'Hành khách', val: passengerInfo?.name },
+                  { label: 'Số điện thoại', val: passengerInfo?.phone },
+                  { label: 'Email nhận vé', val: passengerInfo?.email },
+                ].map(f => (
+                  <div key={f.label}>
+                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 5 }}>{f.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#f0ede6', wordBreak: 'break-all' }}>{f.val || '—'}</div>
+                  </div>
+                ))}
+              </div>
+
+              {bookerInfo && (
+                <div style={{ padding: '12px 16px', background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 12, marginBottom: 12 }}>
+                  <div style={{ fontSize: 8, color: 'rgba(212,175,55,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Check size={9} /> Người đặt hộ
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    {[
+                      { label: 'Họ tên', val: bookerInfo.name },
+                      { label: 'Số điện thoại', val: bookerInfo.phone },
+                    ].map(f => (
+                      <div key={f.label}>
+                        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>{f.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{f.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              <div style={{ marginTop: 4 }}>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <FileText size={11} color="rgba(255,255,255,0.25)" /> Ghi chú cho nhà xe (tùy chọn)
+                </div>
+                <textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  placeholder="VD: Có trẻ em đi cùng, xin xếp ghế cạnh nhau; Đón ở cổng số 2..."
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 10, padding: '12px 14px', color: '#f0ede6', fontSize: 12, fontFamily: 'system-ui', outline: 'none', resize: 'none', height: 80, boxSizing: 'border-box', transition: 'border-color 0.2s', lineHeight: 1.6 }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(212,175,55,0.35)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.09)'}
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ── Add-ons confirm ── */}
+          {(isInsuranceEnabled || needVAT) && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {isInsuranceEnabled && (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 12 }}>
+                    <Shield size={14} color="#4ade80" />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(74,222,128,0.8)' }}>Bảo hiểm hành trình đã bao gồm</span>
+                  </div>
+                )}
+                {needVAT && (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12 }}>
+                    <FileText size={14} color="rgba(255,255,255,0.4)" />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)' }}>Hóa đơn VAT sẽ được xuất</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* ══ RIGHT PANEL ══ */}
+        <div style={{ position: 'sticky', top: 72, display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+          {/* Timer */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            style={{ background: timerUrgent ? 'rgba(248,65,65,0.08)' : 'rgba(212,175,55,0.06)', border: `1px solid ${timerUrgent ? 'rgba(248,65,65,0.25)' : 'rgba(212,175,55,0.18)'}`, borderRadius: 14, padding: '14px 16px', overflow: 'hidden', position: 'relative' }}
+          >
+            {/* Progress bar */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, height: 3, width: '100%', background: 'rgba(255,255,255,0.05)' }}>
+              <motion.div
+                animate={{ width: `${timerPct}%` }}
+                transition={{ duration: 1, ease: 'linear' }}
+                style={{ height: '100%', background: timerUrgent ? '#f87171' : '#d4af37', borderRadius: 99 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Clock size={16} color={timerUrgent ? '#f87171' : '#d4af37'} />
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: timerUrgent ? 'rgba(248,65,65,0.8)' : 'rgba(212,175,55,0.7)', letterSpacing: '0.05em' }}>Thời gian giữ ghế</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>Vui lòng thanh toán sớm</div>
+                </div>
+              </div>
+              <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 900, color: timerUrgent ? '#f87171' : '#d4af37', letterSpacing: '0.05em', lineHeight: 1 }}>
+                {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Promo code */}
+          <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
+              <Tag size={13} color="rgba(212,175,55,0.6)" />
+              <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>Mã giảm giá</span>
+            </div>
+            {promoApplied ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Check size={13} color="#4ade80" />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80', letterSpacing: '0.05em' }}>{promoCode.toUpperCase()}</span>
+                  <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.6)' }}>-{fmt(discount)}đ</span>
+                </div>
+                <button onClick={() => { setPromoApplied(false); setDiscount(0); setPromoCode(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: 2 }}>
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={e => setPromoCode(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
+                  placeholder="Nhập mã ưu đãi"
+                  onFocus={() => setPromoFocused(true)}
+                  onBlur={() => setPromoFocused(false)}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${promoFocused ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, padding: '10px 12px', color: '#f0ede6', fontSize: 12, fontFamily: 'system-ui', outline: 'none', letterSpacing: '0.08em', transition: 'border-color 0.2s' }}
+                />
+                <button
+                  onClick={handleApplyPromo}
+                  style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 10, padding: '10px 14px', color: '#d4af37', fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}
+                >
+                  Áp dụng
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Price summary */}
+          <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.018) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '18px 16px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <FileText size={14} color="rgba(212,175,55,0.6)" />
+              <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>Tóm tắt chi phí</span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                <span>Giá vé · {seats.length} ghế</span>
+                <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>{fmt(seatsTotal)}đ</span>
+              </div>
+
+              {/* Insurance toggle */}
+              <div
+                onClick={() => setIsInsuranceEnabled(p => !p)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '10px 12px', background: isInsuranceEnabled ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isInsuranceEnabled ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 4, border: `1px solid ${isInsuranceEnabled ? '#4ade80' : 'rgba(255,255,255,0.2)'}`, background: isInsuranceEnabled ? '#4ade80' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                    {isInsuranceEnabled && <Check size={8} color="#080a0a" strokeWidth={3} />}
+                  </div>
+                  <span style={{ color: isInsuranceEnabled ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.35)' }}>Bảo hiểm chuyến đi</span>
+                </div>
+                <span style={{ fontWeight: 600, color: isInsuranceEnabled ? 'rgba(74,222,128,0.7)' : 'rgba(255,255,255,0.2)', textDecoration: isInsuranceEnabled ? 'none' : 'line-through' }}>{fmt(seats.length * 20000)}đ</span>
+              </div>
+
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '8px 12px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 10, color: 'rgba(74,222,128,0.7)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Tag size={11} /> Mã giảm giá</span>
+                  <span style={{ fontWeight: 700 }}>-{fmt(discount)}đ</span>
+                </div>
+              )}
+            </div>
+
+            {/* Total */}
+            <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.04) 100%)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: '14px 14px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Tổng thanh toán</span>
+                <motion.span
+                  key={finalTotal}
+                  initial={{ scale: 1.05, color: '#f2c118' }}
+                  animate={{ scale: 1, color: '#d4af37' }}
+                  transition={{ duration: 0.3 }}
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.9rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}
+                >
+                  {fmt(finalTotal)}₫
+                </motion.span>
+              </div>
+            </div>
+
+            {/* Terms */}
+            <div
+              onClick={() => setTermsAccepted(p => !p)}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14, cursor: 'pointer', userSelect: 'none' }}
+            >
+              <div style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${termsAccepted ? '#d4af37' : 'rgba(255,255,255,0.2)'}`, background: termsAccepted ? '#d4af37' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
+                {termsAccepted && <Check size={9} color="#080a0a" strokeWidth={3} />}
+              </div>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, margin: 0 }}>
+                Tôi đã đọc và đồng ý với{' '}
+                <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>Điều khoản dịch vụ</span>
+                {' '}và{' '}
+                <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>Chính sách bảo mật</span>
+              </p>
+            </div>
+
+            {/* CTA */}
+            <motion.button
+              onClick={handleProceedToPayment}
+              disabled={!termsAccepted}
+              whileHover={termsAccepted ? { scale: 1.02, boxShadow: '0 10px 32px rgba(212,175,55,0.3)' } : {}}
+              whileTap={termsAccepted ? { scale: 0.97 } : {}}
+              style={{
+                width: '100%', borderRadius: 12, padding: '15px',
+                background: termsAccepted ? 'linear-gradient(135deg, #e0bb45 0%, #b8920e 100%)' : 'rgba(255,255,255,0.05)',
+                color: termsAccepted ? '#080a0a' : 'rgba(255,255,255,0.2)',
+                border: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
+                cursor: termsAccepted ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                fontFamily: 'system-ui',
+                boxShadow: termsAccepted ? '0 4px 20px rgba(212,175,55,0.2)' : 'none',
+                transition: 'background 0.2s, box-shadow 0.2s',
+              }}
+            >
+              Tiến hành thanh toán
+              {termsAccepted && <ChevronRight size={14} />}
+            </motion.button>
+          </div>
         </div>
       </div>
     </div>
