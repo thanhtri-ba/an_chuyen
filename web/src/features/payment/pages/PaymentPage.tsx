@@ -127,13 +127,16 @@ export function PaymentPage() {
  
  <div className="space-y-6">
  {/* LunaTravel Business Points */}
- <div className="flex items-start gap-4 p-4 border bg-yellow-50/50 border-yellow-100">
+ <div
+   className="flex items-start gap-4 p-4 border bg-yellow-50/50 border-yellow-100 cursor-pointer select-none"
+   onClick={() => setUsePoints(p => !p)}
+ >
  <Checkbox id="points" checked={usePoints} onCheckedChange={(c) => setUsePoints(c as boolean)} className="mt-1 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500" />
  <div className="flex-1">
- <label htmlFor="points" className="font-bold text-yellow-900 flex justify-between cursor-pointer">
+ <div className="font-bold text-yellow-900 flex justify-between">
  <span>Sử dụng {new Intl.NumberFormat('vi-VN').format(availablePoints)} LunaTravel Business Points</span>
  <span>-{new Intl.NumberFormat('vi-VN').format(pointsDiscount)}đ</span>
- </label>
+ </div>
  <p className="text-sm text-yellow-800/70 mt-1">Quy đổi: 10 Điểm = 100đ. Bạn đang có {new Intl.NumberFormat('vi-VN').format(availablePoints)} điểm.</p>
  </div>
  </div>
@@ -352,7 +355,7 @@ export function PaymentPage() {
  <div className="pt-6 border-t border-gray-200 flex flex-col gap-2 mb-8">
  <div className="flex justify-between items-end text-gray-900">
  <span className="font-bold">Tổng thanh toán</span>
- <span className="text-3xl font-extrabold text-secondary">
+ <span className="text-3xl font-extrabold text-white">
  {new Intl.NumberFormat('vi-VN').format(finalTotal)}đ
  </span>
  </div>
