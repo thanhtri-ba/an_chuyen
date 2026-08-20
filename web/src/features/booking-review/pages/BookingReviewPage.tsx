@@ -8,6 +8,12 @@ import { toast } from 'sonner';
 
 export function BookingReviewPage() {
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
   const [timeLeft, setTimeLeft] = useState(570);
   const [promoCode, setPromoCode] = useState('');
@@ -72,24 +78,24 @@ export function BookingReviewPage() {
 
       {/* ── TOPBAR ── */}
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(8,10,10,0.97)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 28px', height: 60, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${isMobile ? '14px' : '28px'}`, height: 60, display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, background: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', flexShrink: 0 }}>
             <ArrowLeft size={14} />
           </button>
-          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {[
               { l: 'Chọn ghế', done: true },
               { l: 'Xác nhận', done: false, active: true },
               { l: 'Thanh toán', done: false },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                {i > 0 && <div style={{ width: 24, height: 1, background: s.done || i === 1 ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.08)', margin: '0 4px' }} />}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: s.active ? 1 : s.done ? 0.7 : 0.3 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: s.active ? '#d4af37' : s.done ? 'rgba(212,175,55,0.15)' : 'transparent', border: `1px solid ${s.active ? '#d4af37' : s.done ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: s.active ? '#080a0a' : s.done ? '#d4af37' : 'rgba(255,255,255,0.3)' }}>
+                {i > 0 && <div style={{ width: isMobile ? 14 : 24, height: 1, background: s.done || i === 1 ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.08)', margin: '0 3px' }} />}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: s.active ? 1 : s.done ? 0.7 : 0.3 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: s.active ? '#d4af37' : s.done ? 'rgba(212,175,55,0.15)' : 'transparent', border: `1px solid ${s.active ? '#d4af37' : s.done ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: s.active ? '#080a0a' : s.done ? '#d4af37' : 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
                     {s.done ? <Check size={9} strokeWidth={3} /> : i + 1}
                   </div>
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: s.active ? '#f0ede6' : 'rgba(255,255,255,0.35)' }}>{s.l}</span>
+                  {!isMobile && <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: s.active ? '#f0ede6' : 'rgba(255,255,255,0.35)' }}>{s.l}</span>}
                 </div>
               </div>
             ))}
@@ -98,15 +104,15 @@ export function BookingReviewPage() {
       </div>
 
       {/* ── BODY ── */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 28px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 14px 120px' : '28px 28px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap: isMobile ? 14 : 24, alignItems: 'start' }}>
 
         {/* ══ LEFT ══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16 }}>
 
           {/* Page title */}
           <div>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 38, fontWeight: 600, margin: 0, lineHeight: 1, letterSpacing: '-0.01em' }}>Xác nhận đặt vé</h1>
-            <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Kiểm tra lại thông tin trước khi thanh toán</p>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? 28 : 38, fontWeight: 600, margin: 0, lineHeight: 1, letterSpacing: '-0.01em' }}>Xác nhận đặt vé</h1>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Kiểm tra lại thông tin trước khi thanh toán</p>
           </div>
 
           {/* ── Trip card ── */}
@@ -122,13 +128,13 @@ export function BookingReviewPage() {
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, letterSpacing: '0.02em' }}>{routeFrom}</span>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: isMobile ? 20 : 26, fontWeight: 700, letterSpacing: '0.02em' }}>{routeFrom}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <div style={{ width: 18, height: 1, background: 'rgba(212,175,55,0.5)' }} />
-                        <div style={{ width: 5, height: 5, background: '#d4af37', transform: 'rotate(45deg)' }} />
-                        <div style={{ width: 18, height: 1, background: 'rgba(212,175,55,0.5)' }} />
+                        <div style={{ width: 14, height: 1, background: 'rgba(212,175,55,0.5)' }} />
+                        <div style={{ width: 4, height: 4, background: '#d4af37', transform: 'rotate(45deg)' }} />
+                        <div style={{ width: 14, height: 1, background: 'rgba(212,175,55,0.5)' }} />
                       </div>
-                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 26, fontWeight: 700, letterSpacing: '0.02em' }}>{routeTo}</span>
+                      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: isMobile ? 20 : 26, fontWeight: 700, letterSpacing: '0.02em' }}>{routeTo}</span>
                     </div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{busAgentName}</div>
                   </div>
@@ -136,20 +142,20 @@ export function BookingReviewPage() {
               </div>
 
               {/* Pickup/dropoff */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 {[
-                  { label: 'Điểm đón', value: pickupLabel || 'Chưa chọn điểm đón', icon: '🟢' },
-                  { label: 'Điểm trả', value: dropoffLabel || 'Chưa chọn điểm trả', icon: '🔴' },
+                  { label: 'Điểm đón', value: pickupLabel || 'Chưa chọn điểm đón' },
+                  { label: 'Điểm trả', value: dropoffLabel || 'Chưa chọn điểm trả' },
                 ].map((item, i) => (
-                  <div key={i} style={{ padding: '16px 24px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                  <div key={i} style={{ padding: isMobile ? '12px 16px' : '16px 24px', borderLeft: (!isMobile && i > 0) ? '1px solid rgba(255,255,255,0.06)' : 'none', borderTop: (isMobile && i > 0) ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                     <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>{item.label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#f0ede6', lineHeight: 1.4 }}>{item.value}</div>
+                    <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 700, color: '#f0ede6', lineHeight: 1.4 }}>{item.value}</div>
                   </div>
                 ))}
               </div>
 
               {/* Seat chips + amenities */}
-              <div style={{ padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>Ghế đã chọn</span>
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -191,7 +197,7 @@ export function BookingReviewPage() {
               </div>
 
               {/* Passenger row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: bookerInfo ? 12 : 0 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: isMobile ? 14 : 20, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: bookerInfo ? 12 : 0 }}>
                 {[
                   { label: 'Hành khách', val: passengerInfo?.name },
                   { label: 'Số điện thoại', val: passengerInfo?.phone },
@@ -209,7 +215,7 @@ export function BookingReviewPage() {
                   <div style={{ fontSize: 8, color: 'rgba(212,175,55,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Check size={9} /> Người đặt hộ
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                     {[
                       { label: 'Họ tên', val: bookerInfo.name },
                       { label: 'Số điện thoại', val: bookerInfo.phone },
@@ -262,165 +268,178 @@ export function BookingReviewPage() {
         </div>
 
         {/* ══ RIGHT PANEL ══ */}
-        <div style={{ position: 'sticky', top: 72, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={isMobile ? { position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(8,10,10,0.98)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px 22px', display: 'flex', flexDirection: 'column', gap: 10 } : { position: 'sticky', top: 72, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          {/* Timer */}
-          <motion.div
-            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-            style={{ background: timerUrgent ? 'rgba(248,65,65,0.08)' : 'rgba(212,175,55,0.06)', border: `1px solid ${timerUrgent ? 'rgba(248,65,65,0.25)' : 'rgba(212,175,55,0.18)'}`, borderRadius: 14, padding: '14px 16px', overflow: 'hidden', position: 'relative' }}
-          >
-            {/* Progress bar */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, height: 3, width: '100%', background: 'rgba(255,255,255,0.05)' }}>
-              <motion.div
-                animate={{ width: `${timerPct}%` }}
-                transition={{ duration: 1, ease: 'linear' }}
-                style={{ height: '100%', background: timerUrgent ? '#f87171' : '#d4af37', borderRadius: 99 }}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Clock size={16} color={timerUrgent ? '#f87171' : '#d4af37'} />
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: timerUrgent ? 'rgba(248,65,65,0.8)' : 'rgba(212,175,55,0.7)', letterSpacing: '0.05em' }}>Thời gian giữ ghế</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>Vui lòng thanh toán sớm</div>
+          {isMobile ? (
+            /* ─ MOBILE bottom bar ─ */
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                {/* Timer compact */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 12px', background: timerUrgent ? 'rgba(248,65,65,0.1)' : 'rgba(212,175,55,0.07)', border: `1px solid ${timerUrgent ? 'rgba(248,65,65,0.25)' : 'rgba(212,175,55,0.18)'}`, borderRadius: 8 }}>
+                  <Clock size={12} color={timerUrgent ? '#f87171' : '#d4af37'} />
+                  <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 800, color: timerUrgent ? '#f87171' : '#d4af37' }}>
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+                  </span>
+                </div>
+                {/* Total */}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Tổng</div>
+                  <motion.div key={finalTotal} initial={{ scale: 1.05 }} animate={{ scale: 1 }}
+                    style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                    {fmt(finalTotal)}₫
+                  </motion.div>
                 </div>
               </div>
-              <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 900, color: timerUrgent ? '#f87171' : '#d4af37', letterSpacing: '0.05em', lineHeight: 1 }}>
-                {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Promo code */}
-          <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
-              <Tag size={13} color="rgba(212,175,55,0.6)" />
-              <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>Mã giảm giá</span>
-            </div>
-            {promoApplied ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Check size={13} color="#4ade80" />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80', letterSpacing: '0.05em' }}>{promoCode.toUpperCase()}</span>
-                  <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.6)' }}>-{fmt(discount)}đ</span>
+              {/* Terms inline */}
+              <div onClick={() => setTermsAccepted(p => !p)} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+                <div style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${termsAccepted ? '#d4af37' : 'rgba(255,255,255,0.2)'}`, background: termsAccepted ? '#d4af37' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                  {termsAccepted && <Check size={9} color="#080a0a" strokeWidth={3} />}
                 </div>
-                <button onClick={() => { setPromoApplied(false); setDiscount(0); setPromoCode(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: 2 }}>
-                  <X size={12} />
-                </button>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', lineHeight: 1.5 }}>
+                  Đồng ý với <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>điều khoản</span> dịch vụ
+                </span>
               </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={e => setPromoCode(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
-                  placeholder="Nhập mã ưu đãi"
-                  onFocus={() => setPromoFocused(true)}
-                  onBlur={() => setPromoFocused(false)}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${promoFocused ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, padding: '10px 12px', color: '#f0ede6', fontSize: 12, fontFamily: 'system-ui', outline: 'none', letterSpacing: '0.08em', transition: 'border-color 0.2s' }}
-                />
-                <button
-                  onClick={handleApplyPromo}
-                  style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 10, padding: '10px 14px', color: '#d4af37', fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}
-                >
-                  Áp dụng
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Price summary */}
-          <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.018) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '18px 16px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <FileText size={14} color="rgba(212,175,55,0.6)" />
-              <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>Tóm tắt chi phí</span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-                <span>Giá vé · {seats.length} ghế</span>
-                <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>{fmt(seatsTotal)}đ</span>
-              </div>
-
-              {/* Insurance toggle */}
-              <div
-                onClick={() => setIsInsuranceEnabled(p => !p)}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '10px 12px', background: isInsuranceEnabled ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isInsuranceEnabled ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s' }}
+              <motion.button
+                onClick={handleProceedToPayment}
+                disabled={!termsAccepted}
+                whileTap={termsAccepted ? { scale: 0.97 } : {}}
+                style={{
+                  width: '100%', borderRadius: 12, padding: '15px',
+                  background: termsAccepted ? 'linear-gradient(135deg, #e0bb45 0%, #b8920e 100%)' : 'rgba(255,255,255,0.05)',
+                  color: termsAccepted ? '#080a0a' : 'rgba(255,255,255,0.2)',
+                  border: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
+                  cursor: termsAccepted ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'system-ui',
+                }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 4, border: `1px solid ${isInsuranceEnabled ? '#4ade80' : 'rgba(255,255,255,0.2)'}`, background: isInsuranceEnabled ? '#4ade80' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                    {isInsuranceEnabled && <Check size={8} color="#080a0a" strokeWidth={3} />}
+                Tiến hành thanh toán {termsAccepted && <ChevronRight size={14} />}
+              </motion.button>
+            </>
+          ) : (
+            /* ─ DESKTOP full panel ─ */
+            <>
+              {/* Timer */}
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                style={{ background: timerUrgent ? 'rgba(248,65,65,0.08)' : 'rgba(212,175,55,0.06)', border: `1px solid ${timerUrgent ? 'rgba(248,65,65,0.25)' : 'rgba(212,175,55,0.18)'}`, borderRadius: 14, padding: '14px 16px', overflow: 'hidden', position: 'relative' }}
+              >
+                <div style={{ position: 'absolute', bottom: 0, left: 0, height: 3, width: '100%', background: 'rgba(255,255,255,0.05)' }}>
+                  <motion.div animate={{ width: `${timerPct}%` }} transition={{ duration: 1, ease: 'linear' }} style={{ height: '100%', background: timerUrgent ? '#f87171' : '#d4af37', borderRadius: 99 }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Clock size={16} color={timerUrgent ? '#f87171' : '#d4af37'} />
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: timerUrgent ? 'rgba(248,65,65,0.8)' : 'rgba(212,175,55,0.7)' }}>Thời gian giữ ghế</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>Vui lòng thanh toán sớm</div>
+                    </div>
                   </div>
-                  <span style={{ color: isInsuranceEnabled ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.35)' }}>Bảo hiểm chuyến đi</span>
+                  <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 900, color: timerUrgent ? '#f87171' : '#d4af37', letterSpacing: '0.05em', lineHeight: 1 }}>
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+                  </div>
                 </div>
-                <span style={{ fontWeight: 600, color: isInsuranceEnabled ? 'rgba(74,222,128,0.7)' : 'rgba(255,255,255,0.2)', textDecoration: isInsuranceEnabled ? 'none' : 'line-through' }}>{fmt(seats.length * 20000)}đ</span>
+              </motion.div>
+
+              {/* Promo code */}
+              <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
+                  <Tag size={13} color="rgba(212,175,55,0.6)" />
+                  <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>Mã giảm giá</span>
+                </div>
+                {promoApplied ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Check size={13} color="#4ade80" />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80' }}>{promoCode.toUpperCase()}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.6)' }}>-{fmt(discount)}đ</span>
+                    </div>
+                    <button onClick={() => { setPromoApplied(false); setDiscount(0); setPromoCode(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: 2 }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleApplyPromo()} placeholder="Nhập mã ưu đãi"
+                      onFocus={() => setPromoFocused(true)} onBlur={() => setPromoFocused(false)}
+                      style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${promoFocused ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, padding: '10px 12px', color: '#f0ede6', fontSize: 12, fontFamily: 'system-ui', outline: 'none', transition: 'border-color 0.2s' }}
+                    />
+                    <button onClick={handleApplyPromo} style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 10, padding: '10px 14px', color: '#d4af37', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'system-ui' }}>
+                      Áp dụng
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {discount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '8px 12px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 10, color: 'rgba(74,222,128,0.7)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Tag size={11} /> Mã giảm giá</span>
-                  <span style={{ fontWeight: 700 }}>-{fmt(discount)}đ</span>
+              {/* Price summary */}
+              <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.018) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '18px 16px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                  <FileText size={14} color="rgba(212,175,55,0.6)" />
+                  <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700 }}>Tóm tắt chi phí</span>
                 </div>
-              )}
-            </div>
-
-            {/* Total */}
-            <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.04) 100%)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: '14px 14px', marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Tổng thanh toán</span>
-                <motion.span
-                  key={finalTotal}
-                  initial={{ scale: 1.05, color: '#f2c118' }}
-                  animate={{ scale: 1, color: '#d4af37' }}
-                  transition={{ duration: 0.3 }}
-                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.9rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                    <span>Giá vé · {seats.length} ghế</span>
+                    <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>{fmt(seatsTotal)}đ</span>
+                  </div>
+                  <div onClick={() => setIsInsuranceEnabled(p => !p)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '10px 12px', background: isInsuranceEnabled ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isInsuranceEnabled ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 14, height: 14, borderRadius: 4, border: `1px solid ${isInsuranceEnabled ? '#4ade80' : 'rgba(255,255,255,0.2)'}`, background: isInsuranceEnabled ? '#4ade80' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                        {isInsuranceEnabled && <Check size={8} color="#080a0a" strokeWidth={3} />}
+                      </div>
+                      <span style={{ color: isInsuranceEnabled ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.35)' }}>Bảo hiểm chuyến đi</span>
+                    </div>
+                    <span style={{ fontWeight: 600, color: isInsuranceEnabled ? 'rgba(74,222,128,0.7)' : 'rgba(255,255,255,0.2)', textDecoration: isInsuranceEnabled ? 'none' : 'line-through' }}>{fmt(seats.length * 20000)}đ</span>
+                  </div>
+                  {discount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '8px 12px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 10, color: 'rgba(74,222,128,0.7)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Tag size={11} /> Mã giảm giá</span>
+                      <span style={{ fontWeight: 700 }}>-{fmt(discount)}đ</span>
+                    </div>
+                  )}
+                </div>
+                <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.04) 100%)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: '14px', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Tổng thanh toán</span>
+                    <motion.span key={finalTotal} initial={{ scale: 1.05, color: '#f2c118' }} animate={{ scale: 1, color: '#d4af37' }} transition={{ duration: 0.3 }}
+                      style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.9rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                      {fmt(finalTotal)}₫
+                    </motion.span>
+                  </div>
+                </div>
+                <div onClick={() => setTermsAccepted(p => !p)} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14, cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${termsAccepted ? '#d4af37' : 'rgba(255,255,255,0.2)'}`, background: termsAccepted ? '#d4af37' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
+                    {termsAccepted && <Check size={9} color="#080a0a" strokeWidth={3} />}
+                  </div>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, margin: 0 }}>
+                    Tôi đã đọc và đồng ý với{' '}
+                    <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>Điều khoản dịch vụ</span>
+                    {' '}và{' '}
+                    <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>Chính sách bảo mật</span>
+                  </p>
+                </div>
+                <motion.button
+                  onClick={handleProceedToPayment}
+                  disabled={!termsAccepted}
+                  whileHover={termsAccepted ? { scale: 1.02, boxShadow: '0 10px 32px rgba(212,175,55,0.3)' } : {}}
+                  whileTap={termsAccepted ? { scale: 0.97 } : {}}
+                  style={{
+                    width: '100%', borderRadius: 12, padding: '15px',
+                    background: termsAccepted ? 'linear-gradient(135deg, #e0bb45 0%, #b8920e 100%)' : 'rgba(255,255,255,0.05)',
+                    color: termsAccepted ? '#080a0a' : 'rgba(255,255,255,0.2)',
+                    border: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
+                    cursor: termsAccepted ? 'pointer' : 'not-allowed',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'system-ui',
+                    boxShadow: termsAccepted ? '0 4px 20px rgba(212,175,55,0.2)' : 'none',
+                    transition: 'background 0.2s, box-shadow 0.2s',
+                  }}
                 >
-                  {fmt(finalTotal)}₫
-                </motion.span>
+                  Tiến hành thanh toán
+                  {termsAccepted && <ChevronRight size={14} />}
+                </motion.button>
               </div>
-            </div>
-
-            {/* Terms */}
-            <div
-              onClick={() => setTermsAccepted(p => !p)}
-              style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14, cursor: 'pointer', userSelect: 'none' }}
-            >
-              <div style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${termsAccepted ? '#d4af37' : 'rgba(255,255,255,0.2)'}`, background: termsAccepted ? '#d4af37' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
-                {termsAccepted && <Check size={9} color="#080a0a" strokeWidth={3} />}
-              </div>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, margin: 0 }}>
-                Tôi đã đọc và đồng ý với{' '}
-                <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>Điều khoản dịch vụ</span>
-                {' '}và{' '}
-                <span style={{ color: 'rgba(212,175,55,0.5)', textDecoration: 'underline' }}>Chính sách bảo mật</span>
-              </p>
-            </div>
-
-            {/* CTA */}
-            <motion.button
-              onClick={handleProceedToPayment}
-              disabled={!termsAccepted}
-              whileHover={termsAccepted ? { scale: 1.02, boxShadow: '0 10px 32px rgba(212,175,55,0.3)' } : {}}
-              whileTap={termsAccepted ? { scale: 0.97 } : {}}
-              style={{
-                width: '100%', borderRadius: 12, padding: '15px',
-                background: termsAccepted ? 'linear-gradient(135deg, #e0bb45 0%, #b8920e 100%)' : 'rgba(255,255,255,0.05)',
-                color: termsAccepted ? '#080a0a' : 'rgba(255,255,255,0.2)',
-                border: 'none', fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
-                cursor: termsAccepted ? 'pointer' : 'not-allowed',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                fontFamily: 'system-ui',
-                boxShadow: termsAccepted ? '0 4px 20px rgba(212,175,55,0.2)' : 'none',
-                transition: 'background 0.2s, box-shadow 0.2s',
-              }}
-            >
-              Tiến hành thanh toán
-              {termsAccepted && <ChevronRight size={14} />}
-            </motion.button>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>
