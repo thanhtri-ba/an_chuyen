@@ -71,6 +71,8 @@ export function HomePage() {
     setDestination(origin);
   };
 
+  return (
+    <div style={{ background: '#0e1111', color: '#f0ede6', fontFamily: "'Outfit', sans-serif", minHeight: '100vh', overflowX: 'hidden' }}>
         <style>{`
           .responsive-padding { padding: 60px 5%; }
           @media (min-width: 1024px) { .responsive-padding { padding: 120px 8%; } }
