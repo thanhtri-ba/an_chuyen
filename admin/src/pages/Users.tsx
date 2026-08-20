@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { Select } from '../components/Select';
 import { ActionButtons } from '../components/ActionButtons';
+import { WalletManagerModal } from '../components/WalletManagerModal';
 
 const Users = () => {
   const { t } = useLanguage();
@@ -13,6 +14,10 @@ const Users = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Wallet Modal state
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [selectedWalletUser, setSelectedWalletUser] = useState<{id: string, name: string} | null>(null);
 
   const [formData, setFormData] = useState({
     id: '',
@@ -49,6 +54,11 @@ const Users = () => {
       role: user.role || 'user',
     });
     setIsModalOpen(true);
+  };
+  
+  const handleOpenWallet = (user: any) => {
+    setSelectedWalletUser({ id: user.id, name: user.fullName || user.email });
+    setIsWalletModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,6 +119,7 @@ const Users = () => {
     { key: 'actions', label: t('common', 'actions'), render: (_: any, item: any) => (
       <ActionButtons
         onPower={() => showToast('Người dùng được khởi tạo từ ứng dụng. Không thể thay đổi trạng thái từ đây.')}
+        onManageWallet={() => handleOpenWallet(item)}
         onEdit={() => handleOpenEdit(item)}
         onDelete={() => showToast('Người dùng được khởi tạo từ ứng dụng. Không thể xóa từ đây.')}
       />
@@ -193,6 +204,14 @@ const Users = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Wallet Modal */}
+      <WalletManagerModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+        userId={selectedWalletUser?.id || null}
+        userName={selectedWalletUser?.name}
+      />
 
       {/* Toast notification */}
       {toast && (

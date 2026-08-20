@@ -9,7 +9,11 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [isCompact, setIsCompact] = useState(localStorage.getItem('sidebar:compact') === 'true');
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const { supabase } = require('../lib/supabase');
+      await supabase.auth.signOut();
+    } catch (e) {}
     localStorage.removeItem('admin_auth');
     localStorage.removeItem('admin_email');
     navigate('/login', { replace: true });

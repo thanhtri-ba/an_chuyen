@@ -1,4 +1,4 @@
-import 'dotenv/config'; // Trigger restart 6
+import 'dotenv/config'; // Trigger restart 7
 import './instrument';
 import * as Sentry from '@sentry/node';
 import express from 'express';

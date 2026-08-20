@@ -154,12 +154,108 @@ router.post('/invite-user', async (req, res) => {
   }
 });
 
+router.post('/tripSchedules/:id/generate-seats', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { floors = 1, rows = 6, cols = 3 } = req.body;
+    
+    // Convert cols to letters (A, B, C...)
+    const colLetters = Array.from({ length: cols }, (_, i) => String.fromCharCode(65 + i));
+    
+    const seatNumbers: string[] = [];
+    for (let floor = 1; floor <= floors; floor++) {
+      for (let row = 1; row <= rows; row++) {
+        for (const col of colLetters) {
+          seatNumbers.push(`T${floor}-${row}${col}`);
+        }
+      }
+    }
+
+    // Delete existing seats for this trip schedule
+    await prisma.seat.deleteMany({
+      where: { tripScheduleId: id }
+    });
+
+    // Create new seats
+    await prisma.seat.createMany({
+      data: seatNumbers.map((seatNumber) => ({
+        tripScheduleId: id,
+        seatNumber,
+        status: 'AVAILABLE'
+      }))
+    });
+
+    const seats = await prisma.seat.findMany({ where: { tripScheduleId: id } });
+    res.json(seats);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ error: message });
+  }
+});
+
+router.post('/users/:id/wallet/topup', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, description } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be greater than 0' });
+    }
+
+    // Use a transaction to ensure data integrity
+    const result = await prisma.$transaction(async (tx) => {
+      // Find or create wallet
+      let wallet = await tx.wallet.findUnique({ where: { userId: id } });
+      
+      if (!wallet) {
+        wallet = await tx.wallet.create({
+          data: {
+            userId: id,
+            balance: 0
+          }
+        });
+      }
+
+      // Update balance
+      const updatedWallet = await tx.wallet.update({
+        where: { id: wallet.id },
+        data: {
+          balance: {
+            increment: amount
+          }
+        }
+      });
+
+      // Create transaction log
+      const transaction = await tx.walletTransaction.create({
+        data: {
+          userId: id,
+          amount,
+          type: 'DEPOSIT',
+          description: description || 'Admin Top-up'
+        }
+      });
+
+      return { wallet: updatedWallet, transaction };
+    });
+
+    res.json(result);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ error: message });
+  }
+});
+
 router.use('/users', createCrudRouter(prisma.user, 'users'));
 router.use('/bookings', createCrudRouter(prisma.booking, 'bookings'));
 router.use('/trips', createCrudRouter(prisma.trip, 'trips'));
+router.use('/tripSchedules', createCrudRouter(prisma.tripSchedule, 'tripSchedules'));
+router.use('/seats', createCrudRouter(prisma.seat, 'seats'));
 router.use('/busAgents', createCrudRouter(prisma.busAgent, 'busAgents'));
 router.use('/promotions', createCrudRouter(prisma.promotion, 'promotions'));
 router.use('/cities', createCrudRouter(prisma.city, 'cities'));
 router.use('/routes', createCrudRouter(prisma.route, 'routes'));
+router.use('/wallets', createCrudRouter(prisma.wallet, 'wallets'));
+router.use('/walletTransactions', createCrudRouter(prisma.walletTransaction, 'walletTransactions'));
 
 export default router;

@@ -214,6 +214,31 @@ async function main() {
             },
           });
         }
+
+        // Create Checkpoints (Pickup & Dropoff)
+        const depStations = await prisma.station.findMany({ where: { cityId: fromCity.id } });
+        const arrStations = await prisma.station.findMany({ where: { cityId: toCity.id } });
+
+        if (depStations.length > 0) {
+          await prisma.checkpoint.create({
+            data: {
+              tripScheduleId: schedule.id,
+              stationId: depStations[0].id,
+              type: 'PICKUP',
+              time: depTime,
+            }
+          });
+        }
+        if (arrStations.length > 0) {
+          await prisma.checkpoint.create({
+            data: {
+              tripScheduleId: schedule.id,
+              stationId: arrStations[0].id,
+              type: 'DROPOFF',
+              time: arrTime,
+            }
+          });
+        }
       }
     }
   }

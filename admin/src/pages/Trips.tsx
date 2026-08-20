@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { Select } from '../components/Select';
 import { ActionButtons } from '../components/ActionButtons';
+import { SeatManagerModal } from '../components/SeatManagerModal';
 
 const Trips = () => {
   const { t } = useLanguage();
@@ -17,6 +18,10 @@ const Trips = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isSeatModalOpen, setIsSeatModalOpen] = useState(false);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+  const [selectedTripName, setSelectedTripName] = useState<string>('');
 
   const [formData, setFormData] = useState({
     id: '',
@@ -168,6 +173,11 @@ const Trips = () => {
         onPower={() => alert('Toggle trip status...')}
         onEdit={() => handleOpenModal(item)} 
         onDelete={() => handleDelete(item.id)} 
+        onManageSeats={() => {
+          setSelectedScheduleId(item.id);
+          setSelectedTripName(`${item.route} (${item.time})`);
+          setIsSeatModalOpen(true);
+        }}
       />
     )}
   ];
@@ -248,6 +258,13 @@ const Trips = () => {
           </div>
         </form>
       </Modal>
+
+      <SeatManagerModal 
+        isOpen={isSeatModalOpen}
+        onClose={() => setIsSeatModalOpen(false)}
+        tripScheduleId={selectedScheduleId}
+        tripName={selectedTripName}
+      />
     </div>
   );
 };

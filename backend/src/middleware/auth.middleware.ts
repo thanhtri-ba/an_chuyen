@@ -80,6 +80,38 @@ export async function verifyAccessToken(
 
     next();
   } catch {
+    // Fallback: Verify using Supabase directly
+    let fallbackErrorMsg = '';
+    try {
+      const { supabaseAdmin } = require('../core/supabase');
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      
+      if (!error && data?.user) {
+        // Fetch role from Prisma since Supabase user metadata might not have it
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        const dbUser = await prisma.user.findFirst({ 
+          where: { 
+            OR: [
+              { id: data.user.id },
+              { email: data.user.email }
+            ] 
+          } 
+        });
+        
+        req.user = {
+          id: data.user.id,
+          role: dbUser?.role || 'user',
+          email: data.user.email
+        };
+        return next();
+      } else {
+        fallbackErrorMsg = error?.message || 'No user found';
+      }
+    } catch (e: any) {
+      fallbackErrorMsg = e.message;
+    }
+
     if (devAuthFallbackEnabled) {
       try {
         await applyDevFallback();
@@ -90,6 +122,7 @@ export async function verifyAccessToken(
     }
     res.status(401).json({
       message: 'Invalid access token',
+      fallbackError: fallbackErrorMsg
     });
   }
 }

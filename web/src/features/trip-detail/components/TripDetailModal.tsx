@@ -1,251 +1,359 @@
-import { 
- Modal, 
- ModalContent, 
- ModalHeader, 
- ModalTitle, 
- ModalDescription 
-} from"../../../design-system/components/Modal";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from"../../../design-system/components/Tabs";
-import { Button } from"../../../design-system/components/Button";
-import { Badge } from"../../../design-system/components/Badge";
-import { MapPin, Info, ShieldAlert, Star, Wifi, Droplets, Usb, Image as ImageIcon, ThumbsUp, MessageSquare } from"lucide-react";
-import { useNavigate } from"react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Star, Wifi, Droplets, Usb, ShieldAlert, MapPin, ThumbsUp, ArrowRight, Clock } from 'lucide-react';
 
 interface TripDetailModalProps {
- isOpen: boolean;
- onClose: () => void;
- trip: any;
+  isOpen: boolean;
+  onClose: () => void;
+  trip: any;
 }
 
+const GALLERY = [
+  'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1533606622442-50dffdb99e69?q=80&w=800&auto=format&fit=crop',
+];
+
+const TABS = ['Tổng quan', 'Lịch trình', 'Chính sách', 'Đánh giá'];
+
 export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps) {
- const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(0);
+  const [activeImg, setActiveImg] = useState(0);
 
- if (!trip) return null;
+  if (!trip) return null;
 
- const handleSelectSeat = () => {
- onClose();
- navigate(`/seat-selection/${trip.id}`);
- };
+  const handleSelectSeat = () => {
+    onClose();
+    navigate(`/seat-selection/${trip.id}`);
+  };
 
- const galleryImages = [
-"https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=800&auto=format&fit=crop",
-"https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=800&auto=format&fit=crop",
-"https://images.unsplash.com/photo-1533606622442-50dffdb99e69?q=80&w=800&auto=format&fit=crop"
- ];
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+        >
+          {/* Backdrop */}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }} onClick={onClose} />
 
- return (
- <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
- <ModalContent className="max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh] bg-background">
- 
- {/* Header Banner */}
- <div className="bg-slate-900 text-white p-6 pb-12 relative overflow-hidden">
- <div className="absolute inset-0 z-0 opacity-20">
- <img src={galleryImages[0]} alt="Bus Banner" className="w-full h-full object-cover blur-sm scale-110" />
- </div>
- <div className="relative z-10 flex justify-between items-start">
- <ModalHeader className="mb-2">
- <ModalTitle className="text-3xl font-extrabold text-white flex items-center gap-3">
- {trip.company} 
- <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">{trip.type}</Badge>
- </ModalTitle>
- <ModalDescription className="text-white/80 text-base">
- Chuyến đi từ {trip.from} đến {trip.to} • Hành trình {trip.duration}
- </ModalDescription>
- </ModalHeader>
- <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full">
- <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
- <span className="font-bold text-lg">{trip.rating}</span>
- <span className="text-white/70 text-sm">({trip.reviews})</span>
- </div>
- </div>
- 
- <div className="absolute -bottom-6 right-6 bg-white text-foreground rounded-2xl shadow-xl px-8 py-4 flex items-center gap-8 border z-20">
- <div>
- <div className="text-sm text-muted-foreground font-semibold mb-1">Giá vé chỉ từ</div>
- <div className="text-3xl font-extrabold text-primary">{new Intl.NumberFormat('vi-VN').format(trip.price)}đ</div>
- </div>
- <Button size="lg" onClick={handleSelectSeat} className="font-extrabold text-lg px-8 shadow-md h-14">
- Chọn ghế ngay
- </Button>
- </div>
- </div>
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative', width: '100%', maxWidth: 860,
+              maxHeight: '90vh', overflowY: 'auto',
+              background: '#111414', border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', flexDirection: 'column',
+            }}
+          >
+            {/* ── HERO HEADER ── */}
+            <div style={{ position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+              <img src={GALLERY[activeImg]} alt="Bus"
+                style={{ width: '100%', height: 200, objectFit: 'cover', filter: 'brightness(0.3) saturate(0.6)', display: 'block' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #111414 0%, transparent 60%)' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(17,20,20,0.8) 0%, transparent 60%)' }} />
 
- {/* Content Tabs */}
- <div className="flex-1 overflow-y-auto p-6 pt-12">
- <Tabs defaultValue="overview">
- <TabsList className="mb-8 bg-muted/50 p-1 w-full sm:w-auto inline-flex">
- <TabsTrigger value="overview" className=" px-6 py-2.5 font-bold">Tổng quan & Ảnh</TabsTrigger>
- <TabsTrigger value="schedule" className=" px-6 py-2.5 font-bold">Lịch trình</TabsTrigger>
- <TabsTrigger value="policy" className=" px-6 py-2.5 font-bold">Chính sách</TabsTrigger>
- <TabsTrigger value="reviews" className=" px-6 py-2.5 font-bold">Đánh giá khách hàng</TabsTrigger>
- </TabsList>
+              {/* Close */}
+              <button onClick={onClose} style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'rgba(17,20,20,0.8)', border: '1px solid rgba(255,255,255,0.1)',
+                color: 'rgba(240,237,230,0.6)', width: 32, height: 32,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', transition: 'all 0.2s',
+              }}>
+                <X size={14} />
+              </button>
 
- <TabsContent value="overview" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- {/* Media Gallery */}
- <div className="space-y-4">
- <div className=" overflow-hidden h-64 border shadow-sm relative group">
- <img src={galleryImages[0]} alt="Bus Interior" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
- <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
- <ImageIcon className="w-4 h-4" /> Xem tất cả ảnh (12)
- </div>
- </div>
- <div className="grid grid-cols-2 gap-4">
- <div className=" overflow-hidden h-24 border shadow-sm">
- <img src={galleryImages[1]} alt="Bus Exterior" className="w-full h-full object-cover hover:scale-110 transition-transform" />
- </div>
- <div className=" overflow-hidden h-24 border shadow-sm relative">
- <img src={galleryImages[2]} alt="Bus Seat" className="w-full h-full object-cover hover:scale-110 transition-transform" />
- <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold cursor-pointer hover:bg-black/50 transition-colors">
- +9 ảnh nữa
- </div>
- </div>
- </div>
- </div>
+              {/* Header content */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 28px 24px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 8 }}>
+                      {trip.type?.toUpperCase()}
+                    </div>
+                    <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', fontWeight: 500, color: '#f0ede6', margin: '0 0 6px', lineHeight: 1.1 }}>
+                      {trip.company}
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(240,237,230,0.45)', fontFamily: 'system-ui' }}>
+                      <span>{trip.from}</span>
+                      <ArrowRight size={10} style={{ color: '#d4af37' }} />
+                      <span>{trip.to}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+                      <Clock size={10} />
+                      <span>{trip.duration}</span>
+                    </div>
+                  </div>
 
- <div className="space-y-6">
- <div>
- <h3 className="font-extrabold text-xl mb-4">Tiện ích nổi bật</h3>
- <div className="grid grid-cols-2 gap-5">
- <div className="flex items-center gap-3 font-medium text-muted-foreground"><div className="p-2 bg-primary/10 rounded-full text-primary"><Wifi className="w-5 h-5" /></div> Wifi tốc độ cao</div>
- <div className="flex items-center gap-3 font-medium text-muted-foreground"><div className="p-2 bg-primary/10 rounded-full text-primary"><Droplets className="w-5 h-5" /></div> Nước suối & Khăn lạnh</div>
- <div className="flex items-center gap-3 font-medium text-muted-foreground"><div className="p-2 bg-primary/10 rounded-full text-primary"><Usb className="w-5 h-5" /></div> Cổng sạc USB</div>
- <div className="flex items-center gap-3 font-medium text-muted-foreground"><div className="p-2 bg-primary/10 rounded-full text-primary"><ShieldAlert className="w-5 h-5" /></div> Búa thoát hiểm</div>
- </div>
- </div>
- 
- <div className="p-5 bg-yellow-50 border border-yellow-200">
- <div className="flex justify-between items-start mb-2">
- <div className="flex items-center gap-2 font-extrabold text-yellow-700 text-lg">
- <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" /> {trip.rating}/5 Rất tốt
- </div>
- <Button variant="link" onClick={() => document.querySelector<HTMLButtonElement>('[data-state="inactive"][value="reviews"]')?.click()} className="text-yellow-700 font-bold p-0 h-auto">Đọc {trip.reviews} đánh giá</Button>
- </div>
- <p className="text-sm text-yellow-800/80 leading-relaxed font-medium">Khách hàng thường khen ngợi nhà xe về sự đúng giờ, xe sạch sẽ và thái độ phục vụ thân thiện của tài xế và lơ xe.</p>
- </div>
- </div>
- </div>
- </TabsContent>
+                  {/* Price + CTA */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+                    <div style={{ padding: '14px 20px', background: 'rgba(17,20,20,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRight: 'none' }}>
+                      <div style={{ fontSize: 9, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui', marginBottom: 4, letterSpacing: '0.1em' }}>Giá vé từ</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                        {new Intl.NumberFormat('vi-VN').format(trip.price)}₫
+                      </div>
+                    </div>
+                    <button onClick={handleSelectSeat} style={{
+                      background: '#d4af37', color: '#0e1111', border: 'none',
+                      padding: '0 24px', height: 68, cursor: 'pointer',
+                      fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
+                      fontFamily: 'system-ui', whiteSpace: 'nowrap',
+                    }}>
+                      Chọn ghế ngay
+                    </button>
+                  </div>
+                </div>
 
- <TabsContent value="schedule" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="flex gap-8 bg-muted/20 p-6 border">
- {/* Timeline Line */}
- <div className="relative w-8 flex flex-col items-center py-2">
- <div className="w-4 h-4 rounded-full bg-primary z-10 ring-4 ring-primary/20"></div>
- <div className="w-1 border-l-2 border-dashed border-primary/30 flex-1 my-2"></div>
- <div className="w-4 h-4 rounded-full bg-border border-4 border-white z-10"></div>
- </div>
- 
- {/* Timeline Content */}
- <div className="flex-1 py-1 space-y-12">
- <div className="bg-white p-5 shadow-sm border relative">
- <div className="absolute left-[-28px] top-4 w-4 h-0.5 bg-primary/30"></div>
- <div className="font-extrabold text-2xl text-primary mb-1">{trip.depTime}</div>
- <div className="font-bold text-lg mb-2">{trip.from}</div>
- <div className="text-sm text-muted-foreground flex items-center gap-2 bg-muted/50 p-2 w-fit"><MapPin className="w-4 h-4 text-primary" /> Bến xe Miền Đông mới, Quầy vé số 12</div>
- </div>
- 
- <div className="bg-white p-5 shadow-sm border relative">
- <div className="absolute left-[-28px] top-4 w-4 h-0.5 bg-border"></div>
- <div className="font-extrabold text-2xl text-muted-foreground mb-1">{trip.arrTime}</div>
- <div className="font-bold text-lg mb-2">{trip.to}</div>
- <div className="text-sm text-muted-foreground flex items-center gap-2 bg-muted/50 p-2 w-fit"><MapPin className="w-4 h-4" /> Bến xe liên tỉnh Đà Lạt</div>
- </div>
- </div>
- </div>
- </TabsContent>
+                {/* Rating inline */}
+                {trip.rating > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12, fontSize: 11, color: '#d4af37', fontFamily: 'system-ui', fontWeight: 700 }}>
+                    <Star size={11} style={{ fill: '#d4af37' }} />
+                    {trip.rating}/5
+                    <span style={{ color: 'rgba(240,237,230,0.3)', fontWeight: 400 }}>({trip.reviews} đánh giá)</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
- <TabsContent value="policy" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- <div className="bg-white border p-6 shadow-sm">
- <h3 className="font-bold text-lg flex items-center gap-2 mb-4 text-red-600"><Info className="w-5 h-5" /> Chính sách hoàn hủy</h3>
- <ul className="space-y-3 text-sm text-muted-foreground">
- <li className="flex justify-between border-b pb-2"><span>Hủy trước 24h</span> <strong className="text-foreground">Hoàn 100%</strong></li>
- <li className="flex justify-between border-b pb-2"><span>Hủy từ 12h - 24h</span> <strong className="text-foreground">Hoàn 50%</strong></li>
- <li className="flex justify-between pb-2"><span>Hủy trước 12h</span> <strong className="text-foreground">Không hoàn tiền</strong></li>
- </ul>
- <p className="text-xs text-muted-foreground mt-4 italic">* Vé ngày Lễ, Tết không áp dụng chính sách hoàn hủy.</p>
- </div>
- 
- <div className="bg-white border p-6 shadow-sm">
- <h3 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-700"><Info className="w-5 h-5" /> Quy định hành lý</h3>
- <ul className="space-y-4 text-sm text-muted-foreground">
- <li className="flex items-start gap-3">
- <div className="w-2 h-2 bg-slate-500 rounded-full mt-1.5"></div>
- <span>Mỗi hành khách được mang tối đa <strong>20kg hành lý ký gửi</strong> và 1 balo nhỏ xách tay để trên xe.</span>
- </li>
- <li className="flex items-start gap-3">
- <div className="w-2 h-2 bg-slate-500 rounded-full mt-1.5"></div>
- <span>Không mang theo động vật sống, hàng hóa có mùi (sầu riêng, nước mắm).</span>
- </li>
- </ul>
- </div>
- </div>
- </TabsContent>
+            {/* ── TABS ── */}
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 28px', flexShrink: 0 }}>
+              {TABS.map((tab, i) => (
+                <button key={tab} onClick={() => setActiveTab(i)} style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  padding: '16px 20px',
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  fontFamily: 'system-ui',
+                  color: activeTab === i ? '#d4af37' : 'rgba(240,237,230,0.3)',
+                  borderBottom: activeTab === i ? '2px solid #d4af37' : '2px solid transparent',
+                  transition: 'all 0.2s',
+                }}>
+                  {tab}
+                </button>
+              ))}
+            </div>
 
- <TabsContent value="reviews" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
- {/* Comprehensive Review System UI */}
- <div className="flex flex-col md:flex-row items-center gap-8 p-6 bg-muted/20 border">
- <div className="flex flex-col items-center justify-center min-w-[150px]">
- <div className="text-6xl font-extrabold text-primary mb-2">{trip.rating}</div>
- <div className="flex gap-1 mb-2">
- {[1,2,3,4,5].map((i) => (
- <Star key={i} className={`w-5 h-5 ${i <= Math.floor(trip.rating) ?'fill-yellow-400 text-yellow-400' :'fill-muted text-muted'}`} />
- ))}
- </div>
- <div className="text-sm font-bold text-muted-foreground">{new Intl.NumberFormat('vi-VN').format(trip.reviews)} đánh giá</div>
- </div>
- 
- <div className="flex-1 w-full space-y-2 border-l pl-8">
- {[5,4,3,2,1].map((rating) => {
- const percent = rating === 5 ? 75 : rating === 4 ? 15 : rating === 3 ? 5 : 2;
- return (
- <div key={rating} className="flex items-center gap-3 text-sm font-medium">
- <div className="w-3 text-muted-foreground">{rating}</div>
- <Star className="w-3 h-3 fill-muted-foreground text-muted-foreground" />
- <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
- <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${percent}%` }}></div>
- </div>
- <div className="w-8 text-right text-muted-foreground text-xs">{percent}%</div>
- </div>
- );
- })}
- </div>
- </div>
- 
- <div className="space-y-4">
- <h4 className="font-extrabold text-lg">Đánh giá mới nhất</h4>
- {[
- { name:"Nguyễn Văn A", date:"Hôm qua", content:"Xe rất mới, giường nằm rộng rãi thoải mái. Tài xế lái an toàn không lạng lách. Wifi chạy tốt để xem Youtube.", likes: 12 },
- { name:"Trần Thị B", date:"3 ngày trước", content:"Chất lượng dịch vụ tuyệt vời. Lơ xe rất lịch sự, phát nước và khăn lạnh đầy đủ. Đón khách đúng giờ.", likes: 8 }
- ].map((review, i) => (
- <div key={i} className="p-5 border bg-white shadow-sm">
- <div className="flex justify-between items-start mb-3">
- <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">{review.name.charAt(0)}</div>
- <div>
- <div className="font-bold text-sm">{review.name}</div>
- <div className="text-xs text-muted-foreground">{review.date}</div>
- </div>
- </div>
- <div className="flex gap-1 bg-yellow-50 px-2 py-1">
- {[1,2,3,4,5].map(star => <Star key={star} className="w-3 h-3 fill-yellow-500 text-yellow-500" />)}
- </div>
- </div>
- <p className="text-sm text-foreground/90 mb-4">{review.content}</p>
- <div className="flex items-center gap-4 text-muted-foreground">
- <button className="flex items-center gap-1.5 text-xs font-semibold hover:text-primary transition-colors"><ThumbsUp className="w-4 h-4" /> Hữu ích ({review.likes})</button>
- <button className="flex items-center gap-1.5 text-xs font-semibold hover:text-primary transition-colors"><MessageSquare className="w-4 h-4" /> Bình luận</button>
- </div>
- </div>
- ))}
- <Button variant="outline" className="w-full font-bold">Xem thêm tất cả đánh giá</Button>
- </div>
- </TabsContent>
- </Tabs>
- </div>
+            {/* ── CONTENT ── */}
+            <div style={{ padding: '28px 28px 32px', flex: 1 }}>
+              <AnimatePresence mode="wait">
+                <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
 
- </ModalContent>
- </Modal>
- );
+                  {/* ── OVERVIEW ── */}
+                  {activeTab === 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+                      {/* Gallery */}
+                      <div>
+                        <div style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden', marginBottom: 8 }}>
+                          <img src={GALLERY[activeImg]} alt="Bus" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.85)' }} />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          {GALLERY.slice(1).map((img, i) => (
+                            <div key={i} style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setActiveImg(i + 1)}>
+                              <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.7)', transition: 'filter 0.2s' }} />
+                              {i === 1 && (
+                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,17,17,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#f0ede6', fontFamily: 'system-ui' }}>
+                                  +9 ảnh nữa
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Amenities + Rating */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                        <div>
+                          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 16 }}>
+                            Tiện ích
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            {[
+                              { Icon: Wifi, label: 'Wifi tốc độ cao' },
+                              { Icon: Droplets, label: 'Nước & Khăn lạnh' },
+                              { Icon: Usb, label: 'Cổng sạc USB' },
+                              { Icon: ShieldAlert, label: 'Búa thoát hiểm' },
+                            ].map(({ Icon, label }) => (
+                              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'rgba(240,237,230,0.55)', fontFamily: 'system-ui' }}>
+                                <div style={{ width: 28, height: 28, background: 'rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Icon size={13} style={{ color: '#d4af37' }} />
+                                </div>
+                                {label}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Rating summary */}
+                        <div style={{ padding: '16px', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#d4af37', fontFamily: 'system-ui' }}>
+                              <Star size={13} style={{ fill: '#d4af37' }} /> {trip.rating}/5 Rất tốt
+                            </div>
+                            <span style={{ fontSize: 10, color: '#d4af37', fontFamily: 'system-ui', cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
+                              Đọc {trip.reviews} đánh giá →
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 12, color: 'rgba(240,237,230,0.5)', lineHeight: 1.7, margin: 0, fontFamily: 'system-ui' }}>
+                            Khách hàng thường khen ngợi nhà xe về sự đúng giờ, xe sạch sẽ và thái độ phục vụ thân thiện.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── SCHEDULE ── */}
+                  {activeTab === 1 && (
+                    <div style={{ maxWidth: 480 }}>
+                      {[
+                        { time: trip.depTime, city: trip.from, station: 'Bến xe Miền Đông mới, Quầy vé 12', active: true },
+                        { time: trip.arrTime, city: trip.to, station: 'Bến xe liên tỉnh', active: false },
+                      ].map((stop, i, arr) => (
+                        <div key={i} style={{ display: 'flex', gap: 20 }}>
+                          {/* Timeline */}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 20 }}>
+                            <div style={{ width: 12, height: 12, background: stop.active ? '#d4af37' : 'transparent', border: `2px solid ${stop.active ? '#d4af37' : 'rgba(255,255,255,0.2)'}`, borderRadius: '50%', flexShrink: 0 }} />
+                            {i < arr.length - 1 && (
+                              <div style={{ width: 1, flex: 1, background: 'repeating-linear-gradient(to bottom, rgba(212,175,55,0.3) 0, rgba(212,175,55,0.3) 4px, transparent 4px, transparent 8px)', margin: '4px 0', minHeight: 60 }} />
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div style={{ paddingBottom: i < arr.length - 1 ? 32 : 0 }}>
+                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 600, color: stop.active ? '#f0ede6' : 'rgba(240,237,230,0.4)', lineHeight: 1 }}>
+                              {stop.time}
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: stop.active ? '#f0ede6' : 'rgba(240,237,230,0.5)', fontFamily: 'system-ui', margin: '6px 0 8px' }}>
+                              {stop.city}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>
+                              <MapPin size={10} style={{ color: '#d4af37', flexShrink: 0 }} />
+                              {stop.station}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── POLICY ── */}
+                  {activeTab === 2 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                      {/* Cancellation */}
+                      <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 16 }}>
+                          Chính sách hoàn hủy
+                        </div>
+                        {[
+                          { label: 'Hủy trước 24h', value: 'Hoàn 100%' },
+                          { label: 'Hủy từ 12h – 24h', value: 'Hoàn 50%' },
+                          { label: 'Hủy trước 12h', value: 'Không hoàn' },
+                        ].map(r => (
+                          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 12, fontFamily: 'system-ui' }}>
+                            <span style={{ color: 'rgba(240,237,230,0.5)' }}>{r.label}</span>
+                            <span style={{ fontWeight: 700, color: '#f0ede6' }}>{r.value}</span>
+                          </div>
+                        ))}
+                        <p style={{ fontSize: 10, color: 'rgba(240,237,230,0.25)', marginTop: 12, fontFamily: 'system-ui', fontStyle: 'italic' }}>
+                          * Vé ngày Lễ, Tết không áp dụng chính sách hoàn hủy.
+                        </p>
+                      </div>
+
+                      {/* Baggage */}
+                      <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 16 }}>
+                          Quy định hành lý
+                        </div>
+                        {[
+                          'Tối đa 20kg hành lý ký gửi và 1 balo nhỏ xách tay.',
+                          'Không mang động vật sống, hàng hóa có mùi (sầu riêng, nước mắm).',
+                        ].map((item, i) => (
+                          <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12, fontSize: 12, color: 'rgba(240,237,230,0.5)', fontFamily: 'system-ui', lineHeight: 1.6 }}>
+                            <span style={{ color: '#d4af37', flexShrink: 0, fontSize: 8, marginTop: 5 }}>◆</span>
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── REVIEWS ── */}
+                  {activeTab === 3 && (
+                    <div>
+                      {/* Rating summary */}
+                      <div style={{ display: 'flex', gap: 32, padding: '20px 0 28px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 24 }}>
+                        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '3.5rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                            {trip.rating}
+                          </div>
+                          <div style={{ display: 'flex', gap: 2, justifyContent: 'center', margin: '6px 0 4px' }}>
+                            {[1,2,3,4,5].map(i => (
+                              <Star key={i} size={12} style={{ fill: i <= Math.floor(trip.rating) ? '#d4af37' : 'rgba(255,255,255,0.1)', color: i <= Math.floor(trip.rating) ? '#d4af37' : 'rgba(255,255,255,0.1)' }} />
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>{trip.reviews} đánh giá</div>
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                          {[5,4,3,2,1].map(r => {
+                            const pct = r === 5 ? 75 : r === 4 ? 15 : r === 3 ? 5 : 2;
+                            return (
+                              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                <span style={{ fontSize: 10, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui', width: 8 }}>{r}</span>
+                                <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                                  <div style={{ height: '100%', width: `${pct}%`, background: '#d4af37' }} />
+                                </div>
+                                <span style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', width: 28 }}>{pct}%</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Reviews list */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {[
+                          { name: 'Nguyễn Văn A', date: 'Hôm qua', content: 'Xe rất mới, giường nằm rộng rãi thoải mái. Tài xế lái an toàn không lạng lách. Wifi chạy tốt.', likes: 12 },
+                          { name: 'Trần Thị B', date: '3 ngày trước', content: 'Chất lượng dịch vụ tuyệt vời. Lơ xe rất lịch sự, phát nước và khăn lạnh đầy đủ. Đón khách đúng giờ.', likes: 8 },
+                        ].map((review, i) => (
+                          <div key={i} style={{ padding: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 32, height: 32, background: 'rgba(212,175,55,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#d4af37', fontFamily: 'system-ui' }}>
+                                  {review.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f0ede6', fontFamily: 'system-ui' }}>{review.name}</div>
+                                  <div style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>{review.date}</div>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: 2 }}>
+                                {[1,2,3,4,5].map(s => <Star key={s} size={9} style={{ fill: '#d4af37', color: '#d4af37' }} />)}
+                              </div>
+                            </div>
+                            <p style={{ fontSize: 12, color: 'rgba(240,237,230,0.6)', lineHeight: 1.7, margin: '0 0 10px', fontFamily: 'system-ui' }}>
+                              {review.content}
+                            </p>
+                            <button style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', fontWeight: 700 }}>
+                              <ThumbsUp size={10} /> Hữu ích ({review.likes})
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
