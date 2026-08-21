@@ -41,8 +41,8 @@ const INITIAL_NOTIFICATIONS: Notification[] = [
   },
   { 
     id: '4', 
-    title: 'Cập nhật điều khoản dịch vụ', 
-    message: 'LunaTravel Business vừa cập nhật chính sách hoàn hủy vé dịp lễ tết. Vui lòng kiểm tra để biết thêm chi tiết.', 
+    title: 'Cập nhật điều khoản dịch vụ',
+    message: 'An Chuyến vừa cập nhật chính sách hoàn hủy vé dịp lễ tết. Vui lòng kiểm tra để biết thêm chi tiết.',
     time: '5 ngày trước', 
     unread: false, 
     type: 'system' 
@@ -145,56 +145,52 @@ export function NotificationsPage() {
                   exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                   transition={{ delay: idx * 0.05, duration: 0.3 }}
                   onClick={() => notif.unread && markAsRead(notif.id)}
-                  className={`relative group overflow-hidden rounded-[2rem] border transition-all duration-300 cursor-pointer ${
-                    notif.unread 
-                      ? 'bg-white border-blue-100 shadow-xl shadow-blue-900/5' 
-                      : 'bg-white/60 border-transparent shadow-sm hover:bg-white hover:shadow-md'
-                  }`}
+                  className="relative group overflow-hidden rounded-[2rem] border transition-all duration-300 cursor-pointer"
+                  style={notif.unread
+                    ? { background: 'rgba(212,175,55,0.06)', borderColor: 'rgba(212,175,55,0.2)' }
+                    : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
                 >
                   {/* Left accent border for unread */}
                   {notif.unread && (
-                    <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-primary"></div>
+                    <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: '#d4af37' }}></div>
                   )}
 
                   <div className="p-6 sm:p-8 flex items-start gap-4 sm:gap-6">
                     {/* Icon */}
-                    <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${
-                      notif.unread 
-                        ? notif.type === 'promo' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-primary'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}>
+                    <div
+                      className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center"
+                      style={notif.unread
+                        ? (notif.type === 'promo' ? { background: 'rgba(251,146,60,0.12)', color: '#fb923c' } : { background: 'rgba(212,175,55,0.12)', color: '#d4af37' })
+                        : { background: 'rgba(255,255,255,0.05)', color: 'rgba(240,237,230,0.4)' }}
+                    >
                       {getIcon(notif.type)}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 pt-1">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
-                        <h3 className={`text-lg sm:text-xl font-bold pr-6 ${
-                          notif.unread ? 'text-gray-900' : 'text-gray-600'
-                        }`}>
+                        <h3 className="text-lg sm:text-xl font-bold pr-6" style={{ color: notif.unread ? '#f0ede6' : 'rgba(240,237,230,0.6)' }}>
                           {notif.title}
                         </h3>
-                        <span className="shrink-0 text-xs font-bold text-gray-400 sm:mt-1.5">
+                        <span className="shrink-0 text-xs font-bold sm:mt-1.5" style={{ color: 'rgba(240,237,230,0.35)' }}>
                           {notif.time}
                         </span>
                       </div>
-                      
-                      <p className={`text-sm sm:text-base leading-relaxed max-w-3xl ${
-                        notif.unread ? 'text-gray-600 font-medium' : 'text-gray-500'
-                      }`}>
+
+                      <p className="text-sm sm:text-base leading-relaxed max-w-3xl" style={{ color: notif.unread ? 'rgba(240,237,230,0.7)' : 'rgba(240,237,230,0.45)' }}>
                         {notif.message}
                       </p>
                     </div>
 
                     {/* Unread indicator */}
                     {notif.unread && (
-                      <div className="shrink-0 w-3 h-3 bg-primary rounded-full mt-2 shadow-sm shadow-primary/50 absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto"></div>
+                      <div className="shrink-0 w-3 h-3 rounded-full mt-2 absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto" style={{ background: '#d4af37' }}></div>
                     )}
                   </div>
                 </motion.div>
               ))
             ) : (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="py-20 text-center bg-white/5 rounded-[3rem] border border-white/10"

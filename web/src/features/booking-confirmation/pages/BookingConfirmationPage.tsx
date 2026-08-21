@@ -42,8 +42,8 @@ export function BookingConfirmationPage() {
  const bookingDate = booking ? new Date(booking.createdAt) : null;
 
  return (
- <div className="min-h-screen bg-gray-100 pt-24 pb-16 flex flex-col items-center justify-start p-4 font-sans text-gray-900">
- 
+ <div className="min-h-screen bg-[#0e1111] pt-24 pb-16 flex flex-col items-center justify-start p-4 font-sans text-gray-900">
+
  {/* Confetti */}
  <AnimatePresence>
  {showConfetti && (
@@ -71,7 +71,7 @@ export function BookingConfirmationPage() {
  <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
  <CheckCircle2 className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
  </div>
- <h1 className="text-xl font-bold text-gray-800">Thanh toán thành công!</h1>
+ <h1 className="text-xl font-bold text-[#f0ede6]">Thanh toán thành công!</h1>
  </motion.div>
 
  {/* ================= RECEIPT TICKET ================= */}
@@ -94,7 +94,7 @@ export function BookingConfirmationPage() {
 
  {/* Company Info */}
  <div className="text-[11px] mb-6 space-y-0.5 font-medium uppercase text-gray-800">
- <p className="font-bold">CÔNG TY CỔ PHẦN LunaTravel Business</p>
+ <p className="font-bold">CÔNG TY CỔ PHẦN AN CHUYẾN</p>
  <p>123 Đường Điện Biên Phủ, P.15, Q.Bình Thạnh, TP. HCM</p>
  <p>Mã số thuế: 0312345678</p>
  <p>Điện thoại: 1900 1234 - (028) 38 123 456</p>
@@ -146,7 +146,7 @@ export function BookingConfirmationPage() {
  </div>
  <div className="text-[11px] font-semibold text-gray-800 leading-tight">
  <p>Signature Valid</p>
- <p>Ký bởi: Công ty Cổ phần LunaTravel Business</p>
+ <p>Ký bởi: Công ty Cổ phần An Chuyến</p>
  <p>Ngày ký: 20/11/2026</p>
  </div>
  </div>
@@ -207,19 +207,19 @@ export function BookingConfirmationPage() {
  transition={{ delay: 0.2, duration: 0.5 }}
  className="w-full grid grid-cols-2 gap-3 mt-6"
  >
- <Link to="/" className="flex items-center justify-center gap-2 h-12 bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+ <Link to="/" className="flex items-center justify-center gap-2 h-12 bg-white/5 border border-white/15 font-semibold text-[#f0ede6] hover:bg-white/10 transition-colors">
  <Home className="w-4 h-4" /> Về trang chủ
  </Link>
  <button className="flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition-colors">
  <Download className="w-4 h-4" /> Tải vé PDF
  </button>
  </motion.div>
- 
- <motion.button 
+
+ <motion.button
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  transition={{ delay: 0.4 }}
- className="mt-6 flex items-center gap-2 text-gray-500 hover:text-emerald-600 transition-colors text-sm font-medium"
+ className="mt-6 flex items-center gap-2 text-[rgba(240,237,230,0.5)] hover:text-emerald-400 transition-colors text-sm font-medium"
  >
  <Share2 className="w-4 h-4" /> Chia sẻ hóa đơn vé
  </motion.button>

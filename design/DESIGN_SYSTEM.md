@@ -1,33 +1,32 @@
 # Design System — An Chuyến
 
+> **Cập nhật 2026-08-22:** Bảng token dưới đây phản ánh giá trị thực tế đã triển khai trên toàn bộ 20 trang
+> (đồng bộ hoá trong đợt redesign 2026-08-22). Xem `design/decisions/design-system-reconciliation.md`
+> để biết lý do các giá trị đổi so với bản trước.
+
 ## Color Tokens
 
 ```css
 :root {
-  /* Core palette */
-  --ink:    #0C0D0B;   /* near-black warm — nền hero, text chính */
-  --fog:    #F5F3EE;   /* off-white beige — nền trang chính */
-  --gold:   #F2C118;   /* amber yellow — accent DUY NHẤT */
-  --amber:  #C97B2F;   /* deep amber — hover, secondary accent */
-  --forest: #192B1D;   /* dark forest green — footer, stats, nav scrolled */
-  --slate:  #4A4E46;   /* warm gray-green — body text phụ */
-  --mist:   #E0DDD7;   /* light warm gray — border, divider */
+  /* Core palette — Lumora dark cinematic */
+  --bg-page:    #0e1111;   /* nền chính toàn site (thay --fog cũ) */
+  --bg-card:    rgba(255,255,255,0.025); /* nền card trên nền tối */
+  --border:     rgba(255,255,255,0.08);  /* border/divider trên nền tối */
+  --gold:       #d4af37;   /* accent DUY NHẤT (thay #F2C118 cũ) */
+  --gold-hover: #f0c94a;
+  --text-primary: #f0ede6; /* chữ chính trên nền tối (thay --ink dark-on-light cũ) */
+  --text-muted:   rgba(240,237,230,0.45);
 
   /* Semantic aliases */
-  --bg-page:      var(--fog);
-  --bg-dark:      var(--forest);
-  --text-primary: var(--ink);
-  --text-body:    var(--slate);
   --accent:       var(--gold);
-  --accent-hover: var(--amber);
-  --border:       var(--mist);
+  --accent-hover: var(--gold-hover);
 }
 ```
 
 ### Lý do không dùng pure white/black
-- `#ffffff` → trông rẻ tiền, contrast quá cứng với ảnh thiên nhiên
-- `#000000` → quá harsh, không phù hợp cảm giác sương mù
-- `--fog` và `--ink` có tông warm nhẹ → hòa quyện với palette rừng núi
+- `#ffffff` → trông rẻ tiền, contrast quá cứng
+- `#000000` → quá harsh, không phù hợp cảm giác cinematic
+- `#0e1111` và `#f0ede6` có tông warm nhẹ → hòa quyện với ánh sáng gold accent
 
 ---
 
@@ -35,31 +34,32 @@
 
 ### Font stack
 ```css
---font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
---font-heading: 'Barlow Condensed', 'Arial Narrow', sans-serif;
---font-body:    'Inter', system-ui, -apple-system, sans-serif;
---font-mono:    'Space Mono', 'Courier New', monospace;
+--font-display: 'Cormorant Garamond', 'Playfair Display', Georgia, serif; /* heading lớn, italic cho hero/số liệu */
+--font-logo:    'Instrument Serif', serif; /* CHỈ dùng cho logo Header/Footer, luôn italic */
+--font-eyebrow: 'Barlow Condensed', system-ui, sans-serif; /* label nhỏ, uppercase */
+--font-body:    system-ui, 'Outfit', sans-serif;
 ```
 
 ### Type scale
 ```
-Display (hero):      clamp(3rem, 6vw, 5rem)    — Cormorant Italic 700
-Display (route):     clamp(1.8rem, 2.5vw, 2.4rem) — Cormorant Italic 600
-Section title:       clamp(1.8rem, 3vw, 2.6rem) — Barlow Condensed 800 Uppercase
-Card title:          1.15–1.4rem                — Barlow Condensed 700 Uppercase
-Body large:          15–16px                    — Inter 400
-Body:                14px                       — Inter 400
-Label/eyebrow:       9–10px                     — Space Mono 400 Uppercase
-Stat number:         clamp(2.4rem, 4vw, 3.4rem) — Cormorant Italic 600
+Display (hero):      clamp(3rem, 7vw, 6rem)      — Cormorant/Instrument Italic
+Section title:        clamp(1.8rem, 3vw, 2.6rem)  — Cormorant Garamond 400
+Card title:           1.15–1.4rem                 — Cormorant Garamond 600 hoặc system-ui 700
+Body large:           15–16px                     — system-ui 400–500
+Body:                 13–14px                     — system-ui 400
+Label/eyebrow:        9–11px                      — Barlow Condensed / system-ui, uppercase, letter-spacing 0.2–0.35em, màu gold
+Stat number:          clamp(2.2rem, 4vw, 3.4rem)  — Cormorant Garamond 600–700
 ```
 
 ### Type rules
 ```
-Cormorant Garamond  → luôn italic. Never regular (trông yếu)
-Barlow Condensed    → luôn uppercase + letter-spacing 0.04–0.08em
-Space Mono          → luôn uppercase + letter-spacing 0.14–0.22em
-Inter               → không uppercase, không bold quá 600
+Cormorant Garamond / Playfair Display → dùng cho heading, số liệu lớn, không uppercase
+Instrument Serif    → CHỈ logo Header/Footer, luôn italic
+Barlow Condensed / system-ui (eyebrow) → luôn uppercase + letter-spacing 0.2–0.35em + màu gold
+system-ui (body)    → không uppercase, weight 400–700 tuỳ ngữ cảnh
 ```
+
+> **Đã loại bỏ:** `Space Mono` (chưa từng triển khai), `Inter` cho body (thực tế dùng system-ui/Outfit).
 
 ---
 

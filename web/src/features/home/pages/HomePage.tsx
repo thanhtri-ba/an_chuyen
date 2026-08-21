@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Search, ArrowRightLeft, Ticket, Zap, Sparkles, Star, ChevronRight, Edit3, X, Calendar } from 'lucide-react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useReducedMotion, AnimatePresence } from 'framer-motion';
 
 const heroVideos = [
   { url: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_092026_dd05b805-ea0f-40b2-8c52-332b88502592.mp4',
@@ -29,6 +29,30 @@ export function HomePage() {
   const [destination, setDestination] = useState('');
   const [activeVideo, setActiveVideo] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // ===== Scroll parallax (hero video, text, routes background) =====
+  const prefersReducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  // Disable/reduce parallax on mobile & when user prefers reduced motion (perf + motion sickness)
+  const parallaxOff = prefersReducedMotion || isMobile;
+
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const videoY = useTransform(heroProgress, [0, 1], ['0%', parallaxOff ? '0%' : '18%']);
+  const videoScale = useTransform(heroProgress, [0, 1], [1, parallaxOff ? 1 : 1.12]);
+  const heroContentY = useTransform(heroProgress, [0, 1], ['0%', parallaxOff ? '0%' : '35%']);
+  const heroContentOpacity = useTransform(heroProgress, [0, 0.75], [1, parallaxOff ? 1 : 0]);
+
+  const routesRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: routesProgress } = useScroll({ target: routesRef, offset: ['start end', 'end start'] });
+  const routesBgY = useTransform(routesProgress, [0, 1], [parallaxOff ? '0%' : '-12%', parallaxOff ? '0%' : '12%']);
 
   const handleVideoSwitch = (index: number) => {
     if (index === activeVideo || isTransitioning) return;
@@ -119,15 +143,17 @@ export function HomePage() {
         `}</style>
 
       {/* ===== HERO SECTION — Lumora style ===== */}
-      <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', background: '#000' }}>
+      <section ref={heroRef} style={{ position: 'relative', height: '100vh', overflow: 'hidden', background: '#000' }}>
 
-        {/* Video layer */}
-        {heroVideos.map((v, i) => (
-          <video key={i} autoPlay muted loop playsInline
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: activeVideo === i ? 1 : 0, transition: 'opacity 1000ms ease-in-out', zIndex: 0 }}
-            src={v.url}
-          />
-        ))}
+        {/* Video layer — parallax: moves down + scales up slightly as page scrolls */}
+        <motion.div style={{ position: 'absolute', inset: 0, y: videoY, scale: videoScale, willChange: 'transform', zIndex: 0 }}>
+          {heroVideos.map((v, i) => (
+            <video key={i} autoPlay muted loop playsInline
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: activeVideo === i ? 1 : 0, transition: 'opacity 1000ms ease-in-out' }}
+              src={v.url}
+            />
+          ))}
+        </motion.div>
 
         {/* Train window PNG overlay */}
         <img
@@ -137,8 +163,8 @@ export function HomePage() {
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 1 }}
         />
 
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Content — parallax: moves up slower + fades out as page scrolls (depth effect) */}
+        <motion.div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column', y: heroContentY, opacity: heroContentOpacity, willChange: 'transform, opacity' }}>
 
           {/* Hero text */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 5%', gap: 20 }}>
@@ -170,7 +196,7 @@ export function HomePage() {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ===== SEARCH BAR SECTION (MOVED BELOW HERO) ===== */}
@@ -391,14 +417,24 @@ export function HomePage() {
       </section>
 
       {/* ===== SECTION 4: PROJECTS / ROUTES (BENTO GLASSMORPHISM) ===== */}
-      <section className="responsive-padding" style={{ 
-        position: 'relative', 
-        background: 'url(https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2000&auto=format&fit=crop) center/cover fixed',
+      <section ref={routesRef} className="responsive-padding" style={{
+        position: 'relative',
+        overflow: 'hidden',
         color: '#ffffff'
       }}>
+        {/* Background image — parallax: drifts opposite to scroll direction (GPU-friendly transform, works on mobile unlike background-attachment:fixed) */}
+        <motion.div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', top: '-15%', left: 0, right: 0, height: '130%',
+            backgroundImage: 'url(https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2000&auto=format&fit=crop)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            y: routesBgY, willChange: 'transform', zIndex: 0,
+          }}
+        />
         {/* Dark overlay for contrast */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(14,17,17,1) 0%, rgba(14,17,17,0.4) 40%, rgba(14,17,17,0.9) 100%)' }}></div>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 0%, rgba(14,17,17,0.8) 100%)' }}></div>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(14,17,17,1) 0%, rgba(14,17,17,0.4) 40%, rgba(14,17,17,0.9) 100%)', zIndex: 1 }}></div>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 0%, rgba(14,17,17,0.8) 100%)', zIndex: 1 }}></div>
 
         <div style={{ position: 'relative', zIndex: 10, maxWidth: 1400, margin: '0 auto' }}>
 
