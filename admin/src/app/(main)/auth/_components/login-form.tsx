@@ -40,8 +40,9 @@ export function LoginForm() {
         password: data.password,
       });
 
-      // Save token
+      // Save token + user info so the header can show who's actually logged in
       localStorage.setItem("admin_token", response.token);
+      localStorage.setItem("admin_user", JSON.stringify(response.user));
       toast.success("Login successful!");
 
       // Redirect to dashboard
