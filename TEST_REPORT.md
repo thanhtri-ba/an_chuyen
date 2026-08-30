@@ -206,6 +206,37 @@ Theo quyết định của bạn: **launch tạm bằng COD + Ví nội bộ**, 
 
 ---
 
+## Cập nhật — Security review, npm audit, dọn lint admin (2026-08-30)
+
+**Security review (thủ công, vì skill `/security-review` lỗi do repo chưa có remote/`origin/HEAD`):**
+
+🔴 **2 lỗ hổng nghiêm trọng đã tìm thấy và fix ngay:**
+1. **Lộ password hash** — `GET /api/admin/users` trả về toàn bộ record User kể cả cột `password` (bcrypt hash) cho mọi request admin. Đã verify bằng test thật trước và sau khi fix.
+2. **Mass-assignment / chiếm quyền tài khoản** — `PUT /api/admin/users/:id` cho phép ghi đè bất kỳ field nào, kể cả `password` (không hash) và `role` — một request admin đơn giản có thể tự nâng quyền user thường lên admin, hoặc set mật khẩu mới cho tài khoản bất kỳ mà không cần biết mật khẩu cũ. Đã verify bằng tấn công thử: gửi `{"role":"admin","password":"hacked123"}` cho 1 user thường → bị chặn hoàn toàn, `role` giữ nguyên `"user"`.
+   - **Fix:** thêm `readOmit`/`writeBlock` field-list vào `createCrudRouter`, áp dụng cho resource `users` (ẩn `password` khi đọc, chặn ghi `password`+`role`).
+
+🟡 **2 phát hiện khác (ghi nhận, chưa fix — rủi ro thấp hơn, cần quyết định kiến trúc):**
+3. JWT access token có hạn 7 ngày, không có refresh token/blacklist — token bị lộ vẫn hợp lệ suốt 7 ngày kể cả sau khi đổi mật khẩu.
+4. Admin CRUD trả nguyên `error.message` từ Prisma khi lỗi — rò rỉ chi tiết schema nội bộ (rủi ro thấp vì đã yêu cầu quyền admin).
+
+**npm audit:**
+- Backend: 10 → 2 vulnerability (2 còn lại bị chặn bởi bản vá thượng nguồn chưa phát hành — `@mastra/core`→`@ai-sdk` và `autocannon`→`uuid`, cả hai đều cần `--force` gây breaking change nên không tự ý áp dụng).
+- Web: 3 lỗ hổng **cao** (`react-router` RSC CSRF bypass) → 0, đã verify build + routing vẫn hoạt động bình thường sau khi nâng cấp.
+- Admin: đã sạch từ trước (0 vulnerability).
+
+**Dọn lint admin (55 → 24 lỗi, đúng bằng baseline ban đầu trước khi thêm 8 trang mới):**
+- Fix toàn bộ `noLabelWithoutControl` (thêm `htmlFor`/`id`) trên 6 trang mới (Vouchers, Banners, Events, Tours, Rentals, Website Config).
+- **Phát hiện + fix 1 bug thật do chính công cụ auto-fix gây ra:** khi chạy `biome check --write --unsafe` để tự động thêm dependency còn thiếu cho `useEffect`, nó thêm hàm `load` (khai báo bằng `function`, tái tạo mỗi lần render) vào mảng dependency — tạo nguy cơ vòng lặp render vô hạn. Đã sửa đúng cách bằng cách bọc `load` trong `useCallback([])` ở cả 7 trang bị ảnh hưởng, verify bằng network trace: chỉ gọi API 1-2 lần (StrictMode) thay vì lặp liên tục.
+- 24 lỗi còn lại là `noExplicitAny` (style, không phải bug) và a11y trên `trip-schedules/page.tsx` (code cũ có từ trước, chưa đụng tới trong phiên này) — để lại vì refactor kiểu dữ liệu/cấu trúc HTML đầy đủ nằm ngoài phạm vi hợp lý của lần dọn dẹp này.
+
+**Verify cuối:** `npm test` (4/4 pass), `tsc --noEmit` sạch cả backend lẫn admin, build web/admin/backend đều thành công.
+
+**Chưa làm (theo yêu cầu của bạn):**
+- Push commit lên remote — **repo hiện chưa cấu hình remote nào cả** (`git remote -v` trống). Cần bạn thêm remote (`git remote add origin <url>`) trước khi mình có thể push.
+- Tích hợp VNPay/Momo thật — tạm hoãn theo quyết định trước đó, chờ có tài khoản merchant.
+
+---
+
 ## Tổng kết & Đề xuất tiếp theo
 
 | Hệ thống | Trạng thái |
