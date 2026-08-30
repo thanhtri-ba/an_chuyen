@@ -22,7 +22,7 @@ export default function Page() {
 
   useEffect(() => {
     api
-      .get<any[]>("/admin/payments")
+      .get<any[]>('/admin/payments?sort=["createdAt","desc"]&range=[0,99]')
       .then((d) => setItems(d || []))
       .catch((error) => console.error("Failed to load payments", error))
       .finally(() => setLoading(false));

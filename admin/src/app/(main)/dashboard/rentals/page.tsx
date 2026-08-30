@@ -24,7 +24,7 @@ export default function Page() {
 
   const load = useCallback(async () => {
     try {
-      const data = await api.get<any[]>("/admin/rentalCars");
+      const data = await api.get<any[]>('/admin/rentalCars?sort=["createdAt","desc"]&range=[0,99]');
       setItems(data || []);
     } catch (error) {
       console.error("Failed to load rental cars", error);

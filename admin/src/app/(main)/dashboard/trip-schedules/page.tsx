@@ -37,7 +37,7 @@ export default function Page() {
 
   useEffect(() => {
     api
-      .get<any[]>("/admin/tripSchedules")
+      .get<any[]>("/admin/tripSchedules?range=[0,99]")
       .then((d) => {
         const data = d || [];
         setItems(data);

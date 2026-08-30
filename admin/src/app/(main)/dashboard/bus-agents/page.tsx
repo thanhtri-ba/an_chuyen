@@ -17,7 +17,7 @@ export default function Page() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await api.get<any[]>("/admin/busAgents");
+        const data = await api.get<any[]>("/admin/busAgents?range=[0,99]");
         setBusAgents(data || []);
       } catch (error) {
         console.error("Failed to load bus agents", error);

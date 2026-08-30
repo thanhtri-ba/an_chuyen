@@ -10,7 +10,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     api
-      .get<any[]>("/admin/users")
+      .get<any[]>('/admin/users?sort=["createdAt","desc"]&range=[0,99]')
       .then((d) => setItems(d || []))
       .catch(console.error)
       .finally(() => setLoading(false));
