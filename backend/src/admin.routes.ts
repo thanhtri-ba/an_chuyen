@@ -338,7 +338,7 @@ router.use('/users', createCrudRouter(prisma.user, 'users', undefined, {
   readOmit: ['password'],
   writeBlock: ['password', 'role'],
 }));
-router.use('/bookings', createCrudRouter(prisma.booking, 'bookings', { user: true, tripSchedule: true }));
+router.use('/bookings', createCrudRouter(prisma.booking, 'bookings', { user: true, tripSchedule: true, payment: true }));
 router.use('/trips', createCrudRouter(prisma.trip, 'trips', { busAgent: true, route: { include: { departureCity: true, arrivalCity: true } } }));
 router.use('/tripSchedules', createCrudRouter(prisma.tripSchedule, 'tripSchedules', { 
   bus: true, 
