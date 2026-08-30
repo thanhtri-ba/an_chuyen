@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { MapPinned, Plus, Search, Trash2 } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function Page() {
   const [price, setPrice] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/tours");
       setItems(data || []);
@@ -31,11 +31,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleAdd() {
     if (!title.trim() || !duration.trim() || !price) return;
@@ -94,22 +94,51 @@ export default function Page() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Tên tour</label>
-                <Input placeholder="Đà Lạt mộng mơ" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <label htmlFor="tour-title" className="font-medium text-sm">
+                  Tên tour
+                </label>
+                <Input
+                  id="tour-title"
+                  placeholder="Đà Lạt mộng mơ"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Thời lượng</label>
-                  <Input placeholder="3N2Đ" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                  <label htmlFor="tour-duration" className="font-medium text-sm">
+                    Thời lượng
+                  </label>
+                  <Input
+                    id="tour-duration"
+                    placeholder="3N2Đ"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Giá (đ)</label>
-                  <Input type="number" placeholder="2500000" value={price} onChange={(e) => setPrice(e.target.value)} />
+                  <label htmlFor="tour-price" className="font-medium text-sm">
+                    Giá (đ)
+                  </label>
+                  <Input
+                    id="tour-price"
+                    type="number"
+                    placeholder="2500000"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Link ảnh (tuỳ chọn)</label>
-                <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                <label htmlFor="tour-image-url" className="font-medium text-sm">
+                  Link ảnh (tuỳ chọn)
+                </label>
+                <Input
+                  id="tour-image-url"
+                  placeholder="https://..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
               </div>
             </div>
             <DialogFooter>

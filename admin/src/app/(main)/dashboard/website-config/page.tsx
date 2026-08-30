@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Plus, Save, Settings2, Trash2 } from "lucide-react";
 
@@ -21,7 +21,7 @@ export default function Page() {
   const [value, setValue] = useState("");
   const [description, setDescription] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/appConfigs");
       setItems(data || []);
@@ -31,17 +31,21 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleAdd() {
     if (!key.trim() || !value.trim()) return;
     setIsSaving(true);
     try {
-      await api.post("/admin/appConfigs", { key: key.trim(), value: value.trim(), description: description.trim() || undefined });
+      await api.post("/admin/appConfigs", {
+        key: key.trim(),
+        value: value.trim(),
+        description: description.trim() || undefined,
+      });
       setKey("");
       setValue("");
       setDescription("");
@@ -98,16 +102,37 @@ export default function Page() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Key</label>
-                <Input placeholder="about_page_content" value={key} onChange={(e) => setKey(e.target.value)} />
+                <label htmlFor="config-key" className="font-medium text-sm">
+                  Key
+                </label>
+                <Input
+                  id="config-key"
+                  placeholder="about_page_content"
+                  value={key}
+                  onChange={(e) => setKey(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Giá trị</label>
-                <Input placeholder="Nội dung / JSON" value={value} onChange={(e) => setValue(e.target.value)} />
+                <label htmlFor="config-value" className="font-medium text-sm">
+                  Giá trị
+                </label>
+                <Input
+                  id="config-value"
+                  placeholder="Nội dung / JSON"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Mô tả (tuỳ chọn)</label>
-                <Input placeholder="Dùng để hiển thị ở trang About" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <label htmlFor="config-description" className="font-medium text-sm">
+                  Mô tả (tuỳ chọn)
+                </label>
+                <Input
+                  id="config-description"
+                  placeholder="Dùng để hiển thị ở trang About"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </div>
             </div>
             <DialogFooter>

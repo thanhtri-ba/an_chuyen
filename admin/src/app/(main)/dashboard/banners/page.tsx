@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Image as ImageIcon, Plus, Search, Trash2 } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function Page() {
   const [targetUrl, setTargetUrl] = useState("");
   const [platform, setPlatform] = useState("all");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/banners");
       setItems(data || []);
@@ -31,11 +31,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleAdd() {
     if (!title.trim() || !imageUrl.trim()) return;
@@ -94,20 +94,44 @@ export default function Page() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Tiêu đề</label>
-                <Input placeholder="Khuyến mãi hè 2026" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <label htmlFor="banner-title" className="font-medium text-sm">
+                  Tiêu đề
+                </label>
+                <Input
+                  id="banner-title"
+                  placeholder="Khuyến mãi hè 2026"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Link ảnh</label>
-                <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                <label htmlFor="banner-image-url" className="font-medium text-sm">
+                  Link ảnh
+                </label>
+                <Input
+                  id="banner-image-url"
+                  placeholder="https://..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Link đích (tuỳ chọn)</label>
-                <Input placeholder="/offers" value={targetUrl} onChange={(e) => setTargetUrl(e.target.value)} />
+                <label htmlFor="banner-target-url" className="font-medium text-sm">
+                  Link đích (tuỳ chọn)
+                </label>
+                <Input
+                  id="banner-target-url"
+                  placeholder="/offers"
+                  value={targetUrl}
+                  onChange={(e) => setTargetUrl(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Nền tảng</label>
+                <label htmlFor="banner-platform" className="font-medium text-sm">
+                  Nền tảng
+                </label>
                 <select
+                  id="banner-platform"
                   value={platform}
                   onChange={(e) => setPlatform(e.target.value)}
                   className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"

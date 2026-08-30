@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { CalendarDays, Plus, Search, Trash2 } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function Page() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/events");
       setItems(data || []);
@@ -31,11 +31,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleAdd() {
     if (!title.trim() || !startDate || !endDate) return;
@@ -94,21 +94,44 @@ export default function Page() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Tiêu đề</label>
-                <Input placeholder="Lễ hội hoa Đà Lạt" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <label htmlFor="event-title" className="font-medium text-sm">
+                  Tiêu đề
+                </label>
+                <Input
+                  id="event-title"
+                  placeholder="Lễ hội hoa Đà Lạt"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Mô tả</label>
-                <Input placeholder="Mô tả ngắn" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <label htmlFor="event-description" className="font-medium text-sm">
+                  Mô tả
+                </label>
+                <Input
+                  id="event-description"
+                  placeholder="Mô tả ngắn"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Bắt đầu</label>
-                  <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <label htmlFor="event-start-date" className="font-medium text-sm">
+                    Bắt đầu
+                  </label>
+                  <Input
+                    id="event-start-date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Kết thúc</label>
-                  <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <label htmlFor="event-end-date" className="font-medium text-sm">
+                    Kết thúc
+                  </label>
+                  <Input id="event-end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </div>
               </div>
             </div>

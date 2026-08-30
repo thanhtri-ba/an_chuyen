@@ -91,7 +91,10 @@ export default function Page() {
                     <TableCell className="text-sm">{o.packageType}</TableCell>
                     <TableCell className="text-sm">{Number(o.totalAmount).toLocaleString("vi-VN")}đ</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${statusColor[o.status] || "border-gray-200/60 bg-gray-50 text-gray-600"} font-medium shadow-none`}>
+                      <Badge
+                        variant="outline"
+                        className={`${statusColor[o.status] || "border-gray-200/60 bg-gray-50 text-gray-600"} font-medium shadow-none`}
+                      >
                         {o.status}
                       </Badge>
                     </TableCell>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Check, Search, Star, Trash2 } from "lucide-react";
 
@@ -14,7 +14,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/reviews");
       setItems(data || []);
@@ -23,11 +23,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleApprove(id: string) {
     try {
@@ -47,7 +47,11 @@ export default function Page() {
     }
   }
 
-  const filtered = items.filter((r) => r.comment?.toLowerCase().includes(searchQuery.toLowerCase()) || r.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filtered = items.filter(
+    (r) =>
+      r.comment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
@@ -93,14 +97,18 @@ export default function Page() {
               ) : (
                 filtered.map((r) => (
                   <TableRow key={r.id} className="group transition-colors hover:bg-muted/30">
-                    <TableCell className="font-medium text-sm">{r.user?.fullName || r.user?.email || "Ẩn danh"}</TableCell>
+                    <TableCell className="font-medium text-sm">
+                      {r.user?.fullName || r.user?.email || "Ẩn danh"}
+                    </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-yellow-600 text-sm">
+                      <div className="flex items-center gap-1 text-sm text-yellow-600">
                         <Star className="size-3.5 fill-yellow-500 text-yellow-500" />
                         {r.rating}/5
                       </div>
                     </TableCell>
-                    <TableCell className="max-w-md truncate text-muted-foreground text-sm">{r.comment || "-"}</TableCell>
+                    <TableCell className="max-w-md truncate text-muted-foreground text-sm">
+                      {r.comment || "-"}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"

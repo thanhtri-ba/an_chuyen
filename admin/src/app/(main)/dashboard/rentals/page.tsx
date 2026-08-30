@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Car, Plus, Search, Trash2 } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function Page() {
   const [seats, setSeats] = useState("4");
   const [pricePerDay, setPricePerDay] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/rentalCars");
       setItems(data || []);
@@ -31,11 +31,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleAdd() {
     if (!name.trim() || !type.trim() || !pricePerDay) return;
@@ -94,22 +94,46 @@ export default function Page() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Tên xe</label>
-                <Input placeholder="Toyota Vios 2024" value={name} onChange={(e) => setName(e.target.value)} />
+                <label htmlFor="rental-name" className="font-medium text-sm">
+                  Tên xe
+                </label>
+                <Input
+                  id="rental-name"
+                  placeholder="Toyota Vios 2024"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Loại xe</label>
-                  <Input placeholder="Sedan, SUV..." value={type} onChange={(e) => setType(e.target.value)} />
+                  <label htmlFor="rental-type" className="font-medium text-sm">
+                    Loại xe
+                  </label>
+                  <Input
+                    id="rental-type"
+                    placeholder="Sedan, SUV..."
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Số ghế</label>
-                  <Input type="number" value={seats} onChange={(e) => setSeats(e.target.value)} />
+                  <label htmlFor="rental-seats" className="font-medium text-sm">
+                    Số ghế
+                  </label>
+                  <Input id="rental-seats" type="number" value={seats} onChange={(e) => setSeats(e.target.value)} />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Giá/ngày (đ)</label>
-                <Input type="number" placeholder="800000" value={pricePerDay} onChange={(e) => setPricePerDay(e.target.value)} />
+                <label htmlFor="rental-price-per-day" className="font-medium text-sm">
+                  Giá/ngày (đ)
+                </label>
+                <Input
+                  id="rental-price-per-day"
+                  type="number"
+                  placeholder="800000"
+                  value={pricePerDay}
+                  onChange={(e) => setPricePerDay(e.target.value)}
+                />
               </div>
             </div>
             <DialogFooter>

@@ -10,8 +10,33 @@ router.use(requireAdmin);
 
 const prisma = new PrismaClient();
 
-const createCrudRouter = (delegate: any, resourceName: string, include?: any) => {
+// `readOmit`: fields stripped from every response (e.g. password hashes should
+// never leave the server, even to an authenticated admin).
+// `writeBlock`: fields silently dropped from create/update bodies so a generic
+// admin CRUD can't be used for mass-assignment into sensitive columns like
+// `password` (would store a value unhashed) or `role` (privilege escalation).
+const createCrudRouter = (
+  delegate: any,
+  resourceName: string,
+  include?: any,
+  options?: { readOmit?: string[]; writeBlock?: string[] },
+) => {
   const crudRouter = Router();
+  const readOmit = options?.readOmit || [];
+  const writeBlock = options?.writeBlock || [];
+
+  const omit = <T extends Record<string, unknown>>(row: T): T => {
+    if (readOmit.length === 0) return row;
+    const clone = { ...row };
+    for (const key of readOmit) delete (clone as Record<string, unknown>)[key];
+    return clone;
+  };
+
+  const stripBlocked = (body: Record<string, unknown>) => {
+    const clone = { ...body };
+    for (const key of writeBlock) delete clone[key];
+    return clone;
+  };
 
   crudRouter.get('/', async (req, res) => {
     const { range, sort, filter } = req.query as any;
@@ -61,7 +86,7 @@ const createCrudRouter = (delegate: any, resourceName: string, include?: any) =>
 
       res.setHeader('Content-Range', `${resourceName} ${skip}-${skip + data.length - 1}/${total}`);
       res.setHeader('X-Total-Count', total);
-      res.json(data);
+      res.json(data.map(omit));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
@@ -72,7 +97,7 @@ const createCrudRouter = (delegate: any, resourceName: string, include?: any) =>
     try {
       const data = await delegate.findUnique({ where: { id: req.params.id }, include });
       if (data) {
-        res.json(data);
+        res.json(omit(data));
       } else {
         res.status(404).json({ error: 'Not found' });
       }
@@ -84,9 +109,10 @@ const createCrudRouter = (delegate: any, resourceName: string, include?: any) =>
 
   crudRouter.post('/', async (req, res) => {
     try {
-      const { id, ...createData } = req.body;
+      const { id, ...rest } = req.body;
+      const createData = stripBlocked(rest);
       const data = await delegate.create({ data: createData });
-      res.status(201).json(data);
+      res.status(201).json(omit(data));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
@@ -95,9 +121,10 @@ const createCrudRouter = (delegate: any, resourceName: string, include?: any) =>
 
   crudRouter.put('/:id', async (req, res) => {
     try {
-      const { id: _, ...updateData } = req.body;
+      const { id: _, ...rest } = req.body;
+      const updateData = stripBlocked(rest);
       const data = await delegate.update({ where: { id: req.params.id }, data: updateData });
-      res.json(data);
+      res.json(omit(data));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
@@ -282,7 +309,10 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-router.use('/users', createCrudRouter(prisma.user, 'users'));
+router.use('/users', createCrudRouter(prisma.user, 'users', undefined, {
+  readOmit: ['password'],
+  writeBlock: ['password', 'role'],
+}));
 router.use('/bookings', createCrudRouter(prisma.booking, 'bookings', { user: true, tripSchedule: true }));
 router.use('/trips', createCrudRouter(prisma.trip, 'trips', { busAgent: true, route: { include: { departureCity: true, arrivalCity: true } } }));
 router.use('/tripSchedules', createCrudRouter(prisma.tripSchedule, 'tripSchedules', { 

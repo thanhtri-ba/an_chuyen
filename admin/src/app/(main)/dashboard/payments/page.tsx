@@ -29,7 +29,9 @@ export default function Page() {
   }, []);
 
   const filtered = items.filter(
-    (p) => p.transactionId?.toLowerCase().includes(searchQuery.toLowerCase()) || p.method?.toLowerCase().includes(searchQuery.toLowerCase()),
+    (p) =>
+      p.transactionId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.method?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
@@ -85,7 +87,10 @@ export default function Page() {
                     <TableCell className="text-sm">{p.method}</TableCell>
                     <TableCell className="text-sm">{Number(p.amount).toLocaleString("vi-VN")}đ</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${statusColor[p.status] || "border-gray-200/60 bg-gray-50 text-gray-600"} font-medium shadow-none`}>
+                      <Badge
+                        variant="outline"
+                        className={`${statusColor[p.status] || "border-gray-200/60 bg-gray-50 text-gray-600"} font-medium shadow-none`}
+                      >
                         {p.status}
                       </Badge>
                     </TableCell>

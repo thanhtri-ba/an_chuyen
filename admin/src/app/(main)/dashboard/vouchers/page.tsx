@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Filter, MoreHorizontal, Plus, Search, Ticket, Trash2 } from "lucide-react";
 
@@ -23,7 +23,7 @@ export default function Page() {
   const [maxDiscount, setMaxDiscount] = useState("");
   const [validUntil, setValidUntil] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await api.get<any[]>("/admin/promotions");
       setItems(data || []);
@@ -32,11 +32,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function handleAdd() {
     if (!code.trim() || !title.trim() || !discountPct || !validUntil) return;
@@ -73,7 +73,9 @@ export default function Page() {
   }
 
   const filtered = items.filter(
-    (p) => p.code?.toLowerCase().includes(searchQuery.toLowerCase()) || p.title?.toLowerCase().includes(searchQuery.toLowerCase()),
+    (p) =>
+      p.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.title?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
@@ -99,26 +101,63 @@ export default function Page() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Mã code</label>
-                <Input placeholder="VD: SALE50" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+                <label htmlFor="voucher-code" className="font-medium text-sm">
+                  Mã code
+                </label>
+                <Input
+                  id="voucher-code"
+                  placeholder="VD: SALE50"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Tiêu đề</label>
-                <Input placeholder="Giảm 50% cho đơn đầu tiên" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <label htmlFor="voucher-title" className="font-medium text-sm">
+                  Tiêu đề
+                </label>
+                <Input
+                  id="voucher-title"
+                  placeholder="Giảm 50% cho đơn đầu tiên"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">% Giảm</label>
-                  <Input type="number" placeholder="10" value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} />
+                  <label htmlFor="voucher-discount-pct" className="font-medium text-sm">
+                    % Giảm
+                  </label>
+                  <Input
+                    id="voucher-discount-pct"
+                    type="number"
+                    placeholder="10"
+                    value={discountPct}
+                    onChange={(e) => setDiscountPct(e.target.value)}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm">Giảm tối đa (đ)</label>
-                  <Input type="number" placeholder="50000" value={maxDiscount} onChange={(e) => setMaxDiscount(e.target.value)} />
+                  <label htmlFor="voucher-max-discount" className="font-medium text-sm">
+                    Giảm tối đa (đ)
+                  </label>
+                  <Input
+                    id="voucher-max-discount"
+                    type="number"
+                    placeholder="50000"
+                    value={maxDiscount}
+                    onChange={(e) => setMaxDiscount(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm">Hết hạn</label>
-                <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+                <label htmlFor="voucher-valid-until" className="font-medium text-sm">
+                  Hết hạn
+                </label>
+                <Input
+                  id="voucher-valid-until"
+                  type="date"
+                  value={validUntil}
+                  onChange={(e) => setValidUntil(e.target.value)}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -177,7 +216,7 @@ export default function Page() {
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600">
                           <Ticket className="size-5" />
                         </div>
-                        <span className="font-semibold font-mono text-foreground">{p.code}</span>
+                        <span className="font-mono font-semibold text-foreground">{p.code}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{p.title}</TableCell>
