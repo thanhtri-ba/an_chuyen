@@ -11,10 +11,28 @@ import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sideb
 import { Separator } from "@/components/ui/separator";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { users } from "@/data/users";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { cn } from "@/lib/utils";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
+
+function getCurrentAdminUser() {
+  try {
+    const raw = localStorage.getItem("admin_user");
+    if (!raw) throw new Error("no stored user");
+    const stored = JSON.parse(raw);
+    return [
+      {
+        id: stored.id,
+        name: stored.fullName || stored.email,
+        email: stored.email,
+        avatar: "",
+        role: stored.role || "admin",
+      },
+    ];
+  } catch {
+    return [{ id: "unknown", name: "Admin", email: "", avatar: "", role: "admin" }];
+  }
+}
 
 const DefaultDashboardPage = lazy(() => import("@/app/(main)/dashboard/default/page"));
 const AnalyticsPage = lazy(() => import("@/app/(main)/dashboard/analytics/page"));
@@ -80,7 +98,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <div className="flex items-center gap-2">
                 <LayoutControls />
                 <ThemeSwitcher />
-                <AccountSwitcher users={users} />
+                <AccountSwitcher users={getCurrentAdminUser()} />
               </div>
             </div>
           </header>
