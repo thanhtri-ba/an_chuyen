@@ -25,8 +25,8 @@ RUN npm install -g serve
 # Copy the build output from the builder stage
 COPY --from=builder /app/dist ./dist
 
-# Expose the port that serve will use
-EXPOSE 3000
+# Expose the port that serve will use (matches docker-compose.yml port mapping)
+EXPOSE 5173
 
 # Start the server, routing all requests to index.html (-s)
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["serve", "-s", "dist", "-l", "5173"]

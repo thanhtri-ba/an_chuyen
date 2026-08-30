@@ -42,7 +42,7 @@ export function BookingConfirmationPage() {
  const bookingDate = booking ? new Date(booking.createdAt) : null;
 
  return (
- <div className="min-h-screen bg-[#0e1111] pt-24 pb-16 flex flex-col items-center justify-start p-4 font-sans text-gray-900">
+ <div className="min-h-screen bg-[#fcfcfc] pt-24 pb-16 flex flex-col items-center justify-start p-4 font-sans text-gray-900">
 
  {/* Confetti */}
  <AnimatePresence>
@@ -71,7 +71,7 @@ export function BookingConfirmationPage() {
  <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
  <CheckCircle2 className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
  </div>
- <h1 className="text-xl font-bold text-[#f0ede6]">Thanh toán thành công!</h1>
+ <h1 className="text-xl font-bold text-[#1a1a1a]">Thanh toán thành công!</h1>
  </motion.div>
 
  {/* ================= RECEIPT TICKET ================= */}
@@ -207,7 +207,7 @@ export function BookingConfirmationPage() {
  transition={{ delay: 0.2, duration: 0.5 }}
  className="w-full grid grid-cols-2 gap-3 mt-6"
  >
- <Link to="/" className="flex items-center justify-center gap-2 h-12 bg-white/5 border border-white/15 font-semibold text-[#f0ede6] hover:bg-white/10 transition-colors">
+ <Link to="/" className="flex items-center justify-center gap-2 h-12 bg-black/5 border border-black/15 font-semibold text-[#1a1a1a] hover:bg-black/10 transition-colors">
  <Home className="w-4 h-4" /> Về trang chủ
  </Link>
  <button className="flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition-colors">

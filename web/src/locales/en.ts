@@ -307,6 +307,65 @@ const en: Translations = {
     securitySub: 'Change password',
     notifications: 'Notifications',
     notificationsSub: 'Customize notifications'
+  },
+  roamora: {
+    heroSub: "It's time to",
+    heroTitle1: "Explore",
+    heroTitle2: "the World",
+    heroDesc: "Discover breathtaking destinations, unforgettable experiences, and memories that last a lifetime.",
+    exploreNow: "Explore Now",
+    whereTo: "Where to?",
+    whereToPlaceholder: "Search destinations",
+    checkIn: "Check in",
+    checkOut: "Check out",
+    travelers: "Travelers",
+    guests: "guests",
+    search: "Search",
+    features: {
+      f1Title: "Handpicked Hotels",
+      f1Desc: "Stay at the finest places to relax.",
+      f2Title: "Expert Guides",
+      f2Desc: "Local experts to guide your journey.",
+      f3Title: "Best Price Guarantee",
+      f3Desc: "We match the best prices for you.",
+      f4Title: "24/7 Support",
+      f4Desc: "We're here for you anytime, anywhere."
+    },
+    destinations: {
+      sub: "Explore the best",
+      title: "Popular Destinations",
+      viewAll: "View all destinations"
+    },
+    promo: {
+      sub: "Limited Time Offer",
+      title1: "Get up to",
+      title2: "30%",
+      title3: "OFF",
+      desc: "on your next adventure",
+      btn: "Explore Deals"
+    },
+    trusted: "Trusted by thousands of travelers worldwide",
+    footer: {
+      desc: "We help you discover the world with unforgettable travel experiences and exceptional services.",
+      quickLinks: "Quick Links",
+      support: "Support",
+      newsletter: "Newsletter",
+      newsletterDesc: "Subscribe to get exclusive travel deals and updates.",
+      emailPlaceholder: "Enter your email",
+      rights: "© 2026 An Chuyến. All rights reserved."
+    },
+    nav: {
+      destinations: "Destinations",
+      experiences: "Experiences",
+      hotels: "Hotels",
+      tours: "Tours",
+      deals: "Deals",
+      aboutUs: "About Us",
+      contactUs: "Contact Us",
+      faqs: "FAQs",
+      privacy: "Privacy Policy",
+      terms: "Terms & Conditions"
+    }
   }
 }
 

@@ -30,9 +30,9 @@ const TIER_CONFIG = {
   },
   Gold: {
     label: 'Thành viên Vàng',
-    color: 'linear-gradient(135deg, #d4af37, #f0c94a)',
-    textColor: '#d4af37',
-    bgColor: 'rgba(212,175,55,0.12)',
+    color: 'linear-gradient(135deg, #163328, #f0c94a)',
+    textColor: '#163328',
+    bgColor: 'rgba(22,51,40,0.12)',
     next: 'Kim Cương',
     pointsNeeded: 50000,
     currentPoints: 2450,
@@ -51,13 +51,13 @@ const TIER_CONFIG = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', height: 48, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 8, color: '#f0ede6', fontFamily: 'system-ui', fontSize: 14, fontWeight: 500,
+  width: '100%', height: 48, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
+  borderRadius: 8, color: '#1a1a1a', fontFamily: 'system-ui', fontSize: 14, fontWeight: 500,
   transition: 'border-color 0.2s, background 0.2s', outline: 'none',
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: 'rgba(240,237,230,0.4)', textTransform: 'uppercase',
+  fontSize: 10, fontWeight: 700, color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase',
   letterSpacing: '0.15em', fontFamily: 'system-ui', display: 'block', marginBottom: 8,
 };
 
@@ -65,7 +65,7 @@ function FormInput({ icon: Icon, style, ...props }: { icon?: any } & React.Input
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ position: 'relative' }}>
-      {Icon && <Icon style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(240,237,230,0.3)' }} />}
+      {Icon && <Icon style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(0,0,0,0.3)' }} />}
       <input
         {...props}
         onFocus={() => setFocused(true)}
@@ -73,8 +73,8 @@ function FormInput({ icon: Icon, style, ...props }: { icon?: any } & React.Input
         style={{
           ...inputStyle,
           paddingLeft: Icon ? 44 : 16, paddingRight: 16,
-          borderColor: focused ? '#d4af37' : 'rgba(255,255,255,0.1)',
-          background: focused ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.05)',
+          borderColor: focused ? '#163328' : 'rgba(0,0,0,0.1)',
+          background: focused ? 'rgba(0,0,0,0.07)' : 'rgba(0,0,0,0.05)',
           ...style,
         }}
       />
@@ -97,7 +97,9 @@ export function ProfilePage() {
   const [message, setMessage] = useState('');
 
   const currentTierStr = user?.loyalty?.tier || 'Member';
-  const tier = { ...TIER_CONFIG[currentTierStr as keyof typeof TIER_CONFIG] } || { ...TIER_CONFIG['Member'] };
+  const tier = {
+    ...(TIER_CONFIG[currentTierStr as keyof typeof TIER_CONFIG] || TIER_CONFIG['Member']),
+  };
   const currentPoints = user?.loyalty?.points || 0;
   tier.currentPoints = currentPoints;
   const progressPercent = Math.min((currentPoints / tier.pointsNeeded) * 100, 100);
@@ -119,7 +121,7 @@ export function ProfilePage() {
   }, [user]);
 
   if (isLoading) return (
-    <div style={{ background: '#0e1111', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>
+    <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>
       {t('common.loading')}
     </div>
   );
@@ -150,21 +152,21 @@ export function ProfilePage() {
   };
 
   const cardStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden',
+    background: 'rgba(0,0,0,0.025)', border: '1px solid rgba(0,0,0,0.07)', overflow: 'hidden',
   };
 
   return (
-    <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh', paddingTop: 100, paddingBottom: 32, fontFamily: 'system-ui' }}>
+    <div style={{ background: '#fcfcfc', color: '#1a1a1a', minHeight: '100vh', paddingTop: 100, paddingBottom: 32, fontFamily: 'system-ui' }}>
       {/* Page Header */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 40, padding: '0 8% 32px' }}>
+      <div style={{ borderBottom: '1px solid rgba(0,0,0,0.07)', marginBottom: 40, padding: '0 8% 32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 24, height: 1, background: '#d4af37' }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#d4af37' }}>Tài khoản</span>
+              <div style={{ width: 24, height: 1, background: '#163328' }} />
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#163328' }}>Tài khoản</span>
             </div>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 400, color: '#f0ede6', margin: 0 }}>{t('profile.title')}</h1>
-            <p style={{ color: 'rgba(240,237,230,0.4)', fontSize: 14, marginTop: 4 }}>{t('profile.subtitle')}</p>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 400, color: '#1a1a1a', margin: 0 }}>{t('profile.title')}</h1>
+            <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 14, marginTop: 4 }}>{t('profile.subtitle')}</p>
           </div>
           <button
             onClick={logout}
@@ -190,19 +192,19 @@ export function ProfilePage() {
 
             {/* Avatar Card */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
-              <div style={{ height: 80, background: 'linear-gradient(135deg, rgba(212,175,55,0.25), rgba(14,17,17,0.9))', position: 'relative' }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+              <div style={{ height: 80, background: 'linear-gradient(135deg, rgba(22,51,40,0.25), rgba(255,255,255,0.9))', position: 'relative' }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
               </div>
               <div style={{ padding: '0 24px 24px', marginTop: -40, textAlign: 'center' }}>
                 <div style={{
-                  width: 80, height: 80, background: 'linear-gradient(135deg,#d4af37,#f0c94a)', color: '#0e1111',
+                  width: 80, height: 80, background: 'linear-gradient(135deg,#163328,#f0c94a)', color: '#fcfcfc',
                   borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 28, fontWeight: 800, margin: '0 auto', border: '4px solid #0e1111',
+                  fontSize: 28, fontWeight: 800, margin: '0 auto', border: '4px solid #fcfcfc',
                 }}>
                   {fullName.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 600, color: '#f0ede6', marginTop: 12 }}>{fullName || 'Tên người dùng'}</h2>
-                <p style={{ color: 'rgba(240,237,230,0.4)', fontSize: 13, marginTop: 2 }}>{user.email}</p>
+                <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 600, color: '#1a1a1a', marginTop: 12 }}>{fullName || 'Tên người dùng'}</h2>
+                <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 13, marginTop: 2 }}>{user.email}</p>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, padding: '6px 14px',
                   borderRadius: 100, fontSize: 11, fontWeight: 700, background: tier.bgColor, color: tier.textColor,
@@ -212,15 +214,15 @@ export function ProfilePage() {
               </div>
 
               {/* Quick Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
                 {[
                   { label: t('profile.trips'), value: bookingsCount.toString() },
                   { label: t('profile.points'), value: currentPoints.toLocaleString() },
                   { label: t('profile.tier'), value: tier.label.split(' ')[0] },
                 ].map((stat, i) => (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 8px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-                    <div style={{ fontWeight: 800, color: '#f0ede6', fontSize: 15 }}>{stat.value}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(240,237,230,0.35)', fontWeight: 500, marginTop: 2 }}>{stat.label}</div>
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 8px', borderLeft: i > 0 ? '1px solid rgba(0,0,0,0.07)' : 'none' }}>
+                    <div style={{ fontWeight: 800, color: '#1a1a1a', fontSize: 15 }}>{stat.value}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', fontWeight: 500, marginTop: 2 }}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -229,13 +231,13 @@ export function ProfilePage() {
             {/* Loyalty Card */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div style={{ position: 'relative', background: tier.color, borderRadius: 12, padding: 24, color: '#fff', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: 128, height: 128, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', transform: 'translate(40%,-40%)' }} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, width: 96, height: 96, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', transform: 'translate(-32%,32%)' }} />
+                <div style={{ position: 'absolute', top: 0, right: 0, width: 128, height: 128, background: 'rgba(0,0,0,0.1)', borderRadius: '50%', transform: 'translate(40%,-40%)' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, width: 96, height: 96, background: 'rgba(0,0,0,0.1)', borderRadius: '50%', transform: 'translate(-32%,32%)' }} />
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                     <div>
-                      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 4 }}>An Chuyến Member Card</div>
+                      <div style={{ color: 'rgba(0,0,0,0.7)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 4 }}>An Chuyến Member Card</div>
                       <div style={{ fontWeight: 800, fontSize: 20 }}>{tier.label}</div>
                     </div>
                     <div style={{ fontSize: 28 }}>{tier.icon}</div>
@@ -243,10 +245,10 @@ export function ProfilePage() {
 
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
-                      <span style={{ color: 'rgba(255,255,255,0.7)' }}>{t('profile.currentPoints')}</span>
+                      <span style={{ color: 'rgba(0,0,0,0.7)' }}>{t('profile.currentPoints')}</span>
                       <span>{tier.currentPoints} / {tier.pointsNeeded} pts → {tier.next}</span>
                     </div>
-                    <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 100, overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: 8, background: 'rgba(0,0,0,0.2)', borderRadius: 100, overflow: 'hidden' }}>
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progressPercent}%` }}
@@ -258,12 +260,12 @@ export function ProfilePage() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{t('profile.accumulatedPoints')}</div>
+                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 11 }}>{t('profile.accumulatedPoints')}</div>
                       <div style={{ fontWeight: 800, fontSize: 22 }}>{tier.currentPoints.toLocaleString()}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{fullName}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 }}>**** {currentPoints}</div>
+                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 11 }}>{fullName}</div>
+                      <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 11, marginTop: 2 }}>**** {currentPoints}</div>
                     </div>
                   </div>
                 </div>
@@ -277,8 +279,8 @@ export function ProfilePage() {
                   <Wallet style={{ width: 20, height: 20, color: '#a5b4fc' }} />
                 </div>
                 <div>
-                  <h3 style={{ fontWeight: 800, color: '#f0ede6', fontSize: 14 }}>{t('profile.walletTitle')}</h3>
-                  <div style={{ fontSize: 11, color: 'rgba(240,237,230,0.4)' }}>{t('profile.availableBalance')}</div>
+                  <h3 style={{ fontWeight: 800, color: '#1a1a1a', fontSize: 14 }}>{t('profile.walletTitle')}</h3>
+                  <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{t('profile.availableBalance')}</div>
                 </div>
               </div>
               <div style={{ fontSize: 28, fontWeight: 800, color: '#a5b4fc', marginBottom: 16 }}>{balance.toLocaleString('vi-VN')}<span style={{ fontSize: 18, opacity: 0.6 }}>đ</span></div>
@@ -291,27 +293,27 @@ export function ProfilePage() {
             {/* Quick Links */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ ...cardStyle, borderRadius: 12 }}>
               {[
-                { icon: Ticket, label: t('profile.myTickets'), sub: t('profile.myTicketsSub'), href: '/my-bookings', color: '#d4af37', bg: 'rgba(212,175,55,0.12)' },
+                { icon: Ticket, label: t('profile.myTickets'), sub: t('profile.myTicketsSub'), href: '/my-bookings', color: '#163328', bg: 'rgba(22,51,40,0.12)' },
                 { icon: Award, label: t('profile.loyaltyProgram'), sub: t('profile.loyaltyProgramSub'), href: '/loyalty', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
                 { icon: Shield, label: t('profile.security'), sub: t('profile.securitySub'), href: '#', color: '#34d399', bg: 'rgba(52,211,153,0.1)' },
                 { icon: Bell, label: t('profile.notifications'), sub: t('profile.notificationsSub'), href: '/notifications', color: '#c084fc', bg: 'rgba(192,132,252,0.1)' },
               ].map((item, i, arr) => (
                 <a key={i} href={item.href} style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: 16,
-                  borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  borderBottom: i < arr.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
                   textDecoration: 'none', transition: 'background 0.2s',
                 }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div style={{ width: 36, height: 36, background: item.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <item.icon style={{ width: 16, height: 16, color: item.color }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#f0ede6' }}>{item.label}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(240,237,230,0.4)' }}>{item.sub}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#1a1a1a' }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{item.sub}</div>
                   </div>
-                  <ChevronRight style={{ width: 16, height: 16, color: 'rgba(240,237,230,0.25)', flexShrink: 0 }} />
+                  <ChevronRight style={{ width: 16, height: 16, color: 'rgba(0,0,0,0.25)', flexShrink: 0 }} />
                 </a>
               ))}
             </motion.div>
@@ -322,9 +324,9 @@ export function ProfilePage() {
 
             {/* Edit Profile Form */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} style={{ ...cardStyle, borderRadius: 12, padding: '28px 32px' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#f0ede6', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, background: 'rgba(212,175,55,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <User style={{ width: 16, height: 16, color: '#d4af37' }} />
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, background: 'rgba(22,51,40,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <User style={{ width: 16, height: 16, color: '#163328' }} />
                 </div>
                 Thông tin cá nhân
               </h3>
@@ -369,9 +371,9 @@ export function ProfilePage() {
                             value={g}
                             checked={gender === g}
                             onChange={(e) => setGender(e.target.value as any)}
-                            style={{ width: 16, height: 16, accentColor: '#d4af37' }}
+                            style={{ width: 16, height: 16, accentColor: '#163328' }}
                           />
-                          <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(240,237,230,0.7)' }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(0,0,0,0.7)' }}>
                             {g === 'MALE' ? t('profile.genderMale') : g === 'FEMALE' ? t('profile.genderFemale') : t('profile.genderOther')}
                           </span>
                         </label>
@@ -407,8 +409,8 @@ export function ProfilePage() {
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder={t('profile.addressPlaceholder')}
                     style={{
-                      width: '100%', padding: 16, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: 8, color: '#f0ede6', fontFamily: 'system-ui', fontSize: 14, fontWeight: 500,
+                      width: '100%', padding: 16, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
+                      borderRadius: 8, color: '#1a1a1a', fontFamily: 'system-ui', fontSize: 14, fontWeight: 500,
                       minHeight: 100, resize: 'none', outline: 'none',
                     }}
                   />
@@ -420,7 +422,7 @@ export function ProfilePage() {
                     disabled={isSaving}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8, height: 48, padding: '0 28px',
-                      background: 'linear-gradient(135deg,#d4af37,#f0c94a)', color: '#0e1111', fontWeight: 800, fontSize: 13,
+                      background: 'linear-gradient(135deg,#163328,#f0c94a)', color: '#fcfcfc', fontWeight: 800, fontSize: 13,
                       border: 'none', borderRadius: 8, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1,
                       textTransform: 'uppercase', letterSpacing: '0.05em',
                     }}
@@ -434,14 +436,14 @@ export function ProfilePage() {
 
             {/* Membership Benefits */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ ...cardStyle, borderRadius: 12, padding: '28px 32px' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#f0ede6', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, background: 'rgba(251,191,36,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Award style={{ width: 16, height: 16, color: '#fbbf24' }} />
                 </div>
                 Quyền lợi thành viên {currentTierStr}
               </h3>
-              <p style={{ fontSize: 13, color: 'rgba(240,237,230,0.4)', marginBottom: 20 }}>
-                {t('profile.earnMorePointsPrefix')} <strong style={{ color: 'rgba(240,237,230,0.7)' }}>{(tier.pointsNeeded - tier.currentPoints).toLocaleString()}</strong> {t('profile.earnMorePointsSuffix')} {tier.next} {t('profile.earnMorePointsEnd')}
+              <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', marginBottom: 20 }}>
+                {t('profile.earnMorePointsPrefix')} <strong style={{ color: 'rgba(0,0,0,0.7)' }}>{(tier.pointsNeeded - tier.currentPoints).toLocaleString()}</strong> {t('profile.earnMorePointsSuffix')} {tier.next} {t('profile.earnMorePointsEnd')}
               </p>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -453,10 +455,10 @@ export function ProfilePage() {
                   { icon: '⭐', title: t('profile.benefitPointsTitle'), desc: t('profile.benefitPointsDesc') },
                   { icon: '🛡️', title: t('profile.benefitInsuranceTitle'), desc: t('profile.benefitInsuranceDesc') },
                 ].map((benefit, i) => (
-                  <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 14, transition: 'background 0.2s' }}>
+                  <div key={i} style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 8, padding: 14, transition: 'background 0.2s' }}>
                     <div style={{ fontSize: 22, marginBottom: 8 }}>{benefit.icon}</div>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#f0ede6', marginBottom: 2 }}>{benefit.title}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(240,237,230,0.4)' }}>{benefit.desc}</div>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: '#1a1a1a', marginBottom: 2 }}>{benefit.title}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{benefit.desc}</div>
                   </div>
                 ))}
               </div>
@@ -464,23 +466,23 @@ export function ProfilePage() {
 
             {/* Activity Stats */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} style={{ ...cardStyle, borderRadius: 12, padding: 24 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#f0ede6', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, background: 'rgba(212,175,55,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingUp style={{ width: 16, height: 16, color: '#d4af37' }} />
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, background: 'rgba(22,51,40,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingUp style={{ width: 16, height: 16, color: '#163328' }} />
                 </div>
                 Thống kê của tôi
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: t('profile.totalTrips'), value: bookingsCount.toString(), icon: '🚌', color: '#d4af37' },
+                  { label: t('profile.totalTrips'), value: bookingsCount.toString(), icon: '🚌', color: '#163328' },
                   { label: t('profile.accumulatedPoints'), value: currentPoints.toLocaleString(), icon: '⭐', color: '#fbbf24' },
                   { label: t('profile.totalKm'), value: '0 km', icon: '📍', color: '#34d399' },
                   { label: t('profile.totalSaved'), value: '0đ', icon: '💰', color: '#f0c94a' },
                 ].map((stat, i) => (
-                  <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                  <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                     <div style={{ fontSize: 22, marginBottom: 8 }}>{stat.icon}</div>
                     <div style={{ fontSize: 18, fontWeight: 800, color: stat.color }}>{stat.value}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(240,237,230,0.4)', marginTop: 2 }}>{stat.label}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)', marginTop: 2 }}>{stat.label}</div>
                   </div>
                 ))}
               </div>

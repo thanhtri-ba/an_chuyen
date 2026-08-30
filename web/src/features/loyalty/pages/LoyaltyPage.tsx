@@ -1,109 +1,148 @@
 import { motion } from 'framer-motion';
-import { Crown, Gift, Sparkles, History } from 'lucide-react';
+import { Crown, Gift, Sparkles, History, Ticket as TicketIcon } from 'lucide-react';
 import { useState } from 'react';
 
 export function LoyaltyPage() {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh', paddingTop: 100, paddingBottom: 80, fontFamily: 'system-ui' }}>
-      <div style={{ padding: '0 8%', maxWidth: 1100, margin: '0 auto' }}>
+    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
+      <div className="px-6 lg:px-12 max-w-[1200px] mx-auto pt-40">
 
         {/* Header */}
-        <div style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', gap: 24 }} className="md:flex-row md:items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', marginBottom: 10 }}>An Chuyến</div>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(1.8rem,3vw,2.6rem)', fontWeight: 400, margin: 0, color: '#f0ede6' }}>Thành viên An Chuyến</h1>
-            <p style={{ color: 'rgba(240,237,230,0.45)', marginTop: 8 }}>Khám phá đặc quyền dành riêng cho bạn</p>
+            <div className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-4">
+              An Chuyến
+            </div>
+            <h1 className="font-display font-medium text-5xl md:text-6xl text-[#1a1a1a] m-0">
+              Thành viên An Chuyến
+            </h1>
+            <p className="text-gray-500 font-medium mt-4 text-lg">
+              Khám phá đặc quyền dành riêng cho bạn
+            </p>
           </div>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', fontWeight: 700, fontSize: 13,
-            background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(240,237,230,0.8)',
-            borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
-          }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(240,237,230,0.8)'; }}
-          >
-            <History style={{ width: 16, height: 16 }} /> Lịch sử điểm
+          <button className="flex items-center gap-3 px-6 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-full font-bold text-xs tracking-widest uppercase hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm shrink-0">
+            <History className="w-4 h-4" /> Lịch sử điểm
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
           {/* Card 3D Flip */}
           <div
-            className="relative w-full aspect-[1.6/1] cursor-pointer perspective-1000"
+            className="relative w-full aspect-[1.6/1] cursor-pointer"
+            style={{ perspective: 1500 }}
             onClick={() => setIsFlipped(!isFlipped)}
           >
             <motion.div
-              className="w-full h-full relative preserve-3d"
+              className="w-full h-full relative"
+              style={{ transformStyle: 'preserve-3d' }}
               animate={{ rotateY: isFlipped ? 180 : 0 }}
               transition={{ duration: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
             >
               {/* Front Side - Gold Tier */}
-              <div className="absolute inset-0 backface-hidden flex flex-col justify-between" style={{ borderRadius: 16, padding: 32, color: '#0e1111', overflow: 'hidden', background: 'linear-gradient(135deg,#d4af37,#f0c94a)' }}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: 256, height: 256, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', filter: 'blur(48px)', transform: 'translate(25%,-50%)' }} />
-                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div 
+                className="absolute inset-0 flex flex-col justify-between rounded-3xl p-8 overflow-hidden shadow-xl"
+                style={{ backfaceVisibility: 'hidden', background: 'linear-gradient(135deg, #ffffff 0%, #fcfcfc 100%)', border: '1px solid rgba(212,175,55,0.3)' }}
+              >
+                {/* Gold accent glow */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/10 rounded-full blur-3xl translate-x-1/4 -translate-y-1/2" />
+                
+                <div className="relative z-10 flex justify-between items-start">
                   <div>
-                    <div style={{ opacity: 0.7, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', fontSize: 11, marginBottom: 4 }}>Thẻ Thành Viên</div>
-                    <div style={{ fontSize: 28, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}><Crown style={{ width: 30, height: 30 }} /> GOLD</div>
+                    <div className="text-[9px] font-bold tracking-widest uppercase text-gray-500 mb-2">
+                      Thẻ Thành Viên
+                    </div>
+                    <div className="text-3xl font-display font-medium text-[#d4af37] flex items-center gap-3">
+                      <Crown className="w-8 h-8" /> GOLD
+                    </div>
                   </div>
-                  <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 22, opacity: 0.6 }}>An Chuyến</span>
+                  <span className="font-serif italic text-3xl text-[#1a1a1a]/20 font-bold">
+                    An Chuyến
+                  </span>
                 </div>
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ fontSize: 13, opacity: 0.8, fontWeight: 500, marginBottom: 4 }}>Nguyễn Văn A</div>
-                  <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '0.2em', fontFamily: 'monospace' }}>**** **** **** 8888</div>
+                
+                <div className="relative z-10">
+                  <div className="text-sm font-medium text-gray-600 mb-2">Nguyễn Văn A</div>
+                  <div className="text-xl font-mono font-bold tracking-widest text-[#1a1a1a]">
+                    **** **** **** 8888
+                  </div>
                 </div>
               </div>
 
               {/* Back Side */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col justify-center items-center text-center" style={{ borderRadius: 16, padding: 32, color: '#f0ede6', background: '#0e1111', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ width: '120%', marginLeft: '-10%', height: 48, background: 'rgba(255,255,255,0.08)', marginBottom: 24 }}></div>
-                <div style={{ background: '#f0ede6', color: '#0e1111', padding: 12, marginBottom: 16, width: '80%', textAlign: 'left', fontFamily: 'monospace', fontWeight: 700, borderRadius: 4 }}>CVC: 123</div>
-                <p style={{ fontSize: 12, color: 'rgba(240,237,230,0.4)' }}>Thẻ điện tử này được phát hành bởi An Chuyến. Hotline: 1900 1234</p>
+              <div 
+                className="absolute inset-0 flex flex-col justify-center items-center text-center rounded-3xl p-8 shadow-xl"
+                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: '#1a1a1a' }}
+              >
+                <div className="w-[120%] -ml-[10%] h-14 bg-black/50 mb-8" />
+                <div className="bg-white text-[#1a1a1a] p-4 mb-6 w-[80%] text-left font-mono font-bold rounded-lg flex justify-end">
+                  CVC: 123
+                </div>
+                <p className="text-xs text-gray-400 font-medium">
+                  Thẻ điện tử này được phát hành bởi An Chuyến.<br/> Hotline: 1900 1234
+                </p>
               </div>
             </motion.div>
           </div>
 
           {/* Progress & Stats */}
-          <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 32, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(212,175,55,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Sparkles style={{ width: 24, height: 24, color: '#d4af37' }} />
+          <div className="bg-white border border-gray-100 rounded-[2rem] p-10 h-full flex flex-col justify-center shadow-sm">
+            <div className="flex items-center gap-5 mb-10">
+              <div className="w-16 h-16 rounded-full bg-[#d4af37]/10 flex items-center justify-center shrink-0">
+                <Sparkles className="w-7 h-7 text-[#d4af37]" />
               </div>
               <div>
-                <div style={{ fontSize: 13, color: 'rgba(240,237,230,0.5)', fontWeight: 700 }}>Điểm hiện tại</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#f0ede6' }}>2,450 <span style={{ fontSize: 13, fontWeight: 700, color: '#d4af37' }}>Pts</span></div>
+                <div className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">Điểm hiện tại</div>
+                <div className="font-display font-medium text-5xl text-[#1a1a1a]">
+                  2,450 <span className="text-base font-bold text-[#d4af37] font-sans uppercase tracking-widest">Pts</span>
+                </div>
               </div>
             </div>
 
-            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700 }}>
-              <span style={{ color: '#d4af37' }}>Gold</span>
-              <span style={{ color: 'rgba(240,237,230,0.35)' }}>Diamond</span>
+            <div className="mb-4 flex justify-between text-[11px] font-bold tracking-widest uppercase">
+              <span className="text-[#d4af37]">Gold</span>
+              <span className="text-gray-400">Diamond</span>
             </div>
-            <div style={{ height: 10, background: 'rgba(255,255,255,0.08)', borderRadius: 100, overflow: 'hidden', marginBottom: 12 }}>
-              <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} style={{ height: '100%', background: 'linear-gradient(90deg,#d4af37,#f0c94a)', borderRadius: 100 }}></motion.div>
+            
+            <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-6">
+              <motion.div 
+                initial={{ width: 0 }} 
+                animate={{ width: '65%' }} 
+                className="h-full bg-gradient-to-r from-[#d4af37] to-[#f0c94a] rounded-full"
+              />
             </div>
-            <p style={{ fontSize: 13, color: 'rgba(240,237,230,0.5)' }}>Bạn cần thêm <strong style={{ color: 'rgba(240,237,230,0.8)' }}>550 điểm</strong> để thăng hạng Diamond.</p>
+            
+            <p className="text-sm font-medium text-gray-500 m-0">
+              Bạn cần thêm <strong className="text-[#1a1a1a] font-bold">550 điểm</strong> để thăng hạng Diamond.
+            </p>
           </div>
         </div>
 
         {/* Rewards Section */}
-        <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(1.5rem,2.5vw,2rem)', fontWeight: 400, color: '#f0ede6', marginTop: 64, marginBottom: 32, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Gift style={{ width: 24, height: 24, color: '#d4af37' }} /> Đổi điểm nhận quà
+        <h2 className="font-display font-medium text-3xl md:text-4xl text-[#1a1a1a] mt-24 mb-10 flex items-center gap-4 border-b border-gray-100 pb-8">
+          <Gift className="w-8 h-8 text-[#d4af37]" /> Đổi điểm nhận quà
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="group" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 24, cursor: 'pointer', transition: 'border-color 0.3s' }}>
-              <div className="group-hover:scale-110" style={{ width: 56, height: 56, background: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d4af37', marginBottom: 16, borderRadius: 12, transition: 'transform 0.2s' }}>
-                <TicketIcon style={{ width: 28, height: 28 }} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { title: 'Voucher 50K', pts: '500 Pts', desc: 'Áp dụng cho mọi chuyến đi' },
+            { title: 'Miễn phí nâng hạng', pts: '1,500 Pts', desc: 'Nâng hạng ghế Limousine' },
+            { title: 'Voucher 200K', pts: '2,000 Pts', desc: 'Áp dụng khi đặt phòng' },
+          ].map((item, idx) => (
+            <div key={idx} className="group bg-white border border-gray-100 rounded-[2rem] p-8 cursor-pointer hover:border-primary hover:shadow-md transition-all shadow-sm">
+              <div className="w-16 h-16 bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] mb-6 rounded-2xl group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all">
+                <TicketIcon className="w-7 h-7" />
               </div>
-              <h3 style={{ fontWeight: 700, color: '#f0ede6', fontSize: 17, marginBottom: 4 }}>Voucher giảm 50.000đ</h3>
-              <p style={{ fontSize: 13, color: 'rgba(240,237,230,0.4)', marginBottom: 24 }}>Áp dụng cho mọi chuyến xe</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 800, color: '#d4af37' }}>500 Pts</span>
-                <button style={{ borderRadius: 100, padding: '10px 24px', fontWeight: 700, fontSize: 13, background: 'linear-gradient(135deg,#d4af37,#f0c94a)', color: '#0e1111', border: 'none', cursor: 'pointer' }}>Đổi ngay</button>
+              <h3 className="font-display font-medium text-2xl text-[#1a1a1a] mb-2">{item.title}</h3>
+              <p className="text-sm text-gray-500 font-medium mb-6">{item.desc}</p>
+              
+              <div className="flex items-center justify-between border-t border-gray-50 pt-6">
+                <span className="font-bold text-[#d4af37]">{item.pts}</span>
+                <button className="text-[10px] font-bold tracking-widest uppercase text-primary bg-primary/5 px-4 py-2 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
+                  Đổi ngay
+                </button>
               </div>
             </div>
           ))}
@@ -111,8 +150,4 @@ export function LoyaltyPage() {
       </div>
     </div>
   );
-}
-
-function TicketIcon(props: React.SVGProps<SVGSVGElement>) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>;
 }

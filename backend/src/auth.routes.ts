@@ -116,7 +116,7 @@ router.post('/login', async (req, res) => {
       secret,
       {
         subject: user.id,
-        expiresIn: '15m',
+        expiresIn: '7d',
       },
     );
 

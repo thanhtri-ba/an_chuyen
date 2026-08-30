@@ -85,10 +85,14 @@ export const updatePaymentStatus = async (req: Request, res: Response, next: Nex
 
 export const confirmCODPayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { paymentId, adminEmail } = req.body;
+    const { paymentId } = req.body;
+    const adminEmail = (req as any).user?.email;
 
-    if (!paymentId || !adminEmail) {
-      return res.status(400).json({ error: 'Missing required fields: paymentId, adminEmail' });
+    if (!paymentId) {
+      return res.status(400).json({ error: 'Missing required field: paymentId' });
+    }
+    if (!adminEmail) {
+      return res.status(400).json({ error: 'Authenticated admin has no email on record' });
     }
 
     const payment = await paymentService.confirmCODPayment({

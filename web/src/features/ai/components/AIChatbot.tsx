@@ -30,6 +30,7 @@ export function AIChatbot() {
  const aiReply = res.data.message ||'Xin lỗi, tôi chưa hiểu ý bạn.';
  setMessages(prev => [...prev, { role:'ai', content: aiReply }]);
  } catch (error) {
+ console.error('AI chat failed', error);
  setMessages(prev => [...prev, { role:'ai', content:'Hiện tại hệ thống AI đang quá tải, vui lòng thử lại sau.' }]);
  } finally {
  setIsTyping(false);

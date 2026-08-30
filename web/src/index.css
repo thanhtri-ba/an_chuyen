@@ -3,29 +3,45 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
+
 @layer base {
  :root {
-  --background: 180 9% 6%;      /* #0e1111 */
-  --foreground: 42 26% 92%;     /* #f0ede6 */
-  --card: 180 9% 8%;            /* slightly lighter dark */
-  --card-foreground: 42 26% 92%;
-  --popover: 180 9% 8%;
-  --popover-foreground: 42 26% 92%;
-  --primary: 46 65% 52%;        /* #d4af37 Gold */
-  --primary-foreground: 180 9% 6%;
-  --primary-hover: 46 65% 45%;
-  --secondary: 180 9% 12%;      /* dark grey */
-  --secondary-foreground: 42 26% 92%;
-  --secondary-hover: 180 9% 16%;
-  --muted: 180 9% 15%;
-  --muted-foreground: 0 0% 65%;
-  --accent: 46 65% 52%;         /* Gold */
-  --accent-foreground: 180 9% 6%;
+  --background: 0 0% 100%;     /* #ffffff */
+  --foreground: 0 0% 10%;       /* #1a1a1a */
+  --card: 0 0% 100%;            /* #ffffff */
+  --card-foreground: 0 0% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 157 39% 14%;        /* Dark Green #163328 */
+  --primary-foreground: 0 0% 100%; /* #ffffff */
+  --primary-hover: 157 39% 20%;
+  --secondary: 41 57% 51%;      /* Bronze #c89b3c */
+  --secondary-foreground: 0 0% 100%;
+  --secondary-hover: 41 57% 45%;
+  --muted: 0 0% 98%;            /* #f9f9f9 */
+  --muted-foreground: 0 0% 45%;
+  --accent: 41 57% 51%;         /* Bronze */
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
-  --border: 180 9% 15%;         /* faint border */
-  --input: 180 9% 15%;
-  --ring: 46 65% 52%;           /* Gold ring */
+  --border: 0 0% 92%;           /* #ebebeb */
+  --input: 0 0% 92%;
+  --ring: 157 39% 14%;          
   --radius: 1rem;
  }
 }
@@ -235,49 +251,4 @@
  }
 }
 
-
-/* DARK THEME GLOBAL OVERRIDES */
-@layer utilities {
-  /* Backgrounds */
-  [class*="bg-white"], [class*="bg-gray-50"], [class*="bg-slate-50"],
-  [class*="bg-gray-100"], [class*="bg-gray-200"] {
-    background-color: hsl(var(--card)) !important;
-  }
-  [class*="bg-blue-50"], [class*="bg-indigo-50"], [class*="bg-purple-50"],
-  [class*="bg-orange-50"], [class*="bg-green-50"], [class*="bg-yellow-50"] {
-    background-color: hsl(var(--secondary)) !important;
-  }
-
-  /* Text — dark → light equivalents */
-  [class*="text-gray-9"], [class*="text-gray-8"], [class*="text-gray-7"],
-  [class*="text-slate-9"], [class*="text-slate-8"], [class*="text-slate-7"],
-  [class*="text-black"] {
-    color: hsl(var(--foreground)) !important;
-  }
-  [class*="text-gray-6"], [class*="text-gray-5"], [class*="text-gray-4"],
-  [class*="text-slate-6"], [class*="text-slate-5"], [class*="text-slate-4"] {
-    color: hsl(var(--muted-foreground)) !important;
-  }
-
-  /* Borders */
-  [class*="border-gray-1"], [class*="border-gray-2"], [class*="border-gray-3"],
-  [class*="border-slate-1"], [class*="border-slate-2"], [class*="border-slate-3"],
-  [class*="border-white"] {
-    border-color: hsl(var(--border)) !important;
-  }
-
-  /* Shadows */
-  .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
-  }
-}
-
-/* Fix btn utility hover colors */
-@layer utilities {
-  .btn-primary:hover {
-    background-color: hsl(var(--primary-hover)) !important;
-  }
-  .btn-secondary:hover {
-    background-color: hsl(var(--secondary-hover)) !important;
-  }
-}
+/* Removed DARK THEME GLOBAL OVERRIDES for Light Luxury Theme */
