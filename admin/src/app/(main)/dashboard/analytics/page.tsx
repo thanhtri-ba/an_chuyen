@@ -35,7 +35,7 @@ export default function Page() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const agents = await api.get<any[]>("/admin/busAgents");
+        const agents = await api.get<any[]>("/admin/busAgents?range=[0,999]");
 
         const validAgents = agents || [];
 

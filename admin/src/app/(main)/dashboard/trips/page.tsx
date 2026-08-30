@@ -16,7 +16,7 @@ export default function Page() {
 
   useEffect(() => {
     api
-      .get<any[]>("/admin/trips")
+      .get<any[]>("/admin/trips?range=[0,99]")
       .then((d) => setItems(d || []))
       .catch(console.error)
       .finally(() => setLoading(false));

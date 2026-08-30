@@ -23,7 +23,7 @@ export default function Page() {
 
   const load = useCallback(async () => {
     try {
-      const data = await api.get<any[]>("/admin/appConfigs");
+      const data = await api.get<any[]>('/admin/appConfigs?sort=["createdAt","desc"]&range=[0,99]');
       setItems(data || []);
       setDrafts(Object.fromEntries((data || []).map((c) => [c.id, c.value])));
     } catch (error) {

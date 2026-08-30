@@ -22,7 +22,7 @@ export default function Page() {
 
   useEffect(() => {
     api
-      .get<any[]>("/admin/deliveryOrders")
+      .get<any[]>('/admin/deliveryOrders?sort=["createdAt","desc"]&range=[0,99]')
       .then((d) => setItems(d || []))
       .catch((error) => console.error("Failed to load delivery orders", error))
       .finally(() => setLoading(false));

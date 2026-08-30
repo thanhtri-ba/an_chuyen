@@ -23,7 +23,7 @@ export default function Page() {
 
   useEffect(() => {
     api
-      .get<any[]>("/admin/bookings")
+      .get<any[]>('/admin/bookings?sort=["createdAt","desc"]&range=[0,99]')
       .then((d) => setItems(d || []))
       .catch(console.error)
       .finally(() => setLoading(false));
