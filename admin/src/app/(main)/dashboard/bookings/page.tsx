@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Download, Filter, MoreHorizontal, Search, User } from "lucide-react";
+import { Check, Download, Filter, Search, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export default function Page() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -54,6 +55,28 @@ export default function Page() {
     link.download = `dat-ve-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleConfirmCod(booking: any) {
+    if (!booking.payment?.id) {
+      alert("Booking này chưa có bản ghi thanh toán (payment) để xác nhận.");
+      return;
+    }
+    setConfirmingId(booking.id);
+    try {
+      await api.post("/payments/cod/confirm", { paymentId: booking.payment.id });
+      setItems((prev) =>
+        prev.map((b) =>
+          b.id === booking.id
+            ? { ...b, status: "CONFIRMED", payment: { ...b.payment, status: "PAID" } }
+            : b,
+        ),
+      );
+    } catch (error: any) {
+      alert(error.message || "Không thể xác nhận thanh toán.");
+    } finally {
+      setConfirmingId(null);
+    }
   }
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
@@ -155,13 +178,19 @@ export default function Page() {
                       })}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </Button>
+                      {b.status === "PENDING_PAYMENT" ? (
+                        <Button
+                          size="sm"
+                          className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+                          disabled={confirmingId === b.id}
+                          onClick={() => void handleConfirmCod(b)}
+                        >
+                          <Check className="size-4" />
+                          {confirmingId === b.id ? "Đang duyệt..." : "Duyệt"}
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
