@@ -2,6 +2,7 @@ import { logger } from './logger';
 
 export type AuditEvent =
   | 'BookingCreated'
+  | 'BookingCancelled'
   | 'PaymentConfirmed'
   | 'TicketIssued'
   | 'AdminUserUpdated'

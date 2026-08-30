@@ -1,16 +1,10 @@
-import * as React from"react"
-import { cn } from"../../shared/utils/cn"
+import * as React from 'react';
+import { cn } from '../../shared/utils/cn';
 
-function Skeleton({
- className,
- ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
- return (
- <div
- className={cn("animate-pulse bg-muted", className)}
- {...props}
- />
- )
-}
+const Skeleton = React.memo(({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn('animate-pulse bg-muted', className)} {...props} />
+));
 
-export { Skeleton }
+Skeleton.displayName = 'Skeleton';
+
+export { Skeleton };

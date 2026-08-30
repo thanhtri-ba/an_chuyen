@@ -5,12 +5,16 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import { PrismaClient } from '@prisma/client';
 import { getCached } from './core/cache';
 import { createServer } from 'http';
 import { initSocket } from './core/socket';
 
 const app = express();
+// Required behind a reverse proxy (Railway, Nginx, etc.) so req.ip and
+// express-rate-limit see the real client IP from X-Forwarded-For.
+app.set('trust proxy', 1);
 const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 //app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
@@ -20,7 +24,19 @@ import { loggingMiddleware } from './middleware/logging.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import { logger } from './core/logger';
 
+// Allow-list of origins that may call this API. Set CORS_ORIGINS (comma-separated)
+// in production — e.g. "https://anchuyen.vn,https://admin.anchuyen.vn". Falls back
+// to local dev ports when unset so `npm run dev` keeps working out of the box.
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+
+if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGINS) {
+  logger.warn('CORS_ORIGINS is not set in production — falling back to localhost dev origins. Set CORS_ORIGINS to your real domains.');
+}
+
 app.use(cors({
+  origin: corsOrigins,
   exposedHeaders: ['Content-Range', 'X-Total-Count'],
 }));
 app.use(helmet({
@@ -31,12 +47,34 @@ app.use(express.json());
 app.use(requestContextMiddleware);
 app.use(loggingMiddleware);
 
+// General API rate limit — protects against abuse/DoS on all endpoints.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later.' },
+});
+
+// Stricter limit on auth endpoints — brute-force protection for login/register.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many login attempts, please try again later.' },
+});
+
+app.use('/api', apiLimiter);
+
 import aiRoutes from './modules/ai/ai.routes';
 // import aiAdvisorRoutes from './modules/ai-advisor/ai-advisor.routes';
 import bookingRoutes from './modules/booking/booking.routes';
+import { BookingService } from './modules/booking/booking.service';
 import adminRoutes from './admin.routes';
 import authRoutes from './auth.routes';
 import { loyaltyRoutes } from './modules/loyalty/loyalty.routes';
+import { walletRoutes } from './modules/wallet/wallet.routes';
 import { rentalRoutes } from './modules/rental/rental.routes';
 import { tourRoutes } from './modules/tour/tour.routes';
 import { eventRoutes } from './modules/event/event.routes';
@@ -44,13 +82,14 @@ import { deliveryRoutes } from './modules/delivery/delivery.routes';
 import seatRoutes from './modules/seat/seat.routes';
 import paymentRoutes from './modules/payment/payment.routes';
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 
 app.use('/api/ai', aiRoutes);
 // app.use('/api/ai-advisor', aiAdvisorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
+app.use('/api/wallet', walletRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/tours', tourRoutes);
 app.use('/api/events', eventRoutes);
@@ -285,10 +324,21 @@ app.use(errorMiddleware);
 if (require.main === module) {
   const server = createServer(app);
   initSocket(server);
-  
+
   server.listen(port as number, '0.0.0.0', () => {
     logger.info(`Server is running on port ${port}`);
   });
+
+  // Nhả ghế của các booking PENDING_PAYMENT quá hạn giữ chỗ (mặc định 15 phút),
+  // tránh rò rỉ tồn kho ghế khi khách bỏ dở việc thanh toán COD.
+  const BOOKING_EXPIRY_MINUTES = Number(process.env.BOOKING_EXPIRY_MINUTES) || 30;
+  setInterval(() => {
+    BookingService.releaseExpiredBookings(BOOKING_EXPIRY_MINUTES)
+      .then((count) => {
+        if (count > 0) logger.info(`Released ${count} expired pending booking(s)`);
+      })
+      .catch((error) => logger.error('Failed to release expired bookings', { error }));
+  }, 5 * 60 * 1000);
 }
 
 export default app;

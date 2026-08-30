@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { verifyAccessToken } from './middleware/auth.middleware';
+import { verifyAccessToken, type AuthenticatedRequest } from './middleware/auth.middleware';
 import { requireAdmin } from './middleware/admin.middleware';
 import { supabaseAdmin } from './core/supabase';
 
@@ -10,8 +10,33 @@ router.use(requireAdmin);
 
 const prisma = new PrismaClient();
 
-const createCrudRouter = (delegate: any, resourceName: string) => {
+// `readOmit`: fields stripped from every response (e.g. password hashes should
+// never leave the server, even to an authenticated admin).
+// `writeBlock`: fields silently dropped from create/update bodies so a generic
+// admin CRUD can't be used for mass-assignment into sensitive columns like
+// `password` (would store a value unhashed) or `role` (privilege escalation).
+const createCrudRouter = (
+  delegate: any,
+  resourceName: string,
+  include?: any,
+  options?: { readOmit?: string[]; writeBlock?: string[] },
+) => {
   const crudRouter = Router();
+  const readOmit = options?.readOmit || [];
+  const writeBlock = options?.writeBlock || [];
+
+  const omit = <T extends Record<string, unknown>>(row: T): T => {
+    if (readOmit.length === 0) return row;
+    const clone = { ...row };
+    for (const key of readOmit) delete (clone as Record<string, unknown>)[key];
+    return clone;
+  };
+
+  const stripBlocked = (body: Record<string, unknown>) => {
+    const clone = { ...body };
+    for (const key of writeBlock) delete clone[key];
+    return clone;
+  };
 
   crudRouter.get('/', async (req, res) => {
     const { range, sort, filter } = req.query as any;
@@ -55,13 +80,13 @@ const createCrudRouter = (delegate: any, resourceName: string) => {
 
     try {
       const [data, total] = await Promise.all([
-        delegate.findMany({ skip, take, orderBy, where }),
+        delegate.findMany({ skip, take, orderBy, where, include }),
         delegate.count({ where })
       ]);
 
       res.setHeader('Content-Range', `${resourceName} ${skip}-${skip + data.length - 1}/${total}`);
       res.setHeader('X-Total-Count', total);
-      res.json(data);
+      res.json(data.map(omit));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
@@ -70,9 +95,9 @@ const createCrudRouter = (delegate: any, resourceName: string) => {
 
   crudRouter.get('/:id', async (req, res) => {
     try {
-      const data = await delegate.findUnique({ where: { id: req.params.id } });
+      const data = await delegate.findUnique({ where: { id: req.params.id }, include });
       if (data) {
-        res.json(data);
+        res.json(omit(data));
       } else {
         res.status(404).json({ error: 'Not found' });
       }
@@ -84,9 +109,10 @@ const createCrudRouter = (delegate: any, resourceName: string) => {
 
   crudRouter.post('/', async (req, res) => {
     try {
-      const { id, ...createData } = req.body;
+      const { id, ...rest } = req.body;
+      const createData = stripBlocked(rest);
       const data = await delegate.create({ data: createData });
-      res.status(201).json(data);
+      res.status(201).json(omit(data));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
@@ -95,9 +121,10 @@ const createCrudRouter = (delegate: any, resourceName: string) => {
 
   crudRouter.put('/:id', async (req, res) => {
     try {
-      const { id: _, ...updateData } = req.body;
+      const { id: _, ...rest } = req.body;
+      const updateData = stripBlocked(rest);
       const data = await delegate.update({ where: { id: req.params.id }, data: updateData });
-      res.json(data);
+      res.json(omit(data));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
@@ -246,16 +273,167 @@ router.post('/users/:id/wallet/topup', async (req, res) => {
   }
 });
 
-router.use('/users', createCrudRouter(prisma.user, 'users'));
-router.use('/bookings', createCrudRouter(prisma.booking, 'bookings'));
-router.use('/trips', createCrudRouter(prisma.trip, 'trips'));
-router.use('/tripSchedules', createCrudRouter(prisma.tripSchedule, 'tripSchedules'));
+router.get('/stats', async (req, res) => {
+  try {
+    // Analytics stats
+    const totalUsers = await prisma.user.count();
+    const totalBookings = await prisma.booking.count();
+    const totalTrips = await prisma.tripSchedule.count();
+
+    // Finance stats
+    const payments = await prisma.payment.aggregate({
+      _sum: {
+        amount: true
+      },
+      where: {
+        status: 'PAID'
+      }
+    });
+
+    const wallets = await prisma.wallet.aggregate({
+      _sum: {
+        balance: true
+      }
+    });
+
+    res.json({
+      totalUsers,
+      totalBookings,
+      totalTrips,
+      totalRevenue: payments._sum.amount || 0,
+      totalWalletBalance: wallets._sum.balance || 0
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+router.use('/users', createCrudRouter(prisma.user, 'users', undefined, {
+  readOmit: ['password'],
+  writeBlock: ['password', 'role'],
+}));
+router.use('/bookings', createCrudRouter(prisma.booking, 'bookings', { user: true, tripSchedule: true }));
+router.use('/trips', createCrudRouter(prisma.trip, 'trips', { busAgent: true, route: { include: { departureCity: true, arrivalCity: true } } }));
+router.use('/tripSchedules', createCrudRouter(prisma.tripSchedule, 'tripSchedules', { 
+  bus: true, 
+  trip: { include: { route: { include: { departureCity: true, arrivalCity: true } }, busAgent: true } },
+  checkpoints: { include: { station: true } }
+}));
 router.use('/seats', createCrudRouter(prisma.seat, 'seats'));
 router.use('/busAgents', createCrudRouter(prisma.busAgent, 'busAgents'));
 router.use('/promotions', createCrudRouter(prisma.promotion, 'promotions'));
 router.use('/cities', createCrudRouter(prisma.city, 'cities'));
-router.use('/routes', createCrudRouter(prisma.route, 'routes'));
+router.use('/routes', createCrudRouter(prisma.route, 'routes', { departureCity: true, arrivalCity: true }));
 router.use('/wallets', createCrudRouter(prisma.wallet, 'wallets'));
 router.use('/walletTransactions', createCrudRouter(prisma.walletTransaction, 'walletTransactions'));
+router.use('/banners', createCrudRouter(prisma.banner, 'banners'));
+router.use('/events', createCrudRouter(prisma.event, 'events'));
+router.use('/appConfigs', createCrudRouter(prisma.appConfig, 'appConfigs'));
+router.use('/reviews', createCrudRouter(prisma.review, 'reviews', { user: true }));
+router.use('/tours', createCrudRouter(prisma.tour, 'tours'));
+router.use('/tourBookings', createCrudRouter(prisma.tourBooking, 'tourBookings', { user: true, tour: true }));
+router.use('/rentalCars', createCrudRouter(prisma.rentalCar, 'rentalCars'));
+router.use('/rentalBookings', createCrudRouter(prisma.rentalBooking, 'rentalBookings', { user: true, car: true }));
+router.use('/deliveryOrders', createCrudRouter(prisma.deliveryOrder, 'deliveryOrders', { user: true, vehicle: true }));
+router.use('/payments', createCrudRouter(prisma.payment, 'payments', { booking: true }));
+
+// Customer support chat
+router.get('/support/conversations', async (req, res) => {
+  try {
+    const { status } = req.query as { status?: string };
+    const where: Record<string, unknown> = {};
+    if (status) {
+      where.status = status;
+    }
+
+    const conversations = await prisma.supportConversation.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        user: { select: { id: true, fullName: true, email: true, phone: true, avatar: true } },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
+
+    res.json(conversations);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ error: message });
+  }
+});
+
+router.get('/support/conversations/:id/messages', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const messages = await prisma.supportMessage.findMany({
+      where: { conversationId: id },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        sender: { select: { id: true, fullName: true, avatar: true, role: true } },
+      },
+    });
+
+    res.json(messages);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ error: message });
+  }
+});
+
+router.post('/support/conversations/:id/messages', async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const message = await prisma.supportMessage.create({
+      data: {
+        conversationId: id,
+        senderId: req.user.id,
+        text,
+      },
+      include: {
+        sender: { select: { id: true, fullName: true, avatar: true, role: true } },
+      },
+    });
+
+    // @updatedAt only fires on direct updates to the conversation, not on related-row creation
+    await prisma.supportConversation.update({ where: { id }, data: {} });
+
+    res.status(201).json(message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ error: message });
+  }
+});
+
+router.patch('/support/conversations/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    const conversation = await prisma.supportConversation.update({
+      where: { id },
+      data: { status },
+    });
+
+    res.json(conversation);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ error: message });
+  }
+});
 
 export default router;

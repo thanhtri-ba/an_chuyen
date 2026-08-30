@@ -68,6 +68,30 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response, ne
   }
 };
 
+export const cancelBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const booking = await BookingService.cancelBooking(userId, req.params.id);
+
+    auditLog({
+      event: 'BookingCancelled',
+      actorId: userId,
+      actorRole: req.user?.role || 'user',
+      resourceType: 'booking',
+      resourceId: booking.id,
+      outcome: 'success',
+    });
+
+    res.json({ success: true, message: 'Đã huỷ booking', data: booking });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message || 'Không thể huỷ booking' });
+  }
+};
+
 export const getBookings = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id;

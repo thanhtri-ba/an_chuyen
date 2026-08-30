@@ -12,10 +12,10 @@ export function BlogDetailPage() {
 
   if (!article) {
     return (
-      <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'rgba(240,237,230,0.4)', marginBottom: 24, fontFamily: 'system-ui' }}>Không tìm thấy bài viết.</p>
-          <Link to="/blog" style={{ color: '#d4af37', textDecoration: 'none', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'system-ui' }}>
+      <div className="min-h-screen bg-[#fcfcfc] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-6 font-medium">Không tìm thấy bài viết.</p>
+          <Link to="/blog" className="text-primary font-bold text-xs tracking-widest uppercase hover:text-primary-hover transition-colors">
             ← Quay lại Cẩm nang
           </Link>
         </div>
@@ -26,327 +26,226 @@ export function BlogDetailPage() {
   const paragraphs = article.content.trim().split('\n').filter((l) => l.trim() !== '');
 
   return (
-    <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
 
       {/* ─── HERO ─── */}
-      <section style={{ position: 'relative', height: '88vh', overflow: 'hidden' }}>
+      <section className="relative h-[85vh] max-h-[800px] min-h-[500px] w-full overflow-hidden">
         <img
           src={article.image}
           alt={article.title}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.35) saturate(0.8)' }}
+          className="absolute inset-0 w-full h-full object-cover brightness-[0.85] saturate-[1.1]"
         />
         {/* Overlays */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0e1111 0%, rgba(14,17,17,0.15) 55%, transparent 100%)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(14,17,17,0.65) 0%, transparent 65%)' }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/20 to-transparent" />
 
         {/* Top bar */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, padding: '100px 8% 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="absolute top-0 left-0 right-0 z-20 pt-28 px-6 lg:px-12 flex justify-between items-start max-w-[1400px] mx-auto">
           <button
             onClick={() => navigate('/blog')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(14,17,17,0.55)', backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(240,237,230,0.7)', padding: '10px 20px', cursor: 'pointer',
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
-              fontFamily: 'system-ui', transition: 'all 0.2s',
-            }}
+            className="flex items-center gap-2 bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 px-5 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-colors shadow-sm"
           >
-            <ArrowLeft size={12} /> Cẩm nang
+            <ArrowLeft className="w-3.5 h-3.5" /> Cẩm nang
           </button>
 
           <button
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(14,17,17,0.55)', backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(240,237,230,0.7)', padding: '10px 20px', cursor: 'pointer',
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
-              fontFamily: 'system-ui',
-            }}
+            className="flex items-center gap-2 bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 px-5 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-colors shadow-sm"
           >
-            <Share2 size={12} /> Chia sẻ
+            <Share2 className="w-3.5 h-3.5" /> Chia sẻ
           </button>
         </div>
 
         {/* Hero content — bottom */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 8% 72px', zIndex: 10 }}>
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
+        <div className="absolute bottom-0 left-0 right-0 pb-20 px-6 lg:px-12 z-10 max-w-[1400px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }} className="max-w-4xl">
 
             {/* Category pill */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-              <div style={{ width: 32, height: 1, background: '#d4af37' }} />
-              <span style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase',
-                color: '#d4af37', fontFamily: 'system-ui',
-              }}>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-10 h-px bg-[#d4af37]" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
                 {article.category}
               </span>
             </div>
 
             {/* Title */}
-            <h1 style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(2.4rem, 4.5vw, 5rem)',
-              fontWeight: 400,
-              color: '#f0ede6',
-              lineHeight: 1.12,
-              maxWidth: 860,
-              margin: '0 0 32px',
-              letterSpacing: '-0.01em',
-            }}>
+            <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-[5.5rem] text-[#1a1a1a] leading-[1.05] mb-10">
               {article.title}
             </h1>
 
             {/* Meta row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 20,
-                fontSize: 11, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui',
-                padding: '10px 20px 10px 0',
-                borderRight: '1px solid rgba(255,255,255,0.1)',
-              }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Clock size={11} /> {article.readTime} đọc
-                </span>
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                fontSize: 11, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui',
-                padding: '10px 0 10px 20px',
-              }}>
-                <Calendar size={11} /> {article.date}
-              </div>
+            <div className="flex items-center gap-6 text-[11px] font-bold tracking-widest uppercase text-gray-500">
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4" /> {article.readTime}
+              </span>
+              <span className="w-px h-4 bg-gray-300" />
+              <span className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" /> {article.date}
+              </span>
             </div>
           </motion.div>
         </div>
 
         {/* Decorative large number */}
-        <div style={{
-          position: 'absolute', bottom: 40, right: '8%', zIndex: 5,
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: '22rem', fontWeight: 700,
-          color: 'rgba(212,175,55,0.04)', lineHeight: 1,
-          userSelect: 'none', pointerEvents: 'none',
-        }}>
+        <div className="absolute bottom-10 right-10 lg:right-24 z-0 font-display text-[16rem] font-bold text-gray-100 leading-none select-none pointer-events-none">
           {String(article.id).padStart(2, '0')}
         </div>
       </section>
 
       {/* ─── GOLD RULE ─── */}
-      <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #d4af37, transparent)' }} />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent w-full opacity-50" />
 
       {/* ─── ARTICLE BODY ─── */}
-      <main>
-        <div style={{ maxWidth: '100%', margin: '0 auto', padding: '80px 8% 100px' }}>
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.25 }}>
+      <main className="px-6 lg:px-12 py-24 max-w-[900px] mx-auto">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.25 }}>
 
-            {/* Lead / desc — serif large italic */}
-            <p style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(1.25rem, 2vw, 1.55rem)',
-              lineHeight: 1.75,
-              color: 'rgba(240,237,230,0.75)',
-              fontStyle: 'italic',
-              margin: '0 0 56px',
-              paddingBottom: 56,
-              borderBottom: '1px solid rgba(255,255,255,0.07)',
-            }}>
-              {article.desc}
-            </p>
+          {/* Lead / desc — serif large italic */}
+          <p className="font-display font-medium text-2xl md:text-3xl leading-[1.6] text-gray-700 italic mb-16 pb-16 border-b border-gray-100">
+            {article.desc}
+          </p>
 
-            {/* Body content */}
-            <div>
-              {paragraphs.map((line, i) => {
-                // H2 heading
-                if (line.startsWith('## ')) {
-                  return (
-                    <div key={i} style={{ margin: '60px 0 24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                        <div style={{ width: 20, height: 1, background: '#d4af37', flexShrink: 0 }} />
-                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
-                          {String(i).padStart(2, '0')}
-                        </span>
-                      </div>
-                      <h2 style={{
-                        fontFamily: "'Cormorant Garamond', Georgia, serif",
-                        fontSize: 'clamp(1.6rem, 2.5vw, 2.2rem)',
-                        fontWeight: 500,
-                        color: '#f0ede6',
-                        lineHeight: 1.25,
-                        margin: 0,
-                      }}>
-                        {line.replace('## ', '')}
-                      </h2>
-                    </div>
-                  );
-                }
-
-                // Horizontal rule
-                if (line.startsWith('---')) {
-                  return (
-                    <div key={i} style={{ margin: '56px 0', display: 'flex', alignItems: 'center', gap: 16 }}>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                      <div style={{ width: 6, height: 6, background: '#d4af37', transform: 'rotate(45deg)', flexShrink: 0 }} />
-                      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                    </div>
-                  );
-                }
-
-                // Italic note (*text*)
-                if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
-                  return (
-                    <div key={i} style={{
-                      margin: '16px 0 28px',
-                      padding: '14px 20px',
-                      borderLeft: '2px solid #d4af37',
-                      background: 'rgba(212,175,55,0.04)',
-                    }}>
-                      <p style={{
-                        fontFamily: "'Cormorant Garamond', Georgia, serif",
-                        fontSize: '1.05rem',
-                        fontStyle: 'italic',
-                        color: '#d4af37',
-                        margin: 0,
-                        lineHeight: 1.7,
-                      }}>
-                        {line.replace(/\*/g, '')}
-                      </p>
-                    </div>
-                  );
-                }
-
-                // Bold label (**text**)
-                if (line.startsWith('**') && line.endsWith('**')) {
-                  return (
-                    <p key={i} style={{
-                      fontSize: '0.85rem', fontWeight: 700, color: '#f0ede6',
-                      letterSpacing: '0.05em', margin: '36px 0 12px',
-                      fontFamily: 'system-ui', textTransform: 'uppercase',
-                    }}>
-                      {line.replace(/\*\*/g, '')}
-                    </p>
-                  );
-                }
-
-                // List item
-                if (line.startsWith('- ')) {
-                  const text = line.replace('- ', '').replace(/\*\*(.+?)\*\*/g, '<strong style="color:#f0ede6;font-weight:700">$1</strong>');
-                  return (
-                    <div key={i} style={{ display: 'flex', gap: 14, margin: '12px 0', alignItems: 'flex-start' }}>
-                      <span style={{ color: '#d4af37', flexShrink: 0, fontSize: 8, marginTop: 7 }}>◆</span>
-                      <p style={{ margin: 0, fontSize: '1rem', lineHeight: 1.8, color: 'rgba(240,237,230,0.65)', fontFamily: 'system-ui' }}
-                        dangerouslySetInnerHTML={{ __html: text }} />
-                    </div>
-                  );
-                }
-
-                // Normal paragraph
+          {/* Body content */}
+          <div className="prose prose-lg prose-gray max-w-none">
+            {paragraphs.map((line, i) => {
+              // H2 heading
+              if (line.startsWith('## ')) {
                 return (
-                  <p key={i} style={{
-                    fontSize: '1.05rem',
-                    lineHeight: 1.9,
-                    color: 'rgba(240,237,230,0.65)',
-                    margin: '0 0 24px',
-                    fontFamily: 'system-ui',
-                  }}>
-                    {line}
+                  <div key={i} className="mt-16 mb-8">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-6 h-px bg-[#d4af37]" />
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+                        {String(i).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <h2 className="font-display font-medium text-3xl md:text-4xl text-[#1a1a1a] leading-tight m-0">
+                      {line.replace('## ', '')}
+                    </h2>
+                  </div>
+                );
+              }
+
+              // Horizontal rule
+              if (line.startsWith('---')) {
+                return (
+                  <div key={i} className="flex items-center gap-4 my-16">
+                    <div className="flex-1 h-px bg-gray-100" />
+                    <div className="w-1.5 h-1.5 bg-[#d4af37] rotate-45" />
+                    <div className="flex-1 h-px bg-gray-100" />
+                  </div>
+                );
+              }
+
+              // Italic note (*text*)
+              if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
+                return (
+                  <div key={i} className="my-10 p-6 md:p-8 bg-gray-50 border-l-2 border-[#d4af37] rounded-r-2xl">
+                    <p className="font-display font-medium text-xl italic text-gray-700 m-0 leading-[1.7]">
+                      {line.replace(/\*/g, '')}
+                    </p>
+                  </div>
+                );
+              }
+
+              // Bold label (**text**)
+              if (line.startsWith('**') && line.endsWith('**')) {
+                return (
+                  <p key={i} className="text-[11px] font-bold text-[#1a1a1a] tracking-widest uppercase mt-12 mb-4">
+                    {line.replace(/\*\*/g, '')}
                   </p>
                 );
-              })}
-            </div>
+              }
 
-            {/* End note */}
-            <div style={{ marginTop: 72, paddingTop: 40, borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-              <div>
-                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', marginBottom: 8, fontFamily: 'system-ui' }}>
-                  An Chuyến — Cẩm nang du lịch
+              // List item
+              if (line.startsWith('- ')) {
+                const text = line.replace('- ', '').replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-[#1a1a1a]">$1</strong>');
+                return (
+                  <div key={i} className="flex gap-4 my-4 items-start">
+                    <span className="text-[#d4af37] text-[10px] mt-2 shrink-0">◆</span>
+                    <p className="m-0 text-lg leading-[1.8] text-gray-600" dangerouslySetInnerHTML={{ __html: text }} />
+                  </div>
+                );
+              }
+
+              // Normal paragraph
+              return (
+                <p key={i} className="text-lg leading-[1.8] text-gray-600 mb-6">
+                  {line}
                 </p>
-                <p style={{ fontSize: 12, color: 'rgba(240,237,230,0.35)', fontFamily: 'system-ui', margin: 0 }}>
-                  {article.date} · {article.readTime} đọc
-                </p>
-              </div>
-              <button style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'transparent', border: '1px solid rgba(212,175,55,0.3)',
-                color: '#d4af37', padding: '10px 22px', cursor: 'pointer',
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
-                fontFamily: 'system-ui', transition: 'all 0.2s',
-              }}>
-                <Share2 size={12} /> Chia sẻ bài viết
-              </button>
+              );
+            })}
+          </div>
+
+          {/* End note */}
+          <div className="mt-24 pt-10 border-t border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-primary mb-2">
+                An Chuyến — Cẩm nang du lịch
+              </p>
+              <p className="text-xs text-gray-400 font-medium m-0">
+                {article.date} · {article.readTime} đọc
+              </p>
             </div>
-          </motion.div>
-        </div>
+            <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-gray-50 transition-colors shadow-sm">
+              <Share2 className="w-3.5 h-3.5 text-primary" /> Chia sẻ bài viết
+            </button>
+          </div>
+        </motion.div>
       </main>
 
       {/* ─── RELATED ARTICLES ─── */}
-      <section style={{ padding: '0 8% 100px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: '100%', margin: '0 auto' }}>
-          {/* Section header */}
-          <div style={{ padding: '56px 0 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 24, height: 1, background: '#d4af37' }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
-                Bài viết liên quan
-              </span>
-            </div>
-            <Link to="/blog" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(240,237,230,0.4)', textDecoration: 'none', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'system-ui', transition: 'color 0.2s' }}
-              className="hover:text-[#d4af37]">
-              Xem tất cả <ChevronRight size={12} />
-            </Link>
+      <section className="px-6 lg:px-12 max-w-[1400px] mx-auto pt-10 border-t border-gray-100">
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-px bg-[#d4af37]" />
+            <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+              Bài viết liên quan
+            </span>
           </div>
+          <Link to="/blog" className="flex items-center gap-2 text-primary font-bold text-[10px] tracking-widest uppercase hover:text-primary-hover transition-colors">
+            Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
-            {related.map((a, idx) => (
-              <motion.div
-                key={a.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <Link to={`/blog/${a.slug}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit' }} className="group">
-                  {/* Image */}
-                  <div style={{ position: 'relative', aspectRatio: '3/2', overflow: 'hidden', marginBottom: 20 }}>
-                    <img src={a.image} alt={a.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.72)', transition: 'transform 0.7s ease, filter 0.4s' }}
-                      className="group-hover:scale-105 group-hover:brightness-60"
-                    />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(14,17,17,0.5) 0%, transparent 60%)' }} />
-                    <div style={{ position: 'absolute', bottom: 14, left: 14, fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
-                      {a.category}
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {related.map((a, idx) => (
+            <motion.div
+              key={a.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="h-full"
+            >
+              <Link to={`/blog/${a.slug}`} className="group h-full flex flex-col">
+                {/* Image */}
+                <div className="relative aspect-[3/2] w-full overflow-hidden rounded-2xl mb-5 shadow-sm">
+                  <img src={a.image} alt={a.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm text-[#1a1a1a] text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm">
+                    {a.category}
                   </div>
+                </div>
 
-                  {/* Meta */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', marginBottom: 10 }}>
-                    <Clock size={10} /> {a.readTime}
-                    <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.12)', display: 'inline-block' }} />
-                    {a.date}
-                  </div>
+                {/* Meta */}
+                <div className="flex items-center gap-3 text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-3 px-1">
+                  <Clock className="w-3 h-3" /> {a.readTime}
+                  <span className="w-1 h-1 rounded-full bg-gray-300" />
+                  {a.date}
+                </div>
 
-                  {/* Title */}
-                  <h3 style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: '1.2rem',
-                    fontWeight: 500,
-                    color: '#f0ede6',
-                    lineHeight: 1.35,
-                    margin: '0 0 12px',
-                    transition: 'color 0.2s',
-                  }} className="group-hover:text-[#d4af37]">
-                    {a.title}
-                  </h3>
+                {/* Title */}
+                <h3 className="font-display font-medium text-xl text-[#1a1a1a] leading-snug mb-4 group-hover:text-primary transition-colors px-1">
+                  {a.title}
+                </h3>
 
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', transition: 'color 0.2s' }}
-                    className="group-hover:text-[#d4af37]">
-                    Đọc tiếp <ChevronRight size={10} />
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                <div className="mt-auto flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-primary transition-colors group-hover:text-primary-hover px-1">
+                  Đọc tiếp <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
+            </motion.div>
+          ))}
         </div>
       </section>
 

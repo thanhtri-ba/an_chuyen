@@ -199,8 +199,11 @@ Cáp treo lên Fansipan — nóc nhà Đông Dương ở độ cao 3.143m — ch
 ];
 
 export const FEATURED_ARTICLE = {
+  id: 99,
+  slug: 'da-lat-mua-da-quy',
   title: 'Đà Lạt mùa dã quỳ — Khi cao nguyên khoác tấm áo vàng rực',
   desc: 'Tháng 11, những bông dã quỳ nở rộ trên khắp triền đồi Đà Lạt, biến thành phố ngàn hoa thành một bức tranh vàng óng tuyệt đẹp.',
+  content: 'Tháng 11, Đà Lạt bước vào mùa hoa dã quỳ rực rỡ nhất. Từng con đường, triền đồi ngoại ô khoác lên mình tấm áo vàng ươm, thu hút đông đảo du khách yêu thiên nhiên.',
   image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1600&auto=format&fit=crop',
   category: 'Kinh nghiệm',
   readTime: '5 phút đọc',

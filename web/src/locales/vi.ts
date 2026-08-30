@@ -305,6 +305,65 @@ const vi = {
     securitySub: 'Đổi mật khẩu',
     notifications: 'Thông báo',
     notificationsSub: 'Tùy chỉnh thông báo'
+  },
+  roamora: {
+    heroSub: "Đã đến lúc để",
+    heroTitle1: "Khám phá",
+    heroTitle2: "Thế giới",
+    heroDesc: "Khám phá những điểm đến tuyệt đẹp, trải nghiệm khó quên và những kỷ niệm theo bạn suốt đời.",
+    exploreNow: "Khám phá ngay",
+    whereTo: "Điểm đi?",
+    whereToPlaceholder: "Tìm kiếm điểm đến",
+    checkIn: "Ngày đi",
+    checkOut: "Ngày về",
+    travelers: "Hành khách",
+    guests: "người",
+    search: "Tìm kiếm",
+    features: {
+      f1Title: "Khách sạn chọn lọc",
+      f1Desc: "Nghỉ ngơi tại những nơi tuyệt vời nhất.",
+      f2Title: "Hướng dẫn viên",
+      f2Desc: "Chuyên gia địa phương dẫn đường cho bạn.",
+      f3Title: "Đảm bảo giá tốt",
+      f3Desc: "Chúng tôi luôn có mức giá cạnh tranh nhất.",
+      f4Title: "Hỗ trợ 24/7",
+      f4Desc: "Luôn đồng hành cùng bạn mọi lúc mọi nơi."
+    },
+    destinations: {
+      sub: "Khám phá điều tốt nhất",
+      title: "Điểm đến phổ biến",
+      viewAll: "Xem tất cả điểm đến"
+    },
+    promo: {
+      sub: "Ưu đãi có giới hạn",
+      title1: "Giảm đến",
+      title2: "30%",
+      title3: "OFF",
+      desc: "cho chuyến đi tiếp theo của bạn",
+      btn: "Xem ưu đãi"
+    },
+    trusted: "Được tin cậy bởi hàng ngàn hành khách trên toàn thế giới",
+    footer: {
+      desc: "Chúng tôi giúp bạn khám phá thế giới với những trải nghiệm du lịch khó quên và dịch vụ tuyệt vời.",
+      quickLinks: "Liên kết nhanh",
+      support: "Hỗ trợ",
+      newsletter: "Nhận tin tức",
+      newsletterDesc: "Đăng ký để nhận các ưu đãi và cập nhật du lịch độc quyền.",
+      emailPlaceholder: "Nhập email của bạn",
+      rights: "© 2026 An Chuyến. All rights reserved."
+    },
+    nav: {
+      destinations: "Điểm đến",
+      experiences: "Trải nghiệm",
+      hotels: "Khách sạn",
+      tours: "Tours",
+      deals: "Ưu đãi",
+      aboutUs: "Về chúng tôi",
+      contactUs: "Liên hệ",
+      faqs: "Hỏi đáp",
+      privacy: "Chính sách bảo mật",
+      terms: "Điều khoản dịch vụ"
+    }
   }
 } as const
 

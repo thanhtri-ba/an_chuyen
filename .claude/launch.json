@@ -12,6 +12,18 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "web"],
       "port": 5173
+    },
+    {
+      "name": "an-chuyen-admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "admin", "--", "--port", "5174"],
+      "port": 5174
+    },
+    {
+      "name": "compute-clone",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "E:/Claude/compute-clone", "--", "-p", "3010"],
+      "port": 3010
     }
   ]
 }

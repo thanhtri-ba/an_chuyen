@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowRight, Clock, ChevronRight } from 'lucide-react';
+import { Search, ArrowRight, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ARTICLES, FEATURED_ARTICLE } from '../data/articles';
+import { ARTICLES, FEATURED_ARTICLE, type Article } from '../data/articles';
 
 const CATEGORY_TABS = ['Tất cả', 'Kinh nghiệm du lịch', 'Ẩm thực địa phương', 'Mẹo đặt vé', 'Điểm đến hot'];
 
@@ -19,99 +19,68 @@ export function BlogPage() {
   });
 
   return (
-    <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh', overflowX: 'hidden' }}>
+    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
 
-      {/* ─── HERO ─── overflow:visible so search bar can bleed below */}
-      <section style={{ position: 'relative', height: '92vh' }}>
-        {/* Image clipped separately */}
-        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      {/* ─── HERO ─── */}
+      <section className="relative h-[92vh] max-h-[800px] min-h-[600px] w-full overflow-hidden">
+        {/* Image */}
+        <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1600&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2000&auto=format&fit=crop"
             alt="hero"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.45) saturate(0.9)' }}
+            className="w-full h-full object-cover brightness-[0.85] saturate-[1.1]"
           />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0e1111 0%, rgba(14,17,17,0.3) 50%, transparent 100%)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(14,17,17,0.7) 0%, transparent 60%)' }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/20 to-transparent" />
         </div>
 
         {/* Content */}
-        <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 8% 80px' }}>
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
+        <div className="relative z-10 h-full flex flex-col justify-end px-6 lg:px-12 max-w-[1400px] mx-auto pb-24">
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }} className="max-w-3xl">
             {/* Eyebrow */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <div style={{ width: 28, height: 1, background: '#d4af37' }} />
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-8 h-px bg-[#d4af37]" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
                 {t('blog.featuredCategories')} — {FEATURED_ARTICLE.category}
               </span>
             </div>
 
             {/* Title */}
-            <h1
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: 'clamp(2.2rem, 4.5vw, 4.5rem)',
-                fontWeight: 400,
-                color: '#f0ede6',
-                lineHeight: 1.15,
-                maxWidth: 820,
-                margin: '0 0 24px',
-              }}
-            >
+            <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-7xl text-[#1a1a1a] leading-[1.1] mb-6">
               {FEATURED_ARTICLE.title}
             </h1>
-            <p style={{ color: 'rgba(240,237,230,0.65)', fontSize: '1rem', lineHeight: 1.7, maxWidth: 560, marginBottom: 36, fontFamily: 'system-ui' }}>
+            <p className="text-gray-700 font-medium text-lg leading-relaxed mb-8 max-w-xl">
               {FEATURED_ARTICLE.desc}
             </p>
 
             {/* Meta row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: 'rgba(240,237,230,0.45)', fontFamily: 'system-ui', marginBottom: 20 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Clock size={12} /> {FEATURED_ARTICLE.readTime}
+            <div className="flex items-center gap-4 text-xs font-bold tracking-widest uppercase text-gray-500 mb-10">
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4" /> {FEATURED_ARTICLE.readTime}
               </span>
-              <span style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)', display: 'inline-block' }} />
+              <span className="w-px h-4 bg-gray-300" />
               <span>{FEATURED_ARTICLE.date}</span>
             </div>
 
-            {/* CTA + Search bar — same row with gap */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 1000, width: 'fit-content' }}>
+            {/* CTA + Search bar */}
+            <div className="flex flex-col sm:flex-row items-center gap-6">
               <Link
-                to="#"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap', height: 48,
-                  background: '#d4af37', color: '#0e1111', padding: '0 28px',
-                  fontSize: 11, fontWeight: 1000, letterSpacing: '0.15em', textTransform: 'uppercase',
-                  textDecoration: 'none', fontFamily: 'system-ui',
-                }}
+                to={`/blog/${FEATURED_ARTICLE.slug}`}
+                className="flex items-center justify-center gap-3 h-14 bg-primary text-white px-8 rounded-full text-xs font-bold tracking-widest uppercase hover:bg-primary-hover transition-colors shadow-md w-full sm:w-auto shrink-0"
               >
-                Đọc bài viết <ArrowRight size={14} />
+                Đọc bài viết <ArrowRight className="w-4 h-4" />
               </Link>
-              <div
-                style={{
-                  width: 520, display: 'flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(20,24,24,0.88)', backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(212,175,55,0.25)',
-                  padding: '0 12px', height: 48,
-                }}
-              >
-                <Search size={13} style={{ color: '#d4af37', flexShrink: 0 }} />
+              
+              <div className="flex items-center gap-3 h-14 bg-white/80 backdrop-blur-md border border-gray-200 rounded-full px-4 w-full max-w-md shadow-sm focus-within:bg-white focus-within:border-primary transition-colors">
+                <Search className="w-5 h-5 text-gray-400 shrink-0 ml-2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('blog.searchPlaceholder')}
-                  style={{
-                    flex: 1, background: 'none', border: 'none', outline: 'none',
-                    color: '#f0ede6', fontSize: 13, fontFamily: 'system-ui', minWidth: 0,
-                  }}
+                  className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-[#1a1a1a] placeholder:text-gray-400 min-w-0"
                 />
-                <button
-                  style={{
-                    background: '#d4af37', color: '#0e1111', border: 'none',
-                    padding: '6px 16px', fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
-                    fontFamily: 'system-ui', flexShrink: 0, height: 32,
-                  }}
-                >
+                <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-colors shrink-0">
                   {t('blog.searchBtn')}
                 </button>
               </div>
@@ -121,22 +90,18 @@ export function BlogPage() {
       </section>
 
       {/* ─── CATEGORY TABS ─── */}
-      <section style={{ padding: '56px 8% 48px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
+      <section className="border-b border-gray-100 bg-white sticky top-[72px] z-30">
+        <div className="px-6 lg:px-12 max-w-[1400px] mx-auto">
+          <div className="flex gap-2 overflow-x-auto custom-scrollbar">
             {CATEGORY_TABS.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  padding: '10px 24px 14px',
-                  fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  fontFamily: 'system-ui', whiteSpace: 'nowrap',
-                  color: activeCategory === cat ? '#d4af37' : 'rgba(240,237,230,0.35)',
-                  borderBottom: activeCategory === cat ? '2px solid #d4af37' : '2px solid transparent',
-                  transition: 'all 0.25s',
-                }}
+                className={`py-6 px-4 text-xs font-bold tracking-widest uppercase whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                  activeCategory === cat 
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-gray-400 hover:text-[#1a1a1a]'
+                }`}
               >
                 {cat}
               </button>
@@ -146,98 +111,71 @@ export function BlogPage() {
       </section>
 
       {/* ─── ARTICLES GRID ─── */}
-      <section style={{ padding: '64px 8% 120px' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(240,237,230,0.35)', fontFamily: 'system-ui' }}>
-              Không tìm thấy bài viết phù hợp.
-            </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCategory + searchQuery}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* First row: 1 large + 1 tall */}
-                {filtered.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-                    {/* Large card */}
-                    <ArticleCard article={filtered[0]} large />
-                    {/* Right column: 2 stacked if available */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                      {filtered.slice(1, 3).map((a) => (
-                        <ArticleCard key={a.id} article={a} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Second row: remaining articles in a 3-col grid */}
-                {filtered.length > 3 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-                    {filtered.slice(3).map((a) => (
+      <section className="px-6 lg:px-12 max-w-[1400px] mx-auto pt-16 pb-24">
+        {filtered.length === 0 ? (
+          <div className="text-center py-20 text-gray-400 font-medium">
+            Không tìm thấy bài viết phù hợp.
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeCategory + searchQuery}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* First row: 1 large + 1 tall */}
+              {filtered.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  {/* Large card */}
+                  <ArticleCard article={filtered[0]} large />
+                  {/* Right column: 2 stacked if available */}
+                  <div className="flex flex-col gap-8">
+                    {filtered.slice(1, 3).map((a) => (
                       <ArticleCard key={a.id} article={a} />
                     ))}
                   </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
+                </div>
+              )}
+
+              {/* Second row: remaining articles in a 3-col grid */}
+              {filtered.length > 3 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filtered.slice(3).map((a) => (
+                    <ArticleCard key={a.id} article={a} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </section>
 
       {/* ─── NEWSLETTER BAND ─── */}
-      <section
-        style={{
-          padding: '80px 8%',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          background: 'linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 60%)',
-        }}
-      >
-        <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', marginBottom: 16, fontFamily: 'system-ui' }}>
-            Cẩm nang du lịch
-          </p>
-          <h2
-            style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(2rem, 4vw, 3.5rem)',
-              fontWeight: 400,
-              color: '#f0ede6',
-              margin: '0 0 16px',
-              lineHeight: 1.2,
-            }}
-          >
-            Nhận cảm hứng du lịch <em style={{ color: '#d4af37' }}>mỗi tuần</em>
-          </h2>
-          <p style={{ color: 'rgba(240,237,230,0.45)', fontSize: 14, lineHeight: 1.7, marginBottom: 32, fontFamily: 'system-ui' }}>
-            Bài viết hay, kinh nghiệm đặt vé và điểm đến mới nhất gửi thẳng vào hộp thư của bạn.
-          </p>
-          <div style={{ display: 'flex', gap: 0, maxWidth: 480, margin: '0 auto' }}>
-            <input
-              type="email"
-              placeholder="email@example.com"
-              style={{
-                flex: 1, background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.12)', borderRight: 'none',
-                padding: '14px 20px', color: '#f0ede6', fontSize: 14,
-                fontFamily: 'system-ui', outline: 'none',
-              }}
-            />
-            <button
-              style={{
-                background: '#d4af37', color: '#0e1111', border: 'none',
-                padding: '14px 28px', fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
-                fontFamily: 'system-ui', flexShrink: 0,
-              }}
-            >
-              Đăng ký
-            </button>
+      <section className="px-6 lg:px-12 max-w-[1400px] mx-auto mb-20">
+        <div className="bg-gray-50 rounded-[3rem] border border-gray-100 p-16 md:p-24 text-center">
+          <div className="max-w-xl mx-auto">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-primary mb-6">
+              Cẩm nang du lịch
+            </p>
+            <h2 className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] mb-6 leading-tight">
+              Nhận cảm hứng du lịch <br/>
+              <em className="text-[#d4af37] font-serif italic">mỗi tuần</em>
+            </h2>
+            <p className="text-gray-500 font-medium mb-12 text-lg">
+              Bài viết hay, kinh nghiệm đặt vé và điểm đến mới nhất gửi thẳng vào hộp thư của bạn.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <input
+                type="email"
+                placeholder="email@example.com"
+                className="w-full sm:w-80 h-14 bg-white border border-gray-200 rounded-full px-6 text-sm font-medium outline-none focus:border-primary transition-colors shadow-sm"
+              />
+              <button className="h-14 bg-primary text-white px-10 rounded-full text-[11px] font-bold tracking-widest uppercase hover:bg-primary-hover transition-colors shadow-md shrink-0">
+                Đăng ký
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -247,110 +185,66 @@ export function BlogPage() {
 }
 
 /* ─── ARTICLE CARD COMPONENT ─── */
-import type { Article } from '../data/articles';
-
 function ArticleCard({ article, large }: { article: Article; large?: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="h-full"
     >
-      <Link to={`/blog/${article.slug}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit' }} className="group">
+      <Link to={`/blog/${article.slug}`} className="group h-full flex flex-col">
         {/* Image */}
         <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: large ? '4/3' : '16/9',
-            overflow: 'hidden',
-            marginBottom: 20,
-          }}
+          className={`relative w-full overflow-hidden rounded-2xl mb-6 shadow-sm ${
+            large ? 'aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[500px]' : 'aspect-[16/9]'
+          }`}
         >
           <img
             src={article.image}
             alt={article.title}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              transition: 'transform 0.7s ease, filter 0.4s ease',
-              filter: 'brightness(0.8)',
-            }}
-            className="group-hover:scale-105 group-hover:brightness-75"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          {/* Gradient */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(14,17,17,0.6) 0%, transparent 60%)' }} />
+          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
 
-          {/* Tag */}
-          {article.tag && (
-            <div
-              style={{
-                position: 'absolute', top: 16, left: 16,
-                background: '#d4af37', color: '#0e1111',
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.15em',
-                textTransform: 'uppercase', padding: '5px 12px',
-                fontFamily: 'system-ui',
-              }}
-            >
-              {article.tag}
+          {/* Tags */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+            {article.tag && (
+              <div className="bg-white/90 backdrop-blur-sm text-[#1a1a1a] text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm">
+                {article.tag}
+              </div>
+            )}
+            <div className="bg-primary/90 backdrop-blur-sm text-white text-[9px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm ml-auto">
+              {article.category}
             </div>
-          )}
-
-          {/* Category on image */}
-          <div
-            style={{
-              position: 'absolute', bottom: 16, left: 16,
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.2em',
-              textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui',
-            }}
-          >
-            {article.category}
           </div>
         </div>
 
         {/* Text */}
-        <div>
+        <div className="flex flex-col flex-1 px-2">
           {/* Meta */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, fontSize: 11, color: 'rgba(240,237,230,0.35)', fontFamily: 'system-ui' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Clock size={10} /> {article.readTime}
+          <div className="flex items-center gap-3 mb-4 text-[11px] font-bold tracking-widest uppercase text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> {article.readTime}
             </span>
-            <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.15)', display: 'inline-block' }} />
+            <span className="w-1 h-1 rounded-full bg-gray-300" />
             <span>{article.date}</span>
           </div>
 
           {/* Title */}
-          <h3
-            style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: large ? '1.8rem' : '1.25rem',
-              fontWeight: 500,
-              color: '#f0ede6',
-              lineHeight: 1.25,
-              margin: '0 0 10px',
-              transition: 'color 0.2s',
-            }}
-            className="group-hover:text-[#d4af37]"
-          >
+          <h3 className={`font-display font-medium text-[#1a1a1a] leading-snug mb-3 group-hover:text-primary transition-colors ${large ? 'text-3xl' : 'text-xl'}`}>
             {article.title}
           </h3>
 
           {large && (
-            <p style={{ color: 'rgba(240,237,230,0.5)', fontSize: 14, lineHeight: 1.7, margin: '0 0 16px', fontFamily: 'system-ui' }}>
+            <p className="text-gray-500 font-medium mb-6 line-clamp-3">
               {article.desc}
             </p>
           )}
 
-          {/* Read more link */}
-          <div
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.15em',
-              textTransform: 'uppercase', color: 'rgba(240,237,230,0.4)',
-              fontFamily: 'system-ui', transition: 'color 0.2s',
-            }}
-            className="group-hover:text-[#d4af37]"
-          >
-            Đọc tiếp <ChevronRight size={12} />
+          {/* Read more */}
+          <div className="mt-auto flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-primary transition-colors group-hover:text-primary-hover pt-4">
+            Đọc tiếp <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
           </div>
         </div>
       </Link>

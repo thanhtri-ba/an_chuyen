@@ -46,9 +46,10 @@ module.exports = {
       fontFamily: {
         sans: ["Outfit", "Inter", "system-ui", "sans-serif"],
         serif: ["Playfair Display", "Georgia", "serif"],
-        display: ["Bebas Neue", "Impact", "sans-serif"],
+        display: ["Cormorant Garamond", "Playfair Display", "Georgia", "serif"],
         cormorant: ["Cormorant Garamond", "Georgia", "serif"],
         brand: ["'Instrument Serif'", "Georgia", "serif"],
+        condensed: ["Barlow Condensed", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

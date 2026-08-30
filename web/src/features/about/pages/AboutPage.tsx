@@ -9,59 +9,59 @@ export function AboutPage() {
 
   const DEFAULT_SERVICES = [
     {
-      title: t('about.rental'),
+      title: t('about.rental') || 'Car Rental',
       image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=800&auto=format&fit=crop',
-      desc: t('about.rentalDesc'),
+      desc: t('about.rentalDesc') || 'Premium car rental services for your journey.',
       number: '01',
       hasArrowRight: false,
     },
     {
-      title: t('about.delivery'),
+      title: t('about.delivery') || 'Delivery',
       image: 'https://images.unsplash.com/photo-1580674285054-bed31e145f59?q=80&w=800&auto=format&fit=crop',
-      desc: t('about.deliveryDesc'),
+      desc: t('about.deliveryDesc') || 'Fast and secure delivery across the country.',
       number: '02',
       hasArrowRight: false,
     },
     {
-      title: t('about.airport'),
+      title: t('about.airport') || 'Airport Transfer',
       image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop',
-      desc: t('about.airportDesc'),
+      desc: t('about.airportDesc') || 'Reliable airport pickups and drop-offs.',
       number: '03',
       hasArrowRight: true,
-      highlight: t('about.newService'),
+      highlight: t('about.newService') || 'NEW',
     },
   ];
 
   const DEFAULT_SPECIALISTS = [
     {
-      name: 'Phương Trang',
-      role: t('about.strategicPartner'),
-      quote: '"Sự an toàn và hài lòng của hành khách luôn là ưu tiên hàng đầu trên mỗi cung đường."',
+      name: 'Phuong Trang',
+      role: 'Strategic Partner',
+      quote: '"Safety and passenger satisfaction are always the top priorities on every journey."',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop',
-      stat: '20+ năm',
-      statLabel: 'kinh nghiệm',
+      stat: '20+ yrs',
+      statLabel: 'Experience',
     },
     {
-      name: 'Thành Bưởi',
-      role: t('about.transportPartner'),
-      quote: '"Đội ngũ tài xế dày dạn kinh nghiệm, sẵn sàng phục vụ 24/7."',
+      name: 'Thanh Buoi',
+      role: 'Transport Partner',
+      quote: '"Experienced drivers, ready to serve 24/7."',
       image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop',
       stat: '500+',
-      statLabel: 'đầu xe',
+      statLabel: 'Vehicles',
     },
     {
-      name: 'Hải Vân',
-      role: t('about.transportPartner'),
-      quote: '"Dịch vụ chuẩn 5 sao, mang lại trải nghiệm khác biệt hoàn toàn."',
+      name: 'Hai Van',
+      role: 'Transport Partner',
+      quote: '"5-star service, bringing a completely different experience."',
       image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=800&auto=format&fit=crop',
       stat: '4.9★',
-      statLabel: 'đánh giá',
+      statLabel: 'Rating',
     },
   ];
 
   const [activeSpecialist, setActiveSpecialist] = useState(0);
   const [services, setServices] = useState(DEFAULT_SERVICES);
-  const [specialists, setSpecialists] = useState(DEFAULT_SPECIALISTS);
+  const [specialists] = useState(DEFAULT_SPECIALISTS);
   const [, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,7 +71,6 @@ export function AboutPage() {
         if (data && data.about_page_content) {
           const parsed = JSON.parse(data.about_page_content);
           if (parsed.services && parsed.services.length > 0) setServices(parsed.services);
-          if (parsed.specialists && parsed.specialists.length > 0) setSpecialists(parsed.specialists);
         }
       } catch (err) {
         console.error('Failed to load about page content', err);
@@ -83,51 +82,40 @@ export function AboutPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0e1111] relative pt-24 pb-32" style={{ color: '#f0ede6' }}>
-
+    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
+      
       {/* ─── INTRO HERO ─── */}
-      <section className="container max-w-7xl mx-auto px-4 md:px-8 mb-24">
+      <section className="relative pt-40 pb-20 px-6 lg:px-12 max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="pt-8"
         >
-          {/* gold rule top */}
-          <div style={{ height: 1, background: 'linear-gradient(90deg, #d4af37 0%, transparent 60%)' }} className="mb-10" />
+          {/* Top Divider */}
+          <div className="h-px bg-gradient-to-r from-[#d4af37] to-transparent mb-12 max-w-2xl" />
 
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <p className="text-xs font-bold tracking-[0.3em] uppercase mb-4" style={{ color: '#d4af37' }}>
-                Về chúng tôi — An Chuyến
+              <p className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-6">
+                About Us — An Chuyến
               </p>
-              <h1
-                className="leading-none tracking-widest"
-                style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
-                  fontSize: 'clamp(3rem, 8vw, 7rem)',
-                  fontWeight: 300,
-                  color: '#f0ede6',
-                  transform: 'scaleY(1.15)',
-                  transformOrigin: 'bottom left',
-                }}
-              >
-                Hành trình <br />
-                <em style={{ color: '#d4af37', fontStyle: 'italic' }}>đáng tin cậy</em>
+              <h1 className="font-display font-medium text-6xl md:text-7xl lg:text-[7.5rem] leading-[0.9] text-[#1a1a1a]">
+                A Journey <br />
+                <em className="text-[#d4af37] font-serif italic">You Can Trust</em>
               </h1>
             </div>
-            <p className="max-w-sm text-sm leading-relaxed md:text-right pb-2" style={{ color: 'rgba(240,237,230,0.55)' }}>
-              Nền tảng đặt vé xe khách và dịch vụ du lịch hàng đầu Việt Nam. Kết nối hơn 1 triệu hành khách với các nhà xe uy tín.
+            <p className="max-w-xs text-gray-500 leading-relaxed md:text-right pb-3 font-medium text-lg">
+              Vietnam's leading platform for booking transportation and travel services. Connecting over 1 million passengers.
             </p>
           </div>
 
-          {/* gold rule bottom */}
-          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, #d4af37 40%, transparent 100%)' }} className="mt-10" />
+          {/* Bottom Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mt-16 max-w-4xl ml-auto" />
         </motion.div>
       </section>
 
       {/* ─── SECTION 1: SERVICES ─── */}
-      <section className="container max-w-7xl mx-auto px-4 md:px-8 mb-32">
+      <section className="px-6 lg:px-12 max-w-[1400px] mx-auto mb-32">
         <div className="flex flex-col">
           {services.map((service, idx) => (
             <motion.div
@@ -136,92 +124,63 @@ export function AboutPage() {
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.6, delay: idx * 0.1 }}
               key={idx}
-              className="group relative grid grid-cols-12 items-center py-10 gap-6 cursor-pointer"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+              className="group relative grid grid-cols-12 items-center py-12 gap-8 cursor-pointer border-b border-gray-100 transition-colors hover:bg-gray-50/50"
             >
               {/* Number */}
               <div className="col-span-1 hidden md:flex justify-center">
-                <span
-                  className="font-mono text-xs font-bold tracking-widest"
-                  style={{ color: 'rgba(212,175,55,0.5)' }}
-                >
+                <span className="font-mono text-sm font-bold tracking-widest text-[#d4af37]/60 group-hover:text-[#d4af37] transition-colors">
                   {service.number}
                 </span>
               </div>
 
               {/* Service title */}
-              <div className="col-span-12 md:col-span-3">
+              <div className="col-span-12 md:col-span-3 px-4 md:px-0">
                 {service.highlight && (
-                  <div
-                    className="text-[9px] font-bold px-2 py-1 w-max mb-3 tracking-[0.2em]"
-                    style={{ background: '#d4af37', color: '#0e1111' }}
-                  >
+                  <div className="text-[9px] font-black px-2.5 py-1 w-max mb-4 tracking-widest bg-[#d4af37] text-white uppercase rounded-sm shadow-sm">
                     {service.highlight}
                   </div>
                 )}
-                <h3
-                  className="transition-colors duration-300 leading-tight"
-                  style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: 'clamp(1.4rem, 2.5vw, 2rem)',
-                    fontWeight: 500,
-                    color: '#f0ede6',
-                    letterSpacing: '0.05em',
-                  }}
-                >
+                <h3 className="font-display font-medium text-3xl md:text-4xl text-[#1a1a1a] leading-tight group-hover:text-primary transition-colors">
                   {service.title}
                 </h3>
               </div>
 
               {/* Image — center */}
-              <div className="col-span-12 md:col-span-5 overflow-hidden" style={{ aspectRatio: '16/9' }}>
+              <div className="col-span-12 md:col-span-5 aspect-[16/9] overflow-hidden rounded-2xl mx-4 md:mx-0 shadow-sm">
                 <img
                   src={service.image}
                   alt={service.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  style={{ filter: 'brightness(0.85)' }}
                 />
               </div>
 
               {/* Desc + Arrow */}
-              <div className="col-span-12 md:col-span-3 flex items-center justify-between gap-4">
-                <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,237,230,0.5)' }}>
+              <div className="col-span-12 md:col-span-3 flex items-center justify-between gap-6 px-4 md:px-0 md:pl-8">
+                <p className="text-gray-500 leading-relaxed font-medium text-sm">
                   {service.desc}
                 </p>
-                <div
-                  className="shrink-0 w-10 h-10 border flex items-center justify-center transition-all duration-300 group-hover:bg-[#d4af37] group-hover:border-[#d4af37]"
-                  style={{ borderColor: 'rgba(255,255,255,0.2)' }}
-                >
+                <div className="shrink-0 w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center transition-all duration-300 group-hover:bg-primary group-hover:border-primary shadow-sm group-hover:shadow-md">
                   {service.hasArrowRight ? (
-                    <ArrowRight className="w-4 h-4 transition-colors group-hover:text-[#0e1111]" style={{ color: '#d4af37' }} />
+                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
                   ) : (
-                    <ArrowUpRight className="w-4 h-4 transition-colors" style={{ color: 'rgba(240,237,230,0.5)' }} />
+                    <ArrowUpRight className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
                   )}
                 </div>
               </div>
-
-              {/* Hover line reveal */}
-              <div
-                className="absolute bottom-0 left-0 h-px transition-all duration-500 group-hover:w-full w-0"
-                style={{ background: '#d4af37' }}
-              />
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* ─── STATS BAND ─── */}
-      <section
-        className="mb-32 py-16"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        <div className="container max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="mb-32 bg-gray-50/50 border-y border-gray-100 py-20">
+        <div className="px-6 lg:px-12 max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
             {[
-              { value: '1M+', label: 'Hành khách' },
-              { value: '63', label: 'Tỉnh thành' },
-              { value: '50+', label: 'Nhà xe đối tác' },
-              { value: '99%', label: 'Đúng giờ' },
+              { value: '1M+', label: 'Passengers' },
+              { value: '63', label: 'Provinces' },
+              { value: '50+', label: 'Partners' },
+              { value: '99%', label: 'On Time' },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -231,22 +190,10 @@ export function AboutPage() {
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
               >
-                <div
-                  className="mb-1"
-                  style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-                    fontWeight: 300,
-                    color: '#d4af37',
-                    lineHeight: 1,
-                  }}
-                >
+                <div className="font-display font-medium text-5xl md:text-6xl text-primary mb-3">
                   {stat.value}
                 </div>
-                <div
-                  className="text-xs font-bold tracking-[0.2em] uppercase"
-                  style={{ color: 'rgba(240,237,230,0.4)' }}
-                >
+                <div className="text-xs font-bold tracking-widest uppercase text-gray-400">
                   {stat.label}
                 </div>
               </motion.div>
@@ -261,68 +208,48 @@ export function AboutPage() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.8 }}
-        className="container max-w-7xl mx-auto px-4 md:px-8 mb-32"
+        className="px-6 lg:px-12 max-w-[1400px] mx-auto mb-32"
       >
         {/* Section header */}
-        <div className="flex justify-between items-start mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
           <div>
-            <p className="text-xs font-bold tracking-[0.3em] uppercase mb-4" style={{ color: '#d4af37' }}>
-              Đối tác chiến lược
+            <p className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-4">
+              Strategic Partners
             </p>
-            <h2
-              className="leading-none tracking-widest"
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: 'clamp(3rem, 7vw, 6rem)',
-                fontWeight: 300,
-                color: 'rgba(240,237,230,0.12)',
-                transform: 'scaleY(1.2)',
-                transformOrigin: 'bottom left',
-              }}
-            >
-              ĐỐI TÁC
+            <h2 className="font-display font-medium text-5xl md:text-7xl text-[#1a1a1a] leading-none">
+              PARTNERS
             </h2>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setActiveSpecialist((prev) => (prev > 0 ? prev - 1 : specialists.length - 1))}
-              className="w-11 h-11 flex items-center justify-center transition-all duration-200 hover:bg-white/10"
-              style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+              className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center transition-all duration-200 hover:bg-gray-50 hover:border-gray-300"
             >
-              <ArrowLeft className="w-4 h-4" style={{ color: '#f0ede6' }} />
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <button
               onClick={() => setActiveSpecialist((prev) => (prev < specialists.length - 1 ? prev + 1 : 0))}
-              className="w-11 h-11 flex items-center justify-center transition-all duration-200"
-              style={{ background: '#d4af37' }}
+              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center transition-all duration-200 hover:bg-primary-hover shadow-md"
             >
-              <ArrowRight className="w-4 h-4 text-[#0e1111]" />
+              <ArrowRight className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
 
         {/* Tab navigation */}
-        <div className="flex mb-12 overflow-x-auto" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex mb-16 overflow-x-auto border-b border-gray-200 custom-scrollbar">
           {specialists.map((spec, idx) => (
             <div
               key={idx}
               onClick={() => setActiveSpecialist(idx)}
-              className="flex-1 min-w-[180px] pb-4 cursor-pointer transition-all duration-300"
-              style={{
-                borderBottom: activeSpecialist === idx ? '2px solid #d4af37' : '2px solid transparent',
-                marginBottom: -1,
-              }}
+              className={`flex-1 min-w-[200px] pb-5 cursor-pointer transition-all duration-300 border-b-2 -mb-[1px] ${
+                activeSpecialist === idx ? 'border-primary' : 'border-transparent'
+              }`}
             >
-              <div
-                className="font-bold text-base transition-colors"
-                style={{ color: activeSpecialist === idx ? '#f0ede6' : 'rgba(240,237,230,0.35)' }}
-              >
+              <div className={`font-bold text-lg transition-colors ${activeSpecialist === idx ? 'text-[#1a1a1a]' : 'text-gray-400'}`}>
                 {spec.name}
               </div>
-              <div
-                className="text-[9px] font-bold tracking-[0.25em] uppercase mt-1 transition-colors"
-                style={{ color: activeSpecialist === idx ? '#d4af37' : 'rgba(240,237,230,0.25)' }}
-              >
+              <div className={`text-[10px] font-bold tracking-widest uppercase mt-1.5 transition-colors ${activeSpecialist === idx ? 'text-primary' : 'text-gray-300'}`}>
                 {spec.role}
               </div>
             </div>
@@ -331,7 +258,7 @@ export function AboutPage() {
 
         {/* Partner detail */}
         {specialists.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center min-h-[480px]">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center min-h-[480px]">
             {/* Text */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -340,69 +267,40 @@ export function AboutPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 24 }}
                 transition={{ duration: 0.45 }}
-                className="md:col-span-5 flex flex-col justify-center"
+                className="md:col-span-5 flex flex-col justify-center relative"
               >
                 {/* Quote mark */}
-                <div
-                  className="mb-4 leading-none select-none"
-                  style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: '5rem',
-                    color: '#d4af37',
-                    lineHeight: 0.7,
-                    opacity: 0.6,
-                  }}
-                >
+                <div className="absolute -top-16 -left-8 font-display text-[8rem] text-primary/10 select-none leading-none z-0">
                   "
                 </div>
-                <blockquote
-                  className="leading-snug mb-8"
-                  style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: 'clamp(1.4rem, 2.5vw, 2rem)',
-                    fontWeight: 400,
-                    color: '#f0ede6',
-                    fontStyle: 'italic',
-                  }}
-                >
+                
+                <blockquote className="relative z-10 font-display text-3xl text-[#1a1a1a] font-medium leading-snug mb-10 italic">
                   {specialists[activeSpecialist].quote.replace(/^"|"$/g, '')}
                 </blockquote>
 
-                <div className="flex items-center gap-6 mb-10">
+                <div className="flex items-center gap-8 mb-10">
                   <div>
-                    <div className="font-bold text-base" style={{ color: '#f0ede6' }}>
+                    <div className="font-bold text-lg text-[#1a1a1a]">
                       {specialists[activeSpecialist].name}
                     </div>
-                    <div
-                      className="text-[9px] font-bold tracking-[0.25em] uppercase mt-0.5"
-                      style={{ color: '#d4af37' }}
-                    >
+                    <div className="text-[10px] font-bold tracking-widest uppercase text-primary mt-1">
                       {specialists[activeSpecialist].role}
                     </div>
                   </div>
-                  <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.12)' }} />
+                  <div className="w-px h-12 bg-gray-200" />
                   <div>
-                    <div
-                      className="font-bold text-xl"
-                      style={{
-                        fontFamily: "'Cormorant Garamond', Georgia, serif",
-                        color: '#d4af37',
-                      }}
-                    >
+                    <div className="font-display font-medium text-3xl text-[#d4af37]">
                       {specialists[activeSpecialist].stat}
                     </div>
-                    <div className="text-[9px] font-bold tracking-widest uppercase" style={{ color: 'rgba(240,237,230,0.35)' }}>
+                    <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
                       {specialists[activeSpecialist].statLabel}
                     </div>
                   </div>
                 </div>
 
-                <button
-                  className="flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase transition-all group w-fit"
-                  style={{ color: '#d4af37' }}
-                >
-                  Tìm hiểu thêm
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
+                <button className="flex items-center gap-3 text-xs font-bold tracking-widest uppercase text-primary transition-all group w-fit hover:text-primary-hover">
+                  Discover More
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1.5" />
                 </button>
               </motion.div>
             </AnimatePresence>
@@ -417,31 +315,24 @@ export function AboutPage() {
                 transition={{ duration: 0.5 }}
                 className="md:col-span-7 flex justify-end relative"
               >
-                <div className="relative w-full md:w-[85%]">
-                  {/* Offset border card */}
-                  <div
-                    className="absolute inset-0 translate-x-4 translate-y-4 pointer-events-none"
-                    style={{ border: '1px solid rgba(212,175,55,0.2)' }}
-                  />
+                <div className="relative w-full md:w-[90%]">
                   <img
                     src={specialists[activeSpecialist].image}
                     alt={specialists[activeSpecialist].name}
-                    className="w-full object-cover"
-                    style={{ height: 480, filter: 'brightness(0.88)' }}
+                    className="w-full h-[500px] object-cover rounded-[2rem] shadow-sm"
                   />
                   {/* Name overlay */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 px-6 py-5"
-                    style={{ background: 'linear-gradient(to top, rgba(14,17,17,0.95) 0%, transparent 100%)' }}
-                  >
-                    <div
-                      className="font-bold text-lg"
-                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#f0ede6' }}
-                    >
-                      {specialists[activeSpecialist].name}
+                  <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white flex items-center justify-between">
+                    <div>
+                      <div className="font-display font-medium text-2xl text-[#1a1a1a]">
+                        {specialists[activeSpecialist].name}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-gray-500 mt-1">
+                        <MapPin className="w-3.5 h-3.5 text-primary" /> Vietnam
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] tracking-widest uppercase" style={{ color: '#d4af37' }}>
-                      <MapPin className="w-3 h-3" /> Vietnam
+                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                      <ArrowUpRight className="w-5 h-5 text-gray-400" />
                     </div>
                   </div>
                 </div>
@@ -457,129 +348,92 @@ export function AboutPage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-50px' }}
         transition={{ duration: 0.8 }}
-        className="container max-w-7xl mx-auto px-4 md:px-8"
+        className="px-6 lg:px-12 max-w-[1400px] mx-auto"
       >
-        {/* gold rule */}
-        <div style={{ height: 1, background: 'linear-gradient(90deg, #d4af37 0%, transparent 70%)' }} className="mb-12" />
+        <div className="bg-white border border-gray-100 rounded-[3rem] p-10 md:p-16 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+          <div className="mb-12">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-primary mb-4">
+              Contact — Free Consultation
+            </p>
+            <h2 className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] leading-none">
+              GET IN TOUCH
+            </h2>
+          </div>
 
-        <p className="text-xs font-bold tracking-[0.3em] uppercase mb-4" style={{ color: '#d4af37' }}>
-          Liên hệ — Tư vấn miễn phí
-        </p>
-        <h2
-          className="mb-16 leading-none"
-          style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 'clamp(2.5rem, 6vw, 5.5rem)',
-            fontWeight: 300,
-            color: '#f0ede6',
-            transform: 'scaleY(1.15)',
-            transformOrigin: 'bottom left',
-            letterSpacing: '0.08em',
-          }}
-        >
-          LIÊN HỆ TƯ VẤN
-        </h2>
+          <form className="max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 mb-12">
+              {[
+                { label: 'Full Name', placeholder: 'John Doe', type: 'text' },
+                { label: 'Phone Number', placeholder: '+1 (555) 000-0000', type: 'tel' },
+              ].map((field) => (
+                <div key={field.label}>
+                  <label className="block mb-2.5 text-[11px] font-bold tracking-widest uppercase text-gray-500">
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-[#1a1a1a] outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
+                  />
+                </div>
+              ))}
+            </div>
 
-        <form className="max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 mb-12">
-            {[
-              { label: 'Họ và tên', placeholder: 'Nguyễn Văn A', type: 'text' },
-              { label: 'Số điện thoại', placeholder: '+84 (900) 123-456', type: 'tel' },
-            ].map((field) => (
-              <div
-                key={field.label}
-                className="pb-2 transition-colors focus-within:border-b-[#d4af37]"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.12)' }}
-              >
-                <label
-                  className="block mb-2 text-[9px] font-bold tracking-[0.25em] uppercase"
-                  style={{ color: 'rgba(240,237,230,0.4)' }}
-                >
-                  {field.label}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-12">
+              {/* Service select */}
+              <div>
+                <label className="block mb-4 text-[11px] font-bold tracking-widest uppercase text-gray-500">
+                  Service
                 </label>
-                <input
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  className="w-full bg-transparent border-none focus:ring-0 text-lg font-medium px-0 outline-none"
-                  style={{
-                    color: '#f0ede6',
-                  }}
-                />
+                <div className="flex flex-wrap gap-3">
+                  {['Car Rental', 'Delivery', 'Airport Transfer'].map((svc, i) => (
+                    <button
+                      key={svc}
+                      type="button"
+                      className={`text-xs font-bold px-6 py-3 rounded-full transition-all duration-200 border ${
+                        i === 0
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-[#1a1a1a]'
+                      }`}
+                    >
+                      {svc}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 mb-16">
-            {/* Service select */}
-            <div>
-              <label
-                className="block mb-4 text-[9px] font-bold tracking-[0.25em] uppercase"
-                style={{ color: 'rgba(240,237,230,0.4)' }}
-              >
-                Dịch vụ
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {['Thuê xe', 'Giao hàng', 'Đưa đón sân bay'].map((svc, i) => (
-                  <button
-                    key={svc}
-                    type="button"
-                    className="text-xs font-bold px-5 py-2.5 transition-all duration-200"
-                    style={
-                      i === 0
-                        ? { background: '#d4af37', color: '#0e1111', border: '1px solid #d4af37' }
-                        : {
-                            background: 'transparent',
-                            color: 'rgba(240,237,230,0.5)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                          }
-                    }
-                  >
-                    {svc}
-                  </button>
-                ))}
+              {/* Date quick select */}
+              <div>
+                <label className="block mb-4 text-[11px] font-bold tracking-widest uppercase text-gray-500">
+                  Travel Date
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {['Today', 'Tomorrow', 'Select Date'].map((d, i) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`text-xs font-bold px-6 py-3 rounded-full transition-all duration-200 border ${
+                        i === 0
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-[#1a1a1a]'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Date quick select */}
-            <div>
-              <label
-                className="block mb-4 text-[9px] font-bold tracking-[0.25em] uppercase"
-                style={{ color: 'rgba(240,237,230,0.4)' }}
-              >
-                Ngày đi
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {['Hôm nay', 'Ngày mai', 'Chọn ngày'].map((d, i) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className="text-xs font-bold px-5 py-2.5 transition-all duration-200"
-                    style={
-                      i === 0
-                        ? { background: '#d4af37', color: '#0e1111', border: '1px solid #d4af37' }
-                        : {
-                            background: 'transparent',
-                            color: 'rgba(240,237,230,0.5)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                          }
-                    }
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full font-bold tracking-[0.2em] uppercase py-5 text-sm transition-all duration-200 hover:brightness-110 active:scale-[0.99]"
-            style={{ background: '#d4af37', color: '#0e1111' }}
-          >
-            GỬI YÊU CẦU TƯ VẤN
-          </button>
-        </form>
+            {/* Submit */}
+            <button
+              type="submit"
+              className="w-full md:w-auto bg-primary hover:bg-primary-hover text-white font-bold tracking-widest uppercase px-12 py-5 rounded-full text-xs transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              SEND INQUIRY
+            </button>
+          </form>
+        </div>
       </motion.section>
     </div>
   );

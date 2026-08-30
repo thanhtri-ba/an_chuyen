@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Share2, Gift, Ticket, Copy, Check, ArrowRight } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
 import api from '../../../lib/api';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +23,7 @@ const getStaticPromos = (t: any) => [
     img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f78?q=80&w=800&auto=format&fit=crop',
     badge: t('offers.promo1Badge'),
     accent: '#d4af37',
-    tag: 'KINH NGHIỆM',
+    tag: 'EXPERIENCE',
   },
   {
     id: 'demo2', code: 'VNPAY10', title: t('offers.promo2Title'), discountPct: 10,
@@ -33,7 +32,7 @@ const getStaticPromos = (t: any) => [
     img: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=800&auto=format&fit=crop',
     badge: null,
     accent: '#d4af37',
-    tag: 'THANH TOÁN',
+    tag: 'PAYMENT',
   },
   {
     id: 'demo3', code: 'VIP20', title: t('offers.promo3Title'), discountPct: 20,
@@ -42,7 +41,7 @@ const getStaticPromos = (t: any) => [
     img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop',
     badge: 'VIP',
     accent: '#d4af37',
-    tag: 'THÀNH VIÊN',
+    tag: 'MEMBER',
   },
 ];
 
@@ -62,115 +61,72 @@ function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: stri
       initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.5 }}
-      style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
-        display: 'flex', flexDirection: 'column',
-        overflow: 'hidden',
-        transition: 'border-color 0.3s',
-        cursor: 'pointer',
-      }}
-      whileHover={{ borderColor: 'rgba(212,175,55,0.35)' }}
+      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 flex flex-col group transition-all"
     >
       {/* Image */}
-      <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', flexShrink: 0 }}>
+      <div className="relative aspect-video overflow-hidden shrink-0">
         {promo.img ? (
-          <img src={promo.img} alt={promo.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.6) saturate(0.75)', transition: 'transform 0.6s ease' }}
-            className="group-hover:scale-105"
-          />
+          <img src={promo.img} alt={promo.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
         ) : (
-          <div style={{ width: '100%', height: '100%', background: 'rgba(212,175,55,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Gift size={40} style={{ color: 'rgba(212,175,55,0.4)' }} />
+          <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+            <Gift className="w-10 h-10 text-gray-300" />
           </div>
         )}
-        {/* Gradient */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(14,17,17,0.75) 0%, transparent 60%)' }} />
+        
+        {/* Subtle gradient overlay to make text pop */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
 
         {/* Tag */}
-        <div style={{ position: 'absolute', top: 14, left: 14, fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', color: '#d4af37', fontFamily: 'system-ui' }}>
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold tracking-widest text-[#1a1a1a] shadow-sm uppercase">
           {promo.tag}
         </div>
 
         {/* Discount pill */}
         {promo.discountPct > 0 && (
-          <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: '#d4af37', color: '#0e1111',
-            fontSize: 10, fontWeight: 900, padding: '4px 10px',
-            fontFamily: 'system-ui', letterSpacing: '0.05em',
-          }}>
+          <div className="absolute top-4 right-4 bg-[#d4af37] text-white text-[11px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm">
             -{promo.discountPct}%
           </div>
         )}
         {promo.badge && !promo.discountPct && (
-          <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: '#d4af37', color: '#0e1111',
-            fontSize: 9, fontWeight: 900, padding: '4px 10px',
-            fontFamily: 'system-ui', letterSpacing: '0.15em',
-          }}>
+          <div className="absolute top-4 right-4 bg-[#d4af37] text-white text-[11px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">
             {promo.badge}
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div style={{ padding: '24px 24px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-        {/* Title */}
-        <h3 style={{
-          fontFamily: "'Cormorant Garamond', Georgia, serif",
-          fontSize: '1.4rem', fontWeight: 500,
-          color: '#f0ede6', lineHeight: 1.25, margin: 0,
-        }}>
+      <div className="p-6 flex-1 flex flex-col gap-4">
+        <h3 className="font-display font-medium text-2xl text-[#1a1a1a] leading-tight m-0">
           {promo.title}
         </h3>
 
-        <p style={{ fontSize: 13, color: 'rgba(240,237,230,0.5)', lineHeight: 1.7, margin: 0, flex: 1, fontFamily: 'system-ui' }}>
+        <p className="text-sm text-gray-500 leading-relaxed flex-1 m-0">
           {promo.subtitle}
         </p>
 
         {/* Code row */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 0,
-          border: '1px solid rgba(212,175,55,0.2)',
-          marginTop: 4,
-        }}>
-          <div style={{
-            flex: 1, padding: '9px 14px',
-            fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', fontFamily: 'monospace',
-            color: '#d4af37', background: 'rgba(212,175,55,0.05)',
-          }}>
+        <div className="flex items-center mt-2 border border-gray-200 rounded-xl overflow-hidden bg-gray-50 group/code hover:border-primary transition-colors">
+          <div className="flex-1 py-3 px-4 text-xs font-bold tracking-widest font-mono text-primary">
             {promo.code}
           </div>
           <button
             onClick={handleCopy}
-            style={{
-              padding: '9px 16px', background: copied ? 'rgba(212,175,55,0.15)' : 'transparent',
-              border: 'none', borderLeft: '1px solid rgba(212,175,55,0.2)',
-              color: '#d4af37', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
-            }}
+            className={`py-3 px-4 border-l border-gray-200 text-primary cursor-pointer transition-colors shrink-0 flex items-center justify-center ${copied ? 'bg-primary/10' : 'bg-transparent hover:bg-gray-100'}`}
           >
-            {copied ? <Check size={13} /> : <Copy size={13} />}
+            {copied ? <Check size={14} /> : <Copy size={14} />}
           </button>
         </div>
 
         {/* Footer */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>
-            <Clock size={10} /> HSD: {new Date(promo.validUntil).toLocaleDateString('vi-VN')}
+        <div className="flex items-center justify-between mt-2 pt-4 border-t border-gray-50">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+            <Clock size={12} /> Exp: {new Date(promo.validUntil).toLocaleDateString('vi-VN')}
           </div>
           <button
             onClick={handleCopy}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
-              color: '#d4af37', fontFamily: 'system-ui',
-            }}
+            className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer text-[11px] font-bold tracking-widest uppercase text-primary hover:text-primary-hover transition-colors"
           >
-            Dùng ngay <ArrowRight size={10} />
+            Use Now <ArrowRight size={12} />
           </button>
         </div>
       </div>
@@ -179,7 +135,6 @@ function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: stri
 }
 
 export function OffersPage() {
-  const { user } = useAuth();
   const { t } = useTranslation();
   const FILTERS = FILTER_KEYS.map(k => ({ key: k, label: t(`offers.${k}`) }));
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -200,46 +155,40 @@ export function OffersPage() {
     ...getStaticPromos(t),
     ...promotions.map(p => ({
       ...p, img: null as string | null, badge: null as string | null,
-      accent: '#d4af37', tag: 'ƯU ĐÃI',
+      accent: '#d4af37', tag: 'OFFER',
     })),
   ];
 
   return (
-    <div style={{ background: '#0e1111', color: '#f0ede6', minHeight: '100vh' }}>
+    <div className="bg-[#fcfcfc] text-[#1a1a1a] min-h-screen font-sans">
 
       {/* ─── HERO ─── */}
-      <section style={{ position: 'relative', height: '55vh', overflow: 'hidden', minHeight: 360 }}>
+      <section className="relative h-[55vh] min-h-[460px] overflow-hidden flex flex-col justify-end">
         <img
-          src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1600&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2000&auto=format&fit=crop"
           alt="hero"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.25) saturate(0.6)' }}
+          className="absolute inset-0 w-full h-full object-cover filter brightness-[0.7] saturate-[0.8]"
         />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0e1111 0%, rgba(14,17,17,0.2) 60%, transparent 100%)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(14,17,17,0.7) 0%, transparent 65%)' }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
 
         {/* Content */}
-        <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 8% 64px' }}>
+        <div className="relative z-10 px-6 lg:px-12 pb-20 max-w-[1400px] mx-auto w-full text-white">
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             {/* Eyebrow */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 28, height: 1, background: '#d4af37' }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-[2px] bg-[#d4af37]" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
                 {t('offers.subtitle')}
               </span>
             </div>
 
             <h1
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: 'clamp(2.4rem, 4.5vw, 5rem)',
-                fontWeight: 400, lineHeight: 1.1,
-                color: '#f0ede6', margin: '0 0 16px',
-                maxWidth: 700,
-              }}
-              dangerouslySetInnerHTML={{ __html: t('offers.title').replace('<em>', '<em style="color:#d4af37;font-style:italic">') }}
+              className="font-display font-medium text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-6 max-w-3xl"
+              dangerouslySetInnerHTML={{ __html: t('offers.title').replace('<em>', '<em class="text-[#d4af37] font-serif italic">') }}
             />
 
-            <p style={{ fontSize: 14, color: 'rgba(240,237,230,0.5)', lineHeight: 1.7, maxWidth: 440, margin: 0, fontFamily: 'system-ui' }}>
+            <p className="text-lg text-gray-200 leading-relaxed max-w-lg font-medium">
               {t('offers.desc')}
             </p>
           </motion.div>
@@ -247,21 +196,17 @@ export function OffersPage() {
       </section>
 
       {/* ─── FILTER TABS ─── */}
-      <section style={{ padding: '0 8%', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
+      <section className="border-b border-gray-100 bg-white sticky top-0 z-40 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 flex gap-8 overflow-x-auto custom-scrollbar">
           {FILTERS.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setActiveFilter(key)}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                padding: '20px 28px',
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-                fontFamily: 'system-ui', whiteSpace: 'nowrap',
-                color: activeFilter === key ? '#d4af37' : 'rgba(240,237,230,0.35)',
-                borderBottom: activeFilter === key ? '2px solid #d4af37' : '2px solid transparent',
-                transition: 'all 0.25s',
-              }}
+              className={`py-5 text-[11px] font-bold tracking-widest uppercase whitespace-nowrap transition-all border-b-2 ${
+                activeFilter === key 
+                  ? 'text-primary border-primary' 
+                  : 'text-gray-400 border-transparent hover:text-gray-600'
+              }`}
             >
               {label}
             </button>
@@ -270,18 +215,18 @@ export function OffersPage() {
       </section>
 
       {/* ─── PROMO GRID ─── */}
-      <section style={{ padding: '64px 8% 80px' }}>
+      <section className="px-6 lg:px-12 py-16 max-w-[1400px] mx-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeFilter}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
           >
             {/* Featured large card + 2 stacked */}
             {allPromos.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 24, marginBottom: 24 }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
                 {allPromos.slice(0, 3).map((promo, idx) => (
                   <PromoCard key={promo.id} promo={promo} onApply={handleApply} index={idx} />
                 ))}
@@ -290,7 +235,7 @@ export function OffersPage() {
 
             {/* Extra promos */}
             {allPromos.length > 3 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {allPromos.slice(3).map((promo, idx) => (
                   <PromoCard key={promo.id} promo={promo} onApply={handleApply} index={idx + 3} />
                 ))}
@@ -300,15 +245,14 @@ export function OffersPage() {
         </AnimatePresence>
       </section>
 
-      {/* ─── GOLD DIVIDER ─── */}
-      <div style={{ margin: '0 8%', height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.4), transparent)' }} />
+      {/* ─── DIVIDER ─── */}
+      <div className="max-w-[1400px] mx-auto px-12">
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+      </div>
 
       {/* ─── REFERRAL SECTION ─── */}
-      <section style={{ padding: '80px 8% 100px' }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64,
-          alignItems: 'center',
-        }}>
+      <section className="px-6 lg:px-12 py-24 max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left: text */}
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -316,34 +260,24 @@ export function OffersPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <div style={{ width: 24, height: 1, background: '#d4af37' }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui' }}>
-                Giới thiệu bạn bè
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-[2px] bg-primary" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-primary">
+                Invite Friends
               </span>
             </div>
 
             <h2
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: 'clamp(2rem, 3.5vw, 3.5rem)',
-                fontWeight: 400, color: '#f0ede6', lineHeight: 1.2, margin: '0 0 20px',
-              }}
-              dangerouslySetInnerHTML={{ __html: t('offers.referralTitle').replace('<em>', '<em style="color:#d4af37;font-style:italic">') }}
+              className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] leading-[1.1] mb-6"
+              dangerouslySetInnerHTML={{ __html: t('offers.referralTitle').replace('<em>', '<em class="text-[#d4af37] font-serif italic">') }}
             />
 
-            <p style={{ fontSize: 15, color: 'rgba(240,237,230,0.55)', lineHeight: 1.8, margin: '0 0 36px', maxWidth: 440, fontFamily: 'system-ui' }}>
+            <p className="text-gray-500 text-lg leading-relaxed mb-10 max-w-md font-medium">
               {t('offers.referralDesc')}
             </p>
 
-            <button style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-              background: '#d4af37', color: '#0e1111',
-              border: 'none', padding: '14px 32px', cursor: 'pointer',
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
-              fontFamily: 'system-ui',
-            }}>
-              <Share2 size={13} /> {t('offers.referralButton')}
+            <button className="inline-flex items-center gap-2.5 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-full text-sm font-bold tracking-wide transition-colors shadow-sm">
+              <Share2 size={16} /> {t('offers.referralButton')}
             </button>
           </motion.div>
 
@@ -353,49 +287,34 @@ export function OffersPage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', height: 280 }}
+            className="relative h-[400px] flex items-center justify-center bg-gray-50 rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm"
           >
-            {/* Decorative orb */}
-            <div style={{ position: 'absolute', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }} />
-
+            {/* Decorative circles */}
+            <div className="absolute w-[500px] h-[500px] rounded-full border border-gray-200 opacity-50" />
+            <div className="absolute w-[350px] h-[350px] rounded-full border border-gray-200 opacity-50" />
+            
             {/* Card 1 */}
-            <div style={{
-              position: 'absolute', top: '20%', left: '15%',
-              width: 150, padding: '20px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(212,175,55,0.2)',
-              transform: 'rotate(-6deg)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-            }}>
-              <div style={{ width: 44, height: 44, background: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Gift size={22} style={{ color: '#d4af37' }} />
+            <div className="absolute top-1/4 left-[15%] w-40 p-6 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-gray-50 -rotate-6 flex flex-col items-center gap-4 z-10 transition-transform hover:rotate-0 hover:scale-105 duration-300">
+              <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center">
+                <Gift size={24} className="text-primary" />
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#d4af37', fontFamily: "'Cormorant Garamond', serif" }}>30K</div>
-                <div style={{ fontSize: 9, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui', letterSpacing: '0.1em' }}>VOUCHER</div>
+              <div className="text-center">
+                <div className="text-2xl font-display font-medium text-primary">30K</div>
+                <div className="text-[10px] text-gray-400 font-bold tracking-widest mt-1">VOUCHER</div>
               </div>
             </div>
 
             {/* Card 2 */}
-            <div style={{
-              position: 'absolute', bottom: '15%', right: '12%',
-              width: 150, padding: '20px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(212,175,55,0.15)',
-              transform: 'rotate(5deg)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-            }}>
-              <div style={{ width: 44, height: 44, background: 'rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Ticket size={22} style={{ color: '#d4af37' }} />
+            <div className="absolute bottom-1/4 right-[15%] w-40 p-6 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-gray-50 rotate-6 flex flex-col items-center gap-4 z-10 transition-transform hover:rotate-0 hover:scale-105 duration-300">
+              <div className="w-14 h-14 bg-orange-50 rounded-full flex items-center justify-center">
+                <Ticket size={24} className="text-orange-400" />
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f0ede6', fontFamily: 'system-ui', letterSpacing: '0.1em' }}>AN CHUYẾN</div>
-                <div style={{ fontSize: 9, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui', letterSpacing: '0.1em', marginTop: 4 }}>MEMBER PASS</div>
+              <div className="text-center">
+                <div className="text-sm font-bold text-[#1a1a1a] tracking-wide">ROAMORA</div>
+                <div className="text-[10px] text-gray-400 font-bold tracking-widest mt-1">MEMBER PASS</div>
               </div>
             </div>
 
-            {/* Gold rule */}
-            <div style={{ position: 'absolute', width: 1, height: '60%', background: 'linear-gradient(to bottom, transparent, rgba(212,175,55,0.4), transparent)', top: '20%', left: '50%' }} />
           </motion.div>
         </div>
       </section>

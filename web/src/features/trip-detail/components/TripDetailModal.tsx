@@ -50,7 +50,7 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
             style={{
               position: 'relative', width: '100%', maxWidth: 860,
               maxHeight: '90vh', overflowY: 'auto',
-              background: '#111414', border: '1px solid rgba(255,255,255,0.08)',
+              background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)',
               display: 'flex', flexDirection: 'column',
             }}
           >
@@ -58,14 +58,14 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
             <div style={{ position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
               <img src={GALLERY[activeImg]} alt="Bus"
                 style={{ width: '100%', height: 200, objectFit: 'cover', filter: 'brightness(0.3) saturate(0.6)', display: 'block' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #111414 0%, transparent 60%)' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(17,20,20,0.8) 0%, transparent 60%)' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #ffffff 0%, transparent 60%)' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(255,255,255,0.8) 0%, transparent 60%)' }} />
 
               {/* Close */}
               <button onClick={onClose} style={{
                 position: 'absolute', top: 16, right: 16,
-                background: 'rgba(17,20,20,0.8)', border: '1px solid rgba(255,255,255,0.1)',
-                color: 'rgba(240,237,230,0.6)', width: 32, height: 32,
+                background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,0,0,0.1)',
+                color: 'rgba(0,0,0,0.6)', width: 32, height: 32,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', transition: 'all 0.2s',
               }}>
@@ -76,17 +76,17 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 28px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 8 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', color: '#163328', fontFamily: 'system-ui', marginBottom: 8 }}>
                       {trip.type?.toUpperCase()}
                     </div>
-                    <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', fontWeight: 500, color: '#f0ede6', margin: '0 0 6px', lineHeight: 1.1 }}>
+                    <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.8rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 6px', lineHeight: 1.1 }}>
                       {trip.company}
                     </h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(240,237,230,0.45)', fontFamily: 'system-ui' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(0,0,0,0.45)', fontFamily: 'system-ui' }}>
                       <span>{trip.from}</span>
-                      <ArrowRight size={10} style={{ color: '#d4af37' }} />
+                      <ArrowRight size={10} style={{ color: '#163328' }} />
                       <span>{trip.to}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+                      <span style={{ color: 'rgba(0,0,0,0.15)' }}>·</span>
                       <Clock size={10} />
                       <span>{trip.duration}</span>
                     </div>
@@ -94,14 +94,14 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
 
                   {/* Price + CTA */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
-                    <div style={{ padding: '14px 20px', background: 'rgba(17,20,20,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRight: 'none' }}>
-                      <div style={{ fontSize: 9, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui', marginBottom: 4, letterSpacing: '0.1em' }}>Giá vé từ</div>
-                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                    <div style={{ padding: '14px 20px', background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(0,0,0,0.08)', borderRight: 'none' }}>
+                      <div style={{ fontSize: 9, color: 'rgba(0,0,0,0.4)', fontFamily: 'system-ui', marginBottom: 4, letterSpacing: '0.1em' }}>Giá vé từ</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 700, color: '#163328', lineHeight: 1 }}>
                         {new Intl.NumberFormat('vi-VN').format(trip.price)}₫
                       </div>
                     </div>
                     <button onClick={handleSelectSeat} style={{
-                      background: '#d4af37', color: '#0e1111', border: 'none',
+                      background: '#163328', color: '#fcfcfc', border: 'none',
                       padding: '0 24px', height: 68, cursor: 'pointer',
                       fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
                       fontFamily: 'system-ui', whiteSpace: 'nowrap',
@@ -113,25 +113,25 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
 
                 {/* Rating inline */}
                 {trip.rating > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12, fontSize: 11, color: '#d4af37', fontFamily: 'system-ui', fontWeight: 700 }}>
-                    <Star size={11} style={{ fill: '#d4af37' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12, fontSize: 11, color: '#163328', fontFamily: 'system-ui', fontWeight: 700 }}>
+                    <Star size={11} style={{ fill: '#163328' }} />
                     {trip.rating}/5
-                    <span style={{ color: 'rgba(240,237,230,0.3)', fontWeight: 400 }}>({trip.reviews} đánh giá)</span>
+                    <span style={{ color: 'rgba(0,0,0,0.3)', fontWeight: 400 }}>({trip.reviews} đánh giá)</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* ── TABS ── */}
-            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 28px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(0,0,0,0.06)', padding: '0 28px', flexShrink: 0 }}>
               {TABS.map((tab, i) => (
                 <button key={tab} onClick={() => setActiveTab(i)} style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   padding: '16px 20px',
                   fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
                   fontFamily: 'system-ui',
-                  color: activeTab === i ? '#d4af37' : 'rgba(240,237,230,0.3)',
-                  borderBottom: activeTab === i ? '2px solid #d4af37' : '2px solid transparent',
+                  color: activeTab === i ? '#163328' : 'rgba(0,0,0,0.3)',
+                  borderBottom: activeTab === i ? '2px solid #163328' : '2px solid transparent',
                   transition: 'all 0.2s',
                 }}>
                   {tab}
@@ -157,7 +157,7 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                             <div key={i} style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setActiveImg(i + 1)}>
                               <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.7)', transition: 'filter 0.2s' }} />
                               {i === 1 && (
-                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,17,17,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#f0ede6', fontFamily: 'system-ui' }}>
+                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#1a1a1a', fontFamily: 'system-ui' }}>
                                   +9 ảnh nữa
                                 </div>
                               )}
@@ -169,7 +169,7 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                       {/* Amenities + Rating */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                         <div>
-                          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 16 }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#163328', fontFamily: 'system-ui', marginBottom: 16 }}>
                             Tiện ích
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -179,9 +179,9 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                               { Icon: Usb, label: 'Cổng sạc USB' },
                               { Icon: ShieldAlert, label: 'Búa thoát hiểm' },
                             ].map(({ Icon, label }) => (
-                              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'rgba(240,237,230,0.55)', fontFamily: 'system-ui' }}>
-                                <div style={{ width: 28, height: 28, background: 'rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <Icon size={13} style={{ color: '#d4af37' }} />
+                              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'rgba(0,0,0,0.55)', fontFamily: 'system-ui' }}>
+                                <div style={{ width: 28, height: 28, background: 'rgba(22,51,40,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Icon size={13} style={{ color: '#163328' }} />
                                 </div>
                                 {label}
                               </div>
@@ -190,16 +190,16 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                         </div>
 
                         {/* Rating summary */}
-                        <div style={{ padding: '16px', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                        <div style={{ padding: '16px', background: 'rgba(22,51,40,0.06)', border: '1px solid rgba(22,51,40,0.15)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#d4af37', fontFamily: 'system-ui' }}>
-                              <Star size={13} style={{ fill: '#d4af37' }} /> {trip.rating}/5 Rất tốt
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#163328', fontFamily: 'system-ui' }}>
+                              <Star size={13} style={{ fill: '#163328' }} /> {trip.rating}/5 Rất tốt
                             </div>
-                            <span style={{ fontSize: 10, color: '#d4af37', fontFamily: 'system-ui', cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
+                            <span style={{ fontSize: 10, color: '#163328', fontFamily: 'system-ui', cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
                               Đọc {trip.reviews} đánh giá →
                             </span>
                           </div>
-                          <p style={{ fontSize: 12, color: 'rgba(240,237,230,0.5)', lineHeight: 1.7, margin: 0, fontFamily: 'system-ui' }}>
+                          <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.5)', lineHeight: 1.7, margin: 0, fontFamily: 'system-ui' }}>
                             Khách hàng thường khen ngợi nhà xe về sự đúng giờ, xe sạch sẽ và thái độ phục vụ thân thiện.
                           </p>
                         </div>
@@ -217,22 +217,22 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                         <div key={i} style={{ display: 'flex', gap: 20 }}>
                           {/* Timeline */}
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 20 }}>
-                            <div style={{ width: 12, height: 12, background: stop.active ? '#d4af37' : 'transparent', border: `2px solid ${stop.active ? '#d4af37' : 'rgba(255,255,255,0.2)'}`, borderRadius: '50%', flexShrink: 0 }} />
+                            <div style={{ width: 12, height: 12, background: stop.active ? '#163328' : 'transparent', border: `2px solid ${stop.active ? '#163328' : 'rgba(0,0,0,0.2)'}`, borderRadius: '50%', flexShrink: 0 }} />
                             {i < arr.length - 1 && (
-                              <div style={{ width: 1, flex: 1, background: 'repeating-linear-gradient(to bottom, rgba(212,175,55,0.3) 0, rgba(212,175,55,0.3) 4px, transparent 4px, transparent 8px)', margin: '4px 0', minHeight: 60 }} />
+                              <div style={{ width: 1, flex: 1, background: 'repeating-linear-gradient(to bottom, rgba(22,51,40,0.3) 0, rgba(22,51,40,0.3) 4px, transparent 4px, transparent 8px)', margin: '4px 0', minHeight: 60 }} />
                             )}
                           </div>
 
                           {/* Content */}
                           <div style={{ paddingBottom: i < arr.length - 1 ? 32 : 0 }}>
-                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 600, color: stop.active ? '#f0ede6' : 'rgba(240,237,230,0.4)', lineHeight: 1 }}>
+                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 600, color: stop.active ? '#1a1a1a' : 'rgba(0,0,0,0.4)', lineHeight: 1 }}>
                               {stop.time}
                             </div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: stop.active ? '#f0ede6' : 'rgba(240,237,230,0.5)', fontFamily: 'system-ui', margin: '6px 0 8px' }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: stop.active ? '#1a1a1a' : 'rgba(0,0,0,0.5)', fontFamily: 'system-ui', margin: '6px 0 8px' }}>
                               {stop.city}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>
-                              <MapPin size={10} style={{ color: '#d4af37', flexShrink: 0 }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>
+                              <MapPin size={10} style={{ color: '#163328', flexShrink: 0 }} />
                               {stop.station}
                             </div>
                           </div>
@@ -245,8 +245,8 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                   {activeTab === 2 && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                       {/* Cancellation */}
-                      <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 16 }}>
+                      <div style={{ padding: 20, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.07)' }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#163328', fontFamily: 'system-ui', marginBottom: 16 }}>
                           Chính sách hoàn hủy
                         </div>
                         {[
@@ -254,27 +254,27 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                           { label: 'Hủy từ 12h – 24h', value: 'Hoàn 50%' },
                           { label: 'Hủy trước 12h', value: 'Không hoàn' },
                         ].map(r => (
-                          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 12, fontFamily: 'system-ui' }}>
-                            <span style={{ color: 'rgba(240,237,230,0.5)' }}>{r.label}</span>
-                            <span style={{ fontWeight: 700, color: '#f0ede6' }}>{r.value}</span>
+                          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,0.06)', fontSize: 12, fontFamily: 'system-ui' }}>
+                            <span style={{ color: 'rgba(0,0,0,0.5)' }}>{r.label}</span>
+                            <span style={{ fontWeight: 700, color: '#1a1a1a' }}>{r.value}</span>
                           </div>
                         ))}
-                        <p style={{ fontSize: 10, color: 'rgba(240,237,230,0.25)', marginTop: 12, fontFamily: 'system-ui', fontStyle: 'italic' }}>
+                        <p style={{ fontSize: 10, color: 'rgba(0,0,0,0.25)', marginTop: 12, fontFamily: 'system-ui', fontStyle: 'italic' }}>
                           * Vé ngày Lễ, Tết không áp dụng chính sách hoàn hủy.
                         </p>
                       </div>
 
                       {/* Baggage */}
-                      <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#d4af37', fontFamily: 'system-ui', marginBottom: 16 }}>
+                      <div style={{ padding: 20, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.07)' }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#163328', fontFamily: 'system-ui', marginBottom: 16 }}>
                           Quy định hành lý
                         </div>
                         {[
                           'Tối đa 20kg hành lý ký gửi và 1 balo nhỏ xách tay.',
                           'Không mang động vật sống, hàng hóa có mùi (sầu riêng, nước mắm).',
                         ].map((item, i) => (
-                          <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12, fontSize: 12, color: 'rgba(240,237,230,0.5)', fontFamily: 'system-ui', lineHeight: 1.6 }}>
-                            <span style={{ color: '#d4af37', flexShrink: 0, fontSize: 8, marginTop: 5 }}>◆</span>
+                          <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12, fontSize: 12, color: 'rgba(0,0,0,0.5)', fontFamily: 'system-ui', lineHeight: 1.6 }}>
+                            <span style={{ color: '#163328', flexShrink: 0, fontSize: 8, marginTop: 5 }}>◆</span>
                             {item}
                           </div>
                         ))}
@@ -286,17 +286,17 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                   {activeTab === 3 && (
                     <div>
                       {/* Rating summary */}
-                      <div style={{ display: 'flex', gap: 32, padding: '20px 0 28px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 24 }}>
+                      <div style={{ display: 'flex', gap: 32, padding: '20px 0 28px', borderBottom: '1px solid rgba(0,0,0,0.06)', marginBottom: 24 }}>
                         <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '3.5rem', fontWeight: 700, color: '#d4af37', lineHeight: 1 }}>
+                          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '3.5rem', fontWeight: 700, color: '#163328', lineHeight: 1 }}>
                             {trip.rating}
                           </div>
                           <div style={{ display: 'flex', gap: 2, justifyContent: 'center', margin: '6px 0 4px' }}>
                             {[1,2,3,4,5].map(i => (
-                              <Star key={i} size={12} style={{ fill: i <= Math.floor(trip.rating) ? '#d4af37' : 'rgba(255,255,255,0.1)', color: i <= Math.floor(trip.rating) ? '#d4af37' : 'rgba(255,255,255,0.1)' }} />
+                              <Star key={i} size={12} style={{ fill: i <= Math.floor(trip.rating) ? '#163328' : 'rgba(0,0,0,0.1)', color: i <= Math.floor(trip.rating) ? '#163328' : 'rgba(0,0,0,0.1)' }} />
                             ))}
                           </div>
-                          <div style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>{trip.reviews} đánh giá</div>
+                          <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>{trip.reviews} đánh giá</div>
                         </div>
 
                         <div style={{ flex: 1 }}>
@@ -304,11 +304,11 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                             const pct = r === 5 ? 75 : r === 4 ? 15 : r === 3 ? 5 : 2;
                             return (
                               <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                                <span style={{ fontSize: 10, color: 'rgba(240,237,230,0.4)', fontFamily: 'system-ui', width: 8 }}>{r}</span>
-                                <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                                  <div style={{ height: '100%', width: `${pct}%`, background: '#d4af37' }} />
+                                <span style={{ fontSize: 10, color: 'rgba(0,0,0,0.4)', fontFamily: 'system-ui', width: 8 }}>{r}</span>
+                                <div style={{ flex: 1, height: 3, background: 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                                  <div style={{ height: '100%', width: `${pct}%`, background: '#163328' }} />
                                 </div>
-                                <span style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', width: 28 }}>{pct}%</span>
+                                <span style={{ fontSize: 10, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui', width: 28 }}>{pct}%</span>
                               </div>
                             );
                           })}
@@ -321,25 +321,25 @@ export function TripDetailModal({ isOpen, onClose, trip }: TripDetailModalProps)
                           { name: 'Nguyễn Văn A', date: 'Hôm qua', content: 'Xe rất mới, giường nằm rộng rãi thoải mái. Tài xế lái an toàn không lạng lách. Wifi chạy tốt.', likes: 12 },
                           { name: 'Trần Thị B', date: '3 ngày trước', content: 'Chất lượng dịch vụ tuyệt vời. Lơ xe rất lịch sự, phát nước và khăn lạnh đầy đủ. Đón khách đúng giờ.', likes: 8 },
                         ].map((review, i) => (
-                          <div key={i} style={{ padding: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div key={i} style={{ padding: 16, background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 32, height: 32, background: 'rgba(212,175,55,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#d4af37', fontFamily: 'system-ui' }}>
+                                <div style={{ width: 32, height: 32, background: 'rgba(22,51,40,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#163328', fontFamily: 'system-ui' }}>
                                   {review.name.charAt(0)}
                                 </div>
                                 <div>
-                                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f0ede6', fontFamily: 'system-ui' }}>{review.name}</div>
-                                  <div style={{ fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui' }}>{review.date}</div>
+                                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', fontFamily: 'system-ui' }}>{review.name}</div>
+                                  <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>{review.date}</div>
                                 </div>
                               </div>
                               <div style={{ display: 'flex', gap: 2 }}>
-                                {[1,2,3,4,5].map(s => <Star key={s} size={9} style={{ fill: '#d4af37', color: '#d4af37' }} />)}
+                                {[1,2,3,4,5].map(s => <Star key={s} size={9} style={{ fill: '#163328', color: '#163328' }} />)}
                               </div>
                             </div>
-                            <p style={{ fontSize: 12, color: 'rgba(240,237,230,0.6)', lineHeight: 1.7, margin: '0 0 10px', fontFamily: 'system-ui' }}>
+                            <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.6)', lineHeight: 1.7, margin: '0 0 10px', fontFamily: 'system-ui' }}>
                               {review.content}
                             </p>
-                            <button style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'rgba(240,237,230,0.3)', fontFamily: 'system-ui', fontWeight: 700 }}>
+                            <button style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui', fontWeight: 700 }}>
                               <ThumbsUp size={10} /> Hữu ích ({review.likes})
                             </button>
                           </div>
