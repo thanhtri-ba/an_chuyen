@@ -25,9 +25,28 @@ const createCrudRouter = (
   const readOmit = options?.readOmit || [];
   const writeBlock = options?.writeBlock || [];
 
+  // Fields that must never leave the server no matter which resource or how
+  // deeply nested (e.g. a booking's included `user` relation) — stripped
+  // recursively, not just from the top-level row like `readOmit` below.
+  const ALWAYS_STRIP = new Set(['password']);
+
+  const deepStrip = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(deepStrip);
+    if (value && typeof value === 'object') {
+      const clone: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+        if (ALWAYS_STRIP.has(key)) continue;
+        clone[key] = deepStrip(val);
+      }
+      return clone;
+    }
+    return value;
+  };
+
   const omit = <T extends Record<string, unknown>>(row: T): T => {
-    if (readOmit.length === 0) return row;
-    const clone = { ...row };
+    const stripped = deepStrip(row) as T;
+    if (readOmit.length === 0) return stripped;
+    const clone = { ...stripped };
     for (const key of readOmit) delete (clone as Record<string, unknown>)[key];
     return clone;
   };
@@ -134,7 +153,7 @@ const createCrudRouter = (
   crudRouter.delete('/:id', async (req, res) => {
     try {
       const data = await delegate.delete({ where: { id: req.params.id } });
-      res.json(data);
+      res.json(omit(data));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       res.status(500).json({ error: message });
