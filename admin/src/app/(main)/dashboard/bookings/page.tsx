@@ -35,6 +35,27 @@ export default function Page() {
     return name.includes(q) || b.id.toLowerCase().includes(q);
   });
 
+  function exportCsv() {
+    const header = ["Mã vé", "Khách hàng", "Tổng tiền", "Trạng thái", "Ngày đặt"];
+    const rows = filteredItems.map((b) => [
+      b.id,
+      b.user?.fullName ?? b.userId,
+      b.totalAmount,
+      b.status,
+      new Date(b.createdAt).toISOString(),
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `dat-ve-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
@@ -44,7 +65,7 @@ export default function Page() {
           <h1 className="font-bold text-2xl tracking-tight">Đặt Vé</h1>
           <p className="text-muted-foreground text-sm">Quản lý các giao dịch đặt vé của khách hàng</p>
         </div>
-        <Button variant="outline" className="gap-2 border-border bg-background shadow-sm">
+        <Button variant="outline" className="gap-2 border-border bg-background shadow-sm" onClick={exportCsv}>
           <Download className="size-4" /> Xuất CSV
         </Button>
       </div>
