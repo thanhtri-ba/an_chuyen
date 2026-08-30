@@ -1,26 +1,46 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { ArrowRight, Filter, Map as MapIcon, MapPin, MoreHorizontal, Plus, Search } from "lucide-react";
+import { ArrowRight, Map as MapIcon, MapPin, Plus, Search, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
 
 export default function Page() {
   const [items, setItems] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [departureCityId, setDepartureCityId] = useState("");
+  const [arrivalCityId, setArrivalCityId] = useState("");
+  const [basePrice, setBasePrice] = useState("");
+  const [durationMins, setDurationMins] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const [routeList, cityList] = await Promise.all([
+        api.get<any[]>("/admin/routes?range=[0,99]"),
+        api.get<any[]>("/admin/cities?range=[0,199]"),
+      ]);
+      setItems(routeList || []);
+      setCities(cityList || []);
+    } catch (error) {
+      console.error("Failed to load routes", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    api
-      .get<any[]>("/admin/routes?range=[0,99]")
-      .then((d) => setItems(d || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    void load();
+  }, [load]);
 
   const filteredItems = items.filter((route) => {
     const q = searchQuery.toLowerCase();
@@ -28,6 +48,38 @@ export default function Page() {
     const arr = route.arrivalCity?.name?.toLowerCase() || "";
     return dep.includes(q) || arr.includes(q);
   });
+
+  async function handleAdd() {
+    if (!departureCityId || !arrivalCityId) return;
+    setIsSaving(true);
+    try {
+      await api.post("/admin/routes", {
+        departureCityId,
+        arrivalCityId,
+        basePrice: basePrice ? Number(basePrice) : undefined,
+        durationMins: durationMins ? Number(durationMins) : undefined,
+      });
+      setDepartureCityId("");
+      setArrivalCityId("");
+      setBasePrice("");
+      setDurationMins("");
+      setIsAddOpen(false);
+      await load();
+    } catch (error) {
+      console.error("Failed to create route", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await api.delete(`/admin/routes/${id}`);
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } catch (error) {
+      console.error("Failed to delete route", error);
+    }
+  }
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
@@ -38,9 +90,68 @@ export default function Page() {
           <h1 className="font-bold text-2xl tracking-tight">Tuyến Đường</h1>
           <p className="text-muted-foreground text-sm">Quản lý danh sách các tuyến đường liên tỉnh</p>
         </div>
-        <Button className="gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700">
-          <Plus className="size-4" /> Thêm Tuyến Đường
-        </Button>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700">
+              <Plus className="size-4" /> Thêm Tuyến Đường
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Thêm Tuyến Đường Mới</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="route-departure" className="font-medium text-sm">Điểm đi</label>
+                <select
+                  id="route-departure"
+                  value={departureCityId}
+                  onChange={(e) => setDepartureCityId(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                >
+                  <option value="">-- Chọn thành phố --</option>
+                  {cities.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="route-arrival" className="font-medium text-sm">Điểm đến</label>
+                <select
+                  id="route-arrival"
+                  value={arrivalCityId}
+                  onChange={(e) => setArrivalCityId(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                >
+                  <option value="">-- Chọn thành phố --</option>
+                  {cities.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="route-price" className="font-medium text-sm">Giá cơ bản (đ)</label>
+                  <Input id="route-price" type="number" placeholder="150000" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="route-duration" className="font-medium text-sm">Thời gian (phút)</label>
+                  <Input id="route-duration" type="number" placeholder="180" value={durationMins} onChange={(e) => setDurationMins(e.target.value)} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={handleAdd}
+                disabled={isSaving || !departureCityId || !arrivalCityId}
+                className="w-full bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {isSaving ? "Đang lưu..." : "Lưu tuyến đường"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
@@ -54,9 +165,6 @@ export default function Page() {
               placeholder="Tìm kiếm tuyến đường (VD: Hà Nội)..."
             />
           </div>
-          <Button variant="outline" size="sm" className="h-9 w-full gap-2 sm:w-auto">
-            <Filter className="size-4" /> Lọc
-          </Button>
         </div>
         <CardContent className="p-0">
           <Table>
@@ -78,7 +186,7 @@ export default function Page() {
                 </TableRow>
               ) : (
                 filteredItems.map((route) => (
-                  <TableRow key={route.id} className="group cursor-pointer transition-colors hover:bg-muted/30">
+                  <TableRow key={route.id} className="group transition-colors hover:bg-muted/30">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-600">
@@ -120,9 +228,10 @@ export default function Page() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() => void handleDelete(route.id)}
+                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
                       >
-                        <MoreHorizontal className="size-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

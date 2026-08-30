@@ -96,6 +96,18 @@ export class PaymentService {
       data: { status: 'CONFIRMED' as any },
     });
 
+    // Seats were only LOCKED (held) while payment was pending — now that it's
+    // paid, mark them BOOKED so they don't look like a stale hold.
+    const seatBookings = await this.prisma.seatBooking.findMany({
+      where: { bookingId: payment.bookingId },
+    });
+    if (seatBookings.length > 0) {
+      await this.prisma.seat.updateMany({
+        where: { id: { in: seatBookings.map((sb) => sb.seatId) } },
+        data: { status: 'BOOKED' as any },
+      });
+    }
+
     return payment;
   }
 

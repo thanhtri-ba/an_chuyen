@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { Bus, Filter, MoreHorizontal, Plus, Search, Star } from "lucide-react";
+import { Bus, Filter, Plus, Search, Star, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
@@ -13,20 +14,48 @@ export default function Page() {
   const [busAgents, setBusAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [name, setName] = useState("");
+
+  async function load() {
+    try {
+      const data = await api.get<any[]>("/admin/busAgents?range=[0,99]");
+      setBusAgents(data || []);
+    } catch (error) {
+      console.error("Failed to load bus agents", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await api.get<any[]>("/admin/busAgents?range=[0,99]");
-        setBusAgents(data || []);
-      } catch (error) {
-        console.error("Failed to load bus agents", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     void load();
   }, []);
+
+  async function handleAdd() {
+    if (!name.trim()) return;
+    setIsSaving(true);
+    try {
+      await api.post("/admin/busAgents", { name: name.trim() });
+      setName("");
+      setIsAddOpen(false);
+      await load();
+    } catch (error) {
+      console.error("Failed to create bus agent", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await api.delete(`/admin/busAgents/${id}`);
+      setBusAgents((prev) => prev.filter((i) => i.id !== id));
+    } catch (error) {
+      console.error("Failed to delete bus agent", error);
+    }
+  }
 
   const filteredAgents = busAgents.filter((agent) => agent.name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -41,9 +70,34 @@ export default function Page() {
           <h1 className="font-bold text-2xl tracking-tight">Nhà Xe</h1>
           <p className="text-muted-foreground text-sm">Danh sách các đối tác cung cấp dịch vụ vận tải</p>
         </div>
-        <Button className="gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700">
-          <Plus className="size-4" /> Thêm Nhà Xe
-        </Button>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700">
+              <Plus className="size-4" /> Thêm Nhà Xe
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Thêm Nhà Xe Mới</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="agent-name" className="font-medium text-sm">Tên nhà xe</label>
+                <Input id="agent-name" placeholder="Hoang Long" value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={handleAdd}
+                disabled={isSaving || !name.trim()}
+                className="w-full bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {isSaving ? "Đang lưu..." : "Lưu nhà xe"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
@@ -114,9 +168,10 @@ export default function Page() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() => void handleDelete(agent.id)}
+                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
                       >
-                        <MoreHorizontal className="size-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

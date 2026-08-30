@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { Filter, MoreHorizontal, Plus, Search, Ticket, Trash2 } from "lucide-react";
+import { Filter, Plus, Search, Ticket, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -244,13 +244,6 @@ export default function Page() {
                         className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
                       >
                         <Trash2 className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        <MoreHorizontal className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
