@@ -32,6 +32,12 @@ const createCrudRouter = (
 
   const deepStrip = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(deepStrip);
+    // Date, Prisma Decimal, and similar wrapper types serialize themselves via
+    // toJSON() and store their real value outside enumerable own properties —
+    // rebuilding them field-by-field (as below) silently collapses them to {}.
+    if (value && typeof value === 'object' && typeof (value as any).toJSON === 'function') {
+      return value;
+    }
     if (value && typeof value === 'object') {
       const clone: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
