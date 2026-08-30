@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 
-import { Check, Download, Filter, Search, User } from "lucide-react";
+import { Check, Download, Search, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+
+const STATUS_TABS = [
+  { key: "PENDING_PAYMENT", label: "Chờ duyệt" },
+  { key: "CONFIRMED", label: "Đã xác nhận" },
+  { key: "COMPLETED", label: "Hoàn thành" },
+  { key: "CANCELLED", label: "Đã huỷ" },
+  { key: "ALL", label: "Tất cả" },
+] as const;
 
 const statusColor: Record<string, string> = {
   CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
@@ -21,6 +30,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<(typeof STATUS_TABS)[number]["key"]>("PENDING_PAYMENT");
 
   useEffect(() => {
     api
@@ -31,10 +41,15 @@ export default function Page() {
   }, []);
 
   const filteredItems = items.filter((b) => {
+    if (activeTab !== "ALL" && b.status !== activeTab) return false;
     const q = searchQuery.toLowerCase();
     const name = b.user?.fullName?.toLowerCase() || "";
     return name.includes(q) || b.id.toLowerCase().includes(q);
   });
+
+  const tabCounts = Object.fromEntries(
+    STATUS_TABS.map(({ key }) => [key, key === "ALL" ? items.length : items.filter((b) => b.status === key).length]),
+  );
 
   function exportCsv() {
     const header = ["Mã vé", "Khách hàng", "Tổng tiền", "Trạng thái", "Ngày đặt"];
@@ -93,6 +108,32 @@ export default function Page() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-medium text-sm transition-colors",
+              activeTab === tab.key
+                ? "border-blue-600 bg-blue-600 text-white"
+                : "border-border bg-background text-muted-foreground hover:bg-muted/50",
+            )}
+          >
+            {tab.label}
+            <span
+              className={cn(
+                "rounded-full px-1.5 text-xs",
+                activeTab === tab.key ? "bg-white/20" : "bg-muted",
+              )}
+            >
+              {tabCounts[tab.key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
         <div className="flex flex-col items-center justify-between gap-4 border-border border-b bg-card p-4 sm:flex-row">
           <div className="relative w-full sm:w-96">
@@ -104,9 +145,6 @@ export default function Page() {
               placeholder="Tìm theo mã vé hoặc tên khách hàng..."
             />
           </div>
-          <Button variant="outline" size="sm" className="h-9 w-full gap-2 sm:w-auto">
-            <Filter className="size-4" /> Lọc
-          </Button>
         </div>
         <CardContent className="p-0">
           <Table>
