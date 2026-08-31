@@ -331,7 +331,7 @@ const vi = {
     },
     destinations: {
       sub: "Khám phá điều tốt nhất",
-      title: "Điểm đến phổ biến",
+      title: "Tất cả điểm đến",
       viewAll: "Xem tất cả điểm đến"
     },
     promo: {

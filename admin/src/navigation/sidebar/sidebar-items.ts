@@ -1,10 +1,13 @@
 import {
+  Bus,
   Calendar,
   Car,
   ChartColumn,
+  Compass,
   CreditCard,
   Forklift,
   Gift,
+  IdCard,
   Image,
   LayoutDashboard,
   type LucideIcon,
@@ -89,10 +92,19 @@ export const sidebarItems: NavGroup[] = [
     items: [{ id: "bus-agents", title: "Nhà Xe", url: "/dashboard/bus-agents", icon: Forklift }],
   },
   {
+    id: 8,
+    label: "Quản Lý Nhân Viên",
+    items: [
+      { id: "employees", title: "Nhân Viên", url: "/dashboard/employees", icon: IdCard },
+      { id: "vehicles", title: "Xe", url: "/dashboard/vehicles", icon: Bus },
+    ],
+  },
+  {
     id: 5,
     label: "Marketing",
     items: [
       { id: "vouchers", title: "Voucher", url: "/dashboard/vouchers", icon: Ticket },
+      { id: "destinations", title: "Điểm Đến", url: "/dashboard/destinations", icon: Compass },
       { id: "banners", title: "Banner", url: "/dashboard/banners", icon: Image },
       { id: "events", title: "Sự Kiện", url: "/dashboard/events", icon: Gift },
       { id: "reviews", title: "Đánh Giá", url: "/dashboard/reviews", icon: Star },

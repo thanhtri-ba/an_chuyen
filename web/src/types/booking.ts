@@ -4,6 +4,23 @@ export interface ContactInfo {
   email: string;
 }
 
+export interface PassengerDetail {
+  name: string;
+  phone: string;
+  email: string;
+  gender?: string;
+  dob?: string;
+  idNumber?: string;
+  nationality?: string;
+}
+
+export interface BookingAmenities {
+  nuocSuoi: number;
+  khanLanh: number;
+  goiTuaCo: number;
+  oCamUSB: boolean;
+}
+
 export interface BookingData {
   tripScheduleId?: string;
   seats: string[];
@@ -19,7 +36,10 @@ export interface BookingData {
   needVAT: boolean;
   notes?: string;
   passengerInfo: ContactInfo;
-  bookerInfo: ContactInfo;
+  bookerInfo: ContactInfo | null;
+  passengers?: PassengerDetail[];
+  amenities?: BookingAmenities;
+  amenitiesTotal?: number;
   totalAmount?: number;
 }
 
@@ -57,4 +77,8 @@ export interface BookingConfirmation {
   seats: string[];
   totalAmount: number;
   createdAt: string;
+  paymentMethod?: string;
+  pickupLabel?: string;
+  dropoffLabel?: string;
+  departureTime?: string;
 }

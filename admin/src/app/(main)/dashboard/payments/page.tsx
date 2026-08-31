@@ -6,19 +6,28 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
-const statusColor: Record<string, string> = {
-  PENDING: "border-yellow-200/60 bg-yellow-50 text-yellow-700",
-  PAID: "border-emerald-200/60 bg-emerald-50 text-emerald-700",
-  FAILED: "border-red-200/60 bg-red-50 text-red-700",
-  REFUNDED: "border-gray-200/60 bg-gray-50 text-gray-600",
+const STATUS_META: Record<string, { label: string; cls: string }> = {
+  PENDING: { label: "Đang chờ", cls: "border-yellow-200/60 bg-yellow-50 text-yellow-700" },
+  PAID: { label: "Đã thanh toán", cls: "border-emerald-200/60 bg-emerald-50 text-emerald-700" },
+  FAILED: { label: "Thất bại", cls: "border-red-200/60 bg-red-50 text-red-700" },
+  REFUNDED: { label: "Đã hoàn tiền", cls: "border-gray-200/60 bg-gray-50 text-gray-600" },
 };
+const STATUS_TABS = [
+  { key: "ALL", label: "Tất cả" },
+  { key: "PAID", label: "Đã thanh toán" },
+  { key: "PENDING", label: "Đang chờ" },
+  { key: "FAILED", label: "Thất bại" },
+  { key: "REFUNDED", label: "Đã hoàn tiền" },
+] as const;
 
 export default function Page() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_TABS)[number]["key"]>("ALL");
 
   useEffect(() => {
     api
@@ -28,10 +37,13 @@ export default function Page() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = items.filter(
-    (p) =>
-      p.transactionId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.method?.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filtered = items.filter((p) => {
+    if (statusFilter !== "ALL" && p.status !== statusFilter) return false;
+    const q = searchQuery.toLowerCase();
+    return p.transactionId?.toLowerCase().includes(q) || p.method?.toLowerCase().includes(q);
+  });
+  const tabCounts = Object.fromEntries(
+    STATUS_TABS.map(({ key }) => [key, key === "ALL" ? items.length : items.filter((p) => p.status === key).length]),
   );
 
   if (loading) {
@@ -39,10 +51,31 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-2">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-2">
       <div className="space-y-1">
         <h1 className="font-bold text-2xl tracking-tight">Giao Dịch Thanh Toán</h1>
         <p className="text-muted-foreground text-sm">Đối soát các giao dịch thanh toán trong hệ thống</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setStatusFilter(tab.key)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-medium text-sm transition-colors",
+              statusFilter === tab.key
+                ? "border-[#192B1D] bg-[#192B1D] text-white"
+                : "border-border bg-background text-muted-foreground hover:bg-muted/50",
+            )}
+          >
+            {tab.label}
+            <span className={cn("rounded-full px-1.5 text-xs", statusFilter === tab.key ? "bg-white/20" : "bg-muted")}>
+              {tabCounts[tab.key]}
+            </span>
+          </button>
+        ))}
       </div>
 
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
@@ -58,7 +91,7 @@ export default function Page() {
           </div>
         </div>
         <CardContent className="p-0">
-          <Table>
+          <Table className="[&_td]:py-4 [&_th]:h-12">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[220px]">Mã giao dịch</TableHead>
@@ -89,9 +122,9 @@ export default function Page() {
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={`${statusColor[p.status] || "border-gray-200/60 bg-gray-50 text-gray-600"} font-medium shadow-none`}
+                        className={cn(STATUS_META[p.status]?.cls || "border-gray-200/60 bg-gray-50 text-gray-600", "font-medium shadow-none")}
                       >
-                        {p.status}
+                        {STATUS_META[p.status]?.label || p.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">

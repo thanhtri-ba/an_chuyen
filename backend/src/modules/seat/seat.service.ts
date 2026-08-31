@@ -76,6 +76,9 @@ export class SeatService {
     const ecoPriceObj = tripSchedule.prices.find((p) => p.seatClass === 'ECONOMY');
     const vipPrice = vipPriceObj ? vipPriceObj.price : 350000;
     const ecoPrice = ecoPriceObj ? ecoPriceObj.price : 280000;
+    // Tầng trên (2) yên tĩnh và ít xóc hơn tầng dưới trên xe giường nằm thực tế — cộng thêm phụ phí nhỏ
+    // để 2 tầng có sự khác biệt thay vì trùng giá hoàn toàn.
+    const UPPER_FLOOR_SURCHARGE = 20000;
 
     return seats.map((seat) => {
       const floorMatch = seat.seatNumber.match(/^T(\d)-/);
@@ -86,11 +89,13 @@ export class SeatService {
       if (seat.status === SeatStatus.BOOKED) mappedStatus = 'booked';
       if (seat.status === SeatStatus.LOCKED) mappedStatus = 'blocked';
 
+      const basePrice = vip ? vipPrice : ecoPrice;
+
       return {
         id: seat.seatNumber,
         floor,
         status: mappedStatus,
-        price: vip ? vipPrice : ecoPrice
+        price: floor === 2 ? basePrice + UPPER_FLOOR_SURCHARGE : basePrice
       };
     });
   }

@@ -1,29 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, ChevronDown, ArrowRight, Users, Calendar } from 'lucide-react';
+import { api } from '../../../lib/api';
 
 /* ─── DATA ─── */
+// City suggestions for the two selects — just autocomplete labels, the actual
+// schedule results below always come from the live /trips API.
 const ROUTES = [
   'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Huế', 'Nha Trang', 'Sapa', 'Hội An', 'Đà Lạt', 'Cần Thơ', 'Hải Phòng',
 ];
 
-const SCHEDULES = [
-  { id: 1, from: 'Hà Nội', to: 'Sapa', dep: '06:00', arr: '10:30', duration: '4g 30p', operator: 'An Chuyến Express', seats: 12, price: 280000, type: 'VIP Giường nằm', date: '2026-08-21', slot: 'Sáng' },
-  { id: 2, from: 'Hà Nội', to: 'Sapa', dep: '08:30', arr: '13:00', duration: '4g 30p', operator: 'An Chuyến Limousine', seats: 4, price: 350000, type: 'Limousine 9 chỗ', date: '2026-08-21', slot: 'Sáng' },
-  { id: 3, from: 'Hà Nội', to: 'Sapa', dep: '10:00', arr: '14:30', duration: '4g 30p', operator: 'An Chuyến Express', seats: 22, price: 260000, type: 'Ghế ngồi', date: '2026-08-21', slot: 'Sáng' },
-  { id: 4, from: 'Hà Nội', to: 'Sapa', dep: '13:30', arr: '18:00', duration: '4g 30p', operator: 'An Chuyến VIP', seats: 8, price: 380000, type: 'VIP Phòng đôi', date: '2026-08-21', slot: 'Chiều' },
-  { id: 5, from: 'Hà Nội', to: 'Sapa', dep: '15:00', arr: '19:30', duration: '4g 30p', operator: 'An Chuyến Express', seats: 16, price: 270000, type: 'Giường nằm', date: '2026-08-21', slot: 'Chiều' },
-  { id: 6, from: 'Hà Nội', to: 'Sapa', dep: '20:00', arr: '00:30', duration: '4g 30p', operator: 'An Chuyến Sleeper', seats: 20, price: 300000, type: 'Giường nằm đêm', date: '2026-08-21', slot: 'Tối' },
-  { id: 7, from: 'Hà Nội', to: 'Sapa', dep: '22:00', arr: '02:30', duration: '4g 30p', operator: 'An Chuyến Limousine', seats: 6, price: 420000, type: 'Limousine đêm', date: '2026-08-21', slot: 'Tối' },
+interface ScheduleItem {
+  id: string;
+  from: string;
+  to: string;
+  dep: string;
+  arr: string;
+  duration: string;
+  operator: string;
+  seats: number;
+  price: number;
+  type: string;
+  date: string;
+  slot: 'Sáng' | 'Chiều' | 'Tối';
+}
 
-  { id: 8, from: 'TP. Hồ Chí Minh', to: 'Đà Lạt', dep: '07:00', arr: '13:30', duration: '6g 30p', operator: 'An Chuyến Express', seats: 18, price: 220000, type: 'Ghế ngồi', date: '2026-08-21', slot: 'Sáng' },
-  { id: 9, from: 'TP. Hồ Chí Minh', to: 'Đà Lạt', dep: '14:00', arr: '20:30', duration: '6g 30p', operator: 'An Chuyến VIP', seats: 9, price: 320000, type: 'VIP Giường nằm', date: '2026-08-21', slot: 'Chiều' },
-  { id: 10, from: 'TP. Hồ Chí Minh', to: 'Đà Lạt', dep: '21:00', arr: '03:30', duration: '6g 30p', operator: 'An Chuyến Sleeper', seats: 24, price: 250000, type: 'Giường nằm đêm', date: '2026-08-21', slot: 'Tối' },
+function slotOf(depHour: number): ScheduleItem['slot'] {
+  if (depHour < 11) return 'Sáng';
+  if (depHour < 18) return 'Chiều';
+  return 'Tối';
+}
 
-  { id: 11, from: 'Đà Nẵng', to: 'Huế', dep: '06:30', arr: '09:00', duration: '2g 30p', operator: 'An Chuyến Express', seats: 30, price: 120000, type: 'Ghế ngồi', date: '2026-08-21', slot: 'Sáng' },
-  { id: 12, from: 'Đà Nẵng', to: 'Huế', dep: '11:00', arr: '13:30', duration: '2g 30p', operator: 'An Chuyến VIP', seats: 14, price: 180000, type: 'Limousine 9 chỗ', date: '2026-08-21', slot: 'Sáng' },
-  { id: 13, from: 'Đà Nẵng', to: 'Huế', dep: '16:30', arr: '19:00', duration: '2g 30p', operator: 'An Chuyến Express', seats: 28, price: 130000, type: 'Ghế ngồi', date: '2026-08-21', slot: 'Chiều' },
-];
+function mapTripSchedule(item: any): ScheduleItem {
+  const dep = new Date(item.departureTime);
+  const arr = new Date(item.arrivalTime);
+  const hours = Math.floor(item.durationMins / 60);
+  const mins = item.durationMins % 60;
+  const price = item.prices?.length ? Math.min(...item.prices.map((p: any) => p.price)) : 0;
+  return {
+    id: item.id,
+    from: item.trip?.route?.departureCity?.name || '',
+    to: item.trip?.route?.arrivalCity?.name || '',
+    dep: dep.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    arr: arr.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    duration: `${hours}g ${mins}p`,
+    operator: item.trip?.busAgent?.name || 'An Chuyến',
+    seats: item.bus?.capacity || 0,
+    price,
+    type: item.bus?.type || item.trip?.busClass || 'Ghế ngồi',
+    date: dep.toISOString().split('T')[0],
+    slot: slotOf(dep.getHours()),
+  };
+}
 
 const SLOT_TABS = ['Tất cả', 'Sáng', 'Chiều', 'Tối'];
 const SORT_OPTIONS = ['Giờ sớm nhất', 'Giá thấp nhất', 'Giá cao nhất', 'Còn nhiều chỗ'];
@@ -97,7 +125,7 @@ function RouteSelect({ value, onChange, label, options }: { value: string; onCha
 }
 
 /* ─── SCHEDULE CARD ─── */
-function ScheduleCard({ item, index }: { item: typeof SCHEDULES[0]; index: number }) {
+function ScheduleCard({ item, index }: { item: ScheduleItem; index: number }) {
   const lowSeats = item.seats <= 5;
 
   return (
@@ -196,12 +224,27 @@ export function SchedulePage() {
   const [slotFilter, setSlotFilter] = useState('Tất cả');
   const [sortBy, setSortBy] = useState(SORT_OPTIONS[0]);
   const [searched, setSearched] = useState(true);
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!searched) return;
+    let cancelled = false;
+    setLoading(true);
+    api.get('/trips', { params: { origin: fromCity, destination: toCity, date, limit: 20 } })
+      .then(res => {
+        if (cancelled) return;
+        const data = res.data?.data || [];
+        setSchedules(data.map(mapTripSchedule));
+      })
+      .catch(() => { if (!cancelled) setSchedules([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [fromCity, toCity, date, searched]);
 
   const handleSearch = () => setSearched(true);
 
-  let results = SCHEDULES.filter(s =>
-    s.from === fromCity && s.to === toCity
-  );
+  let results = schedules;
 
   if (slotFilter !== 'Tất cả') results = results.filter(s => s.slot === slotFilter);
 
@@ -415,7 +458,11 @@ export function SchedulePage() {
               transition={{ duration: 0.2 }}
               style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
             >
-              {results.length === 0 ? (
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>
+                  Đang tìm chuyến...
+                </div>
+              ) : results.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>
                   <div style={{ fontSize: 40, marginBottom: 16 }}>🚌</div>
                   Không tìm thấy chuyến xe phù hợp.

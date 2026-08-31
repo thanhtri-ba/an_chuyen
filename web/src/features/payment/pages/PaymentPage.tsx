@@ -1,98 +1,98 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CreditCard, Wallet, ShieldCheck, Ticket, CheckCircle2, Loader2, Info } from 'lucide-react';
-import { motion } from 'framer-motion';
-
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  ShieldCheck, Ticket, Tag, HelpCircle, Search, PenLine, Users, CreditCard, Info,
+  Phone, ChevronRight, Star, Loader2, Check, Lock, RotateCcw, Headphones, Zap, Landmark, Store,
+} from 'lucide-react';
+import { toast } from 'sonner';
 import api from '../../../lib/api';
-
+import { cn } from '../../../shared/utils/cn';
+import { BookingStepper } from '../../../shared/components/BookingStepper';
 import type { BookingData } from '../../../types';
 
-const inputStyle: React.CSSProperties = {
-  height: 48, width: '100%', background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
-  borderRadius: 8, color: '#1a1a1a', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, outline: 'none',
-};
-
-function PaymentOption({ selected, onSelect, children }: { selected: boolean; onSelect: () => void; children: React.ReactNode }) {
-  return (
-    <label
-      onClick={onSelect}
-      style={{
-        display: 'flex', flexDirection: 'column', padding: 18, borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
-        border: `2px solid ${selected ? '#163328' : 'rgba(0,0,0,0.08)'}`,
-        background: selected ? 'rgba(22,51,40,0.05)' : 'transparent',
-      }}
-    >
-      {children}
-    </label>
-  );
+interface TripScheduleDetail {
+  departureTime: string;
+  arrivalTime: string;
+  trip: { busClass: string; busAgent: { name: string; rating: number }; route: { departureCity: { name: string }; arrivalCity: { name: string } } };
 }
+
+const AMENITY_PRICES = { water: 10000, towel: 5000, pillow: 30000 };
+
+const WALLETS = [
+  { key: 'momo', label: 'MoMo', logo: '/payment/momo.jpg' },
+  { key: 'zalopay', label: 'ZaloPay', logo: '/payment/zalopay.jpg' },
+  { key: 'vnpay', label: 'VNPay', logo: '/payment/vnpay.jpg' },
+  { key: 'shopeepay', label: 'ShopeePay', logo: '/payment/shopeepay.jpg' },
+];
+
+const OTHER_METHODS = [
+  { key: 'card', label: 'Visa / Mastercard / JCB', icon: CreditCard, logos: ['/payment/visa.jpg', '/payment/mastercard.svg'] },
+  { key: 'atm', label: 'Thẻ ATM nội địa / Internet Banking', icon: Landmark, logos: [] as string[] },
+  { key: 'store', label: 'Thanh toán tại cửa hàng tiện lợi', icon: Store, logos: ['/payment/circlek.jpg', '/payment/ministop.png'] },
+];
+
+const COMMITMENTS = [
+  { icon: RotateCcw, label: 'Hoàn tiền 150% nếu nhà xe hủy chuyến' },
+  { icon: Headphones, label: 'Hỗ trợ 24/7 mọi lúc mọi nơi' },
+  { icon: ShieldCheck, label: 'Thông tin bảo mật tuyệt đối' },
+  { icon: Zap, label: 'Đặt vé nhanh chóng, tiện lợi' },
+];
+
 
 export function PaymentPage() {
   const navigate = useNavigate();
-  const [selectedMethod, setSelectedMethod] = useState('busz-wallet');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [usePoints, setUsePoints] = useState(false);
-  const [voucherCode, setVoucherCode] = useState('');
-  const [voucherApplied, setVoucherApplied] = useState(false);
   const [pendingBooking, setPendingBooking] = useState<BookingData | null>(null);
-  const [availablePoints, setAvailablePoints] = useState(0);
-  const [walletBalance, setWalletBalance] = useState(0);
+  const [tripDetail, setTripDetail] = useState<TripScheduleDetail | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem('pending_booking');
     if (raw) {
-      try {
-        setPendingBooking(JSON.parse(raw));
-      } catch {
-        setPendingBooking(null);
-      }
+      try { setPendingBooking(JSON.parse(raw)); } catch { setPendingBooking(null); }
     }
-
-    api.get('/loyalty/me')
-      .then(res => setAvailablePoints(res.data?.data?.points || 0))
-      .catch(() => setAvailablePoints(0));
-
-    api.get('/wallet/me')
-      .then(res => setWalletBalance(res.data?.data?.balance || 0))
-      .catch(() => setWalletBalance(0));
   }, []);
 
-  const [voucherDiscount, setVoucherDiscount] = useState(0);
+  useEffect(() => {
+    if (!pendingBooking?.tripScheduleId) return;
+    api.get(`/trip-schedules/${pendingBooking.tripScheduleId}`).then(r => setTripDetail(r.data.data)).catch(() => {});
+  }, [pendingBooking?.tripScheduleId]);
 
-  // seatsTotal chỉ tính tiền ghế, tránh double-count insurance từ trang trước
-  const baseTotal = pendingBooking?.seatsTotal || 0;
-  const insuranceTotal = pendingBooking?.addInsurance ? (pendingBooking.seats.length * (pendingBooking.insurancePrice || 20000)) : 0;
-  const pointsDiscount = availablePoints * 10;
-  const finalTotal = Math.max(0, baseTotal + insuranceTotal - (usePoints ? pointsDiscount : 0) - voucherDiscount);
+  const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n);
 
-  const handleApplyVoucher = async () => {
-    try {
-      const res = await api.post('/vouchers/validate', { code: voucherCode.toUpperCase() });
-      if (res.data?.discount) {
-        setVoucherDiscount(res.data.discount);
-        setVoucherApplied(true);
-      } else {
-        setVoucherDiscount(0);
-        alert('Mã không hợp lệ hoặc đã hết hạn.');
-      }
-    } catch {
-      setVoucherDiscount(0);
-      alert('Mã không hợp lệ hoặc đã hết hạn.');
-    }
-  };
+  const [depCity, arrCity] = (pendingBooking?.routeLabel || 'TP. Hồ Chí Minh → Nha Trang').split(' → ');
+  const depTime = tripDetail ? new Date(tripDetail.departureTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '07:00';
+  const arrTime = tripDetail ? new Date(tripDetail.arrivalTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '15:30';
+  const tripDate = tripDetail ? new Date(tripDetail.departureTime).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN');
+  const busClass = tripDetail?.trip.busClass || 'Limousine 22 chỗ';
+  const agentRating = tripDetail?.trip.busAgent.rating || 4.8;
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pendingBooking) {
-      alert('Không tìm thấy thông tin đặt vé. Vui lòng chọn ghế lại.');
-      return;
-    }
+  const seats = pendingBooking?.seats || [];
+  const passengerList = pendingBooking?.passengers?.length ? pendingBooking.passengers : (pendingBooking ? [pendingBooking.passengerInfo] : []);
+
+  const amenities = pendingBooking?.amenities;
+  const amenityLines = [
+    amenities && amenities.nuocSuoi > 0 ? { label: `Nước suối (x${amenities.nuocSuoi})`, amount: amenities.nuocSuoi * AMENITY_PRICES.water } : null,
+    amenities && amenities.khanLanh > 0 ? { label: `Khăn lạnh (x${amenities.khanLanh})`, amount: amenities.khanLanh * AMENITY_PRICES.towel } : null,
+    amenities && amenities.goiTuaCo > 0 ? { label: `Gối tựa cổ (x${amenities.goiTuaCo})`, amount: amenities.goiTuaCo * AMENITY_PRICES.pillow } : null,
+    amenities?.oCamUSB ? { label: 'Ổ cắm USB', amount: 0, free: true } : null,
+  ].filter((l): l is { label: string; amount: number; free?: boolean } => l !== null);
+
+  const seatsTotal = pendingBooking?.seatsTotal || 0;
+  const amenitiesTotal = pendingBooking?.amenitiesTotal || 0;
+  const finalTotal = seatsTotal + amenitiesTotal;
+
+  const handlePayment = async () => {
+    if (!pendingBooking) { toast.error('Không tìm thấy thông tin đặt vé. Vui lòng chọn ghế lại.'); return; }
+    if (!selectedMethod) { toast.error('Vui lòng chọn một phương thức thanh toán.'); return; }
+    if (!termsAccepted) { toast.error('Vui lòng đồng ý với điều khoản & chính sách bảo mật.'); return; }
     setIsProcessing(true);
     try {
       const res = await api.post('/bookings/create', {
         tripScheduleId: pendingBooking.tripScheduleId,
         seatNumbers: pendingBooking.seats,
-        passengers: [{ name: pendingBooking.passengerInfo.name }],
+        passengers: passengerList.map(p => ({ name: p.name })),
         paymentMethod: selectedMethod,
         pickupPointId: pendingBooking.pickupPoint,
         dropoffPointId: pendingBooking.dropoffPoint,
@@ -108,231 +108,255 @@ export function PaymentPage() {
         seats: pendingBooking.seats,
         totalAmount: booking?.totalAmount ?? finalTotal,
         createdAt: booking?.createdAt || new Date().toISOString(),
+        paymentMethod: selectedMethod,
+        pickupLabel: pendingBooking.pickupLabel,
+        dropoffLabel: pendingBooking.dropoffLabel,
+        departureTime: tripDetail?.departureTime,
       }));
 
       sessionStorage.removeItem('pending_booking');
       navigate('/booking-confirmation');
     } catch (error: any) {
-      console.error("Booking failed", error);
-      alert(error?.response?.data?.message || 'Thanh toán thất bại, vui lòng thử lại.');
+      toast.error(error?.response?.data?.message || 'Thanh toán thất bại, vui lòng thử lại.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const cardStyle: React.CSSProperties = { background: 'rgba(0,0,0,0.025)', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 12, padding: 28 };
+  if (!pendingBooking) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#F8F9FA] text-[#6B7280] text-sm font-medium">
+        Không tìm thấy thông tin đặt vé. <Link to="/search" className="text-[#2563EB] ml-1 hover:underline">Quay lại tìm chuyến</Link>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: '#fcfcfc', color: '#1a1a1a', minHeight: 'calc(100vh - 4rem)', paddingTop: 80, paddingBottom: 48, fontFamily: 'system-ui' }}>
-      {/* Header Info */}
-      <div style={{ background: 'rgba(252,252,252,0.97)', backdropFilter: 'blur(24px)', padding: '16px 0', position: 'sticky', top: 0, zIndex: 30, borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button
-            onClick={() => navigate(`/seat-selection/${pendingBooking?.tripScheduleId || ''}`)}
-            style={{ padding: 10, background: 'rgba(0,0,0,0.05)', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1a1a', cursor: 'pointer' }}
-          >
-            <ArrowLeft style={{ width: 20, height: 20 }} />
-          </button>
-          <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a' }}>Thanh toán an toàn</h1>
-            <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 12, fontWeight: 500, marginTop: 2 }}>Mã đơn hàng: #BZ882910</p>
+    <div className="h-screen bg-[#F8F9FA] text-[#1F2937] font-['Be_Vietnam_Pro',_sans-serif] flex overflow-hidden">
+      {/* ── SLIM ICON SIDEBAR ── */}
+      <div className="w-[80px] bg-white border-r border-[#E5E7EB] flex flex-col items-center py-6 gap-8 shrink-0">
+        <Link to="/search" className="flex flex-col items-center gap-1">
+          <div className="w-10 h-10 bg-[rgba(255,193,7,0.1)] rounded-xl flex items-center justify-center text-[#FFC107]">
+            <Search size={18} strokeWidth={2.5} />
           </div>
-        </div>
+          <span className="text-[10px] font-medium text-[#FFC107]">Tìm vé</span>
+        </Link>
+        {[{ icon: Ticket, label: 'Vé của tôi', to: '/my-bookings' }, { icon: Tag, label: 'Ưu đãi', to: '/offers' }].map((item, i) => (
+          <Link key={i} to={item.to} className="flex flex-col items-center gap-1 text-[#9CA3AF] hover:text-[#1F2937] transition-colors">
+            <div className="w-10 h-10 flex items-center justify-center"><item.icon size={18} /></div>
+            <span className="text-[10px] font-medium text-center">{item.label}</span>
+          </Link>
+        ))}
+        <div className="flex-1" />
+        <Link to="/contact" className="flex flex-col items-center gap-1 text-[#9CA3AF] hover:text-[#1F2937] transition-colors">
+          <div className="w-10 h-10 flex items-center justify-center"><HelpCircle size={18} /></div>
+          <span className="text-[10px] font-medium">Trợ giúp</span>
+        </Link>
       </div>
 
-      <div className="container" style={{ paddingTop: 32, display: 'flex', flexDirection: 'column', gap: 32 }}>
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* ── TOPBAR ── */}
+        <BookingStepper activeStep={4} />
 
-          {/* Left Column: Payment Methods */}
-          <div className="w-full lg:w-[60%] flex flex-col gap-6">
-
-            <div style={cardStyle}>
-              <h2 style={{ fontSize: 19, fontWeight: 800, marginBottom: 24, color: '#1a1a1a' }}>Ưu đãi & Điểm thưởng</h2>
-
-              <div className="flex flex-col gap-6">
-                {/* An Chuyến Points */}
-                <div
-                  style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: 16, borderRadius: 8, cursor: 'pointer', userSelect: 'none', background: 'rgba(22,51,40,0.06)', border: '1px solid rgba(22,51,40,0.2)' }}
-                  onClick={() => setUsePoints(p => !p)}
-                >
-                  <input type="checkbox" checked={usePoints} onChange={(e) => setUsePoints(e.target.checked)} style={{ width: 18, height: 18, marginTop: 4, accentColor: '#163328', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: '#163328', display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                      <span>Sử dụng {new Intl.NumberFormat('vi-VN').format(availablePoints)} An Chuyến Points</span>
-                      <span>-{new Intl.NumberFormat('vi-VN').format(pointsDiscount)}đ</span>
-                    </div>
-                    <p style={{ fontSize: 13, color: 'rgba(22,51,40,0.6)', marginTop: 4 }}>Quy đổi: 10 Điểm = 100đ. Bạn đang có {new Intl.NumberFormat('vi-VN').format(availablePoints)} điểm.</p>
-                  </div>
-                </div>
-
-                {/* Voucher */}
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <Ticket style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, color: 'rgba(0,0,0,0.35)' }} />
-                    <input
-                      value={voucherCode}
-                      onChange={(e) => setVoucherCode(e.target.value)}
-                      placeholder="Nhập mã khuyến mãi"
-                      disabled={voucherApplied}
-                      style={{ ...inputStyle, paddingLeft: 44, textTransform: 'uppercase' }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleApplyVoucher}
-                    disabled={voucherApplied || !voucherCode}
-                    style={{
-                      height: 48, padding: '0 24px', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: voucherApplied || !voucherCode ? 'not-allowed' : 'pointer',
-                      opacity: voucherApplied || !voucherCode ? 0.5 : 1,
-                      background: voucherApplied ? 'rgba(0,0,0,0.1)' : 'linear-gradient(135deg,#163328,#f0c94a)',
-                      color: voucherApplied ? '#1a1a1a' : '#fcfcfc',
-                    }}
-                  >
-                    {voucherApplied ? 'Đã áp dụng' : 'Áp dụng'}
-                  </button>
-                </div>
-                {voucherApplied && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#34d399', fontSize: 13, fontWeight: 700, background: 'rgba(52,211,153,0.08)', padding: 12, borderRadius: 8, border: '1px solid rgba(52,211,153,0.2)' }}>
-                    <CheckCircle2 style={{ width: 16, height: 16 }} /> Tuyệt vời! Bạn được giảm {new Intl.NumberFormat('vi-VN').format(voucherDiscount)}đ
-                  </div>
-                )}
-              </div>
+        {/* ── SCROLLABLE CONTENT ── */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+          <div className="max-w-[1280px] mx-auto flex flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-[#1F2937]">Thanh toán</h1>
+              <span className="bg-[#DCFCE7] border border-[#BBF7D0] text-[#15803D] text-xs font-medium px-[13px] py-[5px] rounded-full flex items-center gap-1.5">
+                <ShieldCheck size={11} /> Bảo mật 100%
+              </span>
             </div>
 
-            <div style={cardStyle}>
-              <h2 style={{ fontSize: 19, fontWeight: 800, marginBottom: 24, color: '#1a1a1a' }}>Chọn phương thức thanh toán</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-              <form onSubmit={handlePayment} className="flex flex-col gap-4">
-
-                <PaymentOption selected={selectedMethod === 'busz-wallet'} onSelect={() => setSelectedMethod('busz-wallet')}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(52,211,153,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399' }}>
-                        <Wallet style={{ width: 20, height: 20 }} />
-                      </div>
+              {/* ── LEFT COLUMN: Journey & Passenger Info ── */}
+              <div className="lg:col-span-4 flex flex-col gap-6">
+                <div className="bg-white border border-[#F3F4F6] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-[21px] flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-[#1F2937]">Thanh toán</h2>
+                    <button onClick={() => navigate(`/seat-selection/${pendingBooking.tripScheduleId || ''}`)} className="flex items-center gap-1 text-sm text-[#2563EB] hover:underline">
+                      <PenLine size={12} /> Sửa
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex gap-3">
+                      <div className="w-2 h-2 rounded-full bg-[#16A34A] mt-1.5 shrink-0" />
                       <div>
-                        <div style={{ fontWeight: 700, color: '#1a1a1a' }}>Ví An Chuyến Pay</div>
-                        <div style={{ fontSize: 13, color: '#34d399', fontWeight: 600 }}>Số dư: {new Intl.NumberFormat('vi-VN').format(walletBalance)}đ</div>
+                        <div className="text-sm font-bold text-[#1F2937]">{depCity}</div>
+                        <div className="text-xs text-[#6B7280] mt-0.5">{pendingBooking.pickupLabel || `Bến xe ${depCity}`}</div>
+                        <div className="text-xs text-[#6B7280]">{depTime} - {tripDate}</div>
                       </div>
                     </div>
-                    <input type="radio" name="payment" checked={selectedMethod === 'busz-wallet'} onChange={() => setSelectedMethod('busz-wallet')} style={{ width: 20, height: 20, accentColor: '#163328' }} />
-                  </div>
-                  {selectedMethod === 'busz-wallet' && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.08)', fontSize: 13, color: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <ShieldCheck style={{ width: 16, height: 16, color: '#34d399' }} /> Miễn phí giao dịch. Hoàn tiền 100% về ví nếu hủy vé hợp lệ.
-                    </motion.div>
-                  )}
-                </PaymentOption>
-
-                {/* Thanh toán tại quầy */}
-                <PaymentOption selected={selectedMethod === 'cod'} onSelect={() => setSelectedMethod('cod')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="cod"
-                      checked={selectedMethod === 'cod'}
-                      onChange={() => setSelectedMethod('cod')}
-                      style={{ width: 18, height: 18, accentColor: '#163328' }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <CreditCard style={{ width: 20, height: 20, color: '#1a1a1a' }} />
-                      <span style={{ fontWeight: 700, color: '#1a1a1a' }}>Thanh toán tiền mặt tại quầy (COD)</span>
+                    <div className="flex gap-3">
+                      <div className="w-2 h-2 rounded-full bg-[#EF4444] mt-1.5 shrink-0" />
+                      <div>
+                        <div className="text-sm font-bold text-[#1F2937]">{arrCity}</div>
+                        <div className="text-xs text-[#6B7280] mt-0.5">{pendingBooking.dropoffLabel || `Bến xe ${arrCity}`}</div>
+                        <div className="text-xs text-[#6B7280]">~ {arrTime} - {tripDate}</div>
+                      </div>
+                    </div>
+                    <div className="border-t border-[#F3F4F6] pt-4 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-[#1F2937]">
+                          Nhà xe {pendingBooking.busAgentName} <span className="text-[#FFC107] inline-flex items-center gap-0.5"><Star size={11} className="fill-[#FFC107] text-[#FFC107]" /> {agentRating}</span>
+                        </div>
+                        <div className="text-xs text-[#6B7280] mt-0.5">{busClass}</div>
+                      </div>
+                      <img src="/phuong-trang-bus.jpg" alt={pendingBooking.busAgentName} className="w-20 h-12 rounded object-cover shrink-0 border border-[#F3F4F6]" />
                     </div>
                   </div>
-                  {selectedMethod === 'cod' && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-                      <div style={{ display: 'flex', gap: 12, background: 'rgba(251,146,60,0.08)', padding: 16, borderRadius: 8, border: '1px solid rgba(251,146,60,0.2)' }}>
-                        <Info style={{ width: 20, height: 20, color: '#fb923c', flexShrink: 0 }} />
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: '#fdba74', marginBottom: 4 }}>Giữ chỗ trong 30 phút</p>
-                          <p style={{ fontSize: 12, color: 'rgba(253,186,116,0.75)' }}>Bạn vui lòng đến quầy vé An Chuyến tại bến xe để thanh toán bằng tiền mặt và nhận vé cứng trong vòng 30 phút kể từ lúc đặt thành công. Sau thời gian này, vé sẽ tự động bị hủy.</p>
+                </div>
+
+                <div className="bg-white border border-[#F3F4F6] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-[21px] flex flex-col gap-4">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-[#1F2937]"><Users size={16} className="text-[#6B7280]" /> Thông tin hành khách</h2>
+                  <div className="flex flex-col gap-4">
+                    {passengerList.map((p, i) => (
+                      <div key={i} className="relative bg-[#F9FAFB] border border-[#F3F4F6] rounded-lg pt-[29px] pb-[17px] px-[17px]">
+                        <span className="absolute top-0 left-0 bg-[#E5E7EB] text-[#4B5563] text-xs font-bold px-2 py-1 rounded-tl-lg rounded-br-lg">Hành khách {i + 1}</span>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-xs text-[#6B7280]">Họ và tên</div>
+                            <div className="text-sm font-medium text-[#1F2937]">{p.name || '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-[#6B7280]">Số điện thoại</div>
+                            <div className="text-sm font-medium text-[#1F2937]">{p.phone || '—'}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="text-xs text-[#6B7280]">CCCD/CMND</div>
+                            <div className="text-sm font-medium text-[#1F2937]">{('idNumber' in p && p.idNumber) || '—'}</div>
+                          </div>
                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </PaymentOption>
-              </form>
-            </div>
-          </div>
-
-          {/* Right Column: Order Summary */}
-          <div className="w-full lg:w-[40%]">
-            <div style={{ ...cardStyle, position: 'sticky', top: 112 }}>
-              <h2 style={{ fontSize: 19, fontWeight: 800, marginBottom: 24, color: '#1a1a1a' }}>Chi tiết thanh toán</h2>
-
-              <div className="flex flex-col gap-4" style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#1a1a1a' }}>{pendingBooking?.routeLabel || 'Chuyến xe'}</div>
-                    <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', marginTop: 4 }}>
-                      {pendingBooking?.busAgentName || 'Nhà xe'} • Ghế {pendingBooking?.seats.join(', ') || '--'}
+                    ))}
+                  </div>
+                  <div className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-lg p-[13px] flex gap-2 items-start">
+                    <Info size={16} className="text-[#2563EB] mt-0.5 shrink-0" />
+                    <div className="text-sm text-[#4B5563] leading-relaxed">
+                      Email nhận vé: <span className="font-bold text-[#1F2937]">{pendingBooking.passengerInfo.email || '—'}</span> (Vé điện tử sẽ được gửi về email này)
                     </div>
                   </div>
-                  <div style={{ fontWeight: 700, color: '#1a1a1a' }}>{new Intl.NumberFormat('vi-VN').format(pendingBooking?.seatsTotal || 0)}đ</div>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <ShieldCheck style={{ width: 16, height: 16, color: '#34d399' }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(0,0,0,0.7)' }}>Bảo hiểm chuyến đi</span>
-                  </div>
-                  <div style={{ fontWeight: 700, color: '#1a1a1a' }}>{new Intl.NumberFormat('vi-VN').format(insuranceTotal)}đ</div>
-                </div>
-
-                {(usePoints || voucherApplied) && (
-                  <div style={{ paddingTop: 16, borderTop: '1px dashed rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {usePoints && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#163328' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600 }}>Giảm trừ điểm ({new Intl.NumberFormat('vi-VN').format(availablePoints)} pts)</span>
-                        <span style={{ fontWeight: 700 }}>-{new Intl.NumberFormat('vi-VN').format(pointsDiscount)}đ</span>
-                      </div>
-                    )}
-                    {voucherApplied && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#f0c94a' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600 }}>Mã khuyến mãi ({voucherCode.toUpperCase()})</span>
-                        <span style={{ fontWeight: 700 }}>-{new Intl.NumberFormat('vi-VN').format(voucherDiscount)}đ</span>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <span style={{ fontWeight: 700, color: '#1a1a1a' }}>Tổng thanh toán</span>
-                  <span style={{ fontSize: 28, fontWeight: 800, color: '#163328' }}>
-                    {new Intl.NumberFormat('vi-VN').format(finalTotal)}đ
+              {/* ── MIDDLE COLUMN: Payment Methods ── */}
+              <div className="lg:col-span-4 bg-white border border-[#F3F4F6] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-[21px] flex flex-col gap-4">
+                <h2 className="flex items-center gap-2 text-lg font-bold text-[#1F2937]"><CreditCard size={16} className="text-[#6B7280]" /> Phương thức thanh toán</h2>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {WALLETS.map(w => (
+                    <button
+                      key={w.key}
+                      onClick={() => setSelectedMethod(w.key)}
+                      className={cn('relative flex items-center gap-4 p-[17px] rounded-lg border text-left transition-colors bg-white', selectedMethod === w.key ? 'border-2 border-[#FFC107] p-[16px]' : 'border-[#E5E7EB] hover:border-[#D1D5DB]')}
+                    >
+                      <img src={w.logo} alt={w.label} className="w-8 h-8 rounded object-cover shrink-0" />
+                      <span className="text-sm font-bold text-[#1F2937]">{w.label}</span>
+                      {selectedMethod === w.key && (
+                        <span className="absolute top-1 right-1 w-4 h-4 bg-[#FFC107] rounded-full flex items-center justify-center">
+                          <Check size={10} className="text-white" strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col gap-3 w-full">
+                  {OTHER_METHODS.map(m => (
+                    <button
+                      key={m.key}
+                      onClick={() => setSelectedMethod(m.key)}
+                      className={cn('flex items-center justify-between p-[17px] rounded-lg border transition-colors bg-white', selectedMethod === m.key ? 'border-2 border-[#FFC107] p-[16px]' : 'border-[#E5E7EB] hover:border-[#D1D5DB]')}
+                    >
+                      <div className="flex items-center gap-3">
+                        <m.icon size={17} className="text-[#6B7280] shrink-0" />
+                        <span className="text-sm font-semibold text-[#1F2937] text-left">{m.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {m.logos.map(l => <img key={l} src={l} alt="" className="h-4 rounded-sm object-contain" />)}
+                        <ChevronRight size={14} className="text-[#9CA3AF]" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <label className="flex items-start gap-2 pt-2 cursor-pointer select-none">
+                  <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} className="w-4 h-4 mt-0.5 rounded border-[#D1D5DB] accent-[#FFC107] shrink-0" />
+                  <span className="text-sm text-[#4B5563] leading-relaxed">
+                    Tôi đã đọc và đồng ý với <a className="text-[#2563EB] hover:underline cursor-pointer">Điều khoản &amp; Quy định</a> và <a className="text-[#2563EB] hover:underline cursor-pointer">Chính sách bảo mật</a> của An Chuyến.
                   </span>
-                </div>
-                <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)', textAlign: 'right' }}>Đã bao gồm thuế và phí dịch vụ</p>
+                </label>
               </div>
 
-              <button
-                onClick={handlePayment}
-                disabled={isProcessing}
-                style={{
-                  width: '100%', height: 56, fontWeight: 800, fontSize: 16, borderRadius: 10, border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isProcessing ? 'not-allowed' : 'pointer',
-                  opacity: isProcessing ? 0.7 : 1, background: 'linear-gradient(135deg,#163328,#f0c94a)', color: '#fcfcfc',
-                }}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 style={{ width: 22, height: 22, marginRight: 8 }} className="animate-spin" /> Đang xử lý giao dịch...
-                  </>
-                ) : (
-                  `Thanh toán ${new Intl.NumberFormat('vi-VN').format(finalTotal)}đ`
-                )}
-              </button>
+              {/* ── RIGHT COLUMN: Order Summary ── */}
+              <div className="lg:col-span-4 flex flex-col gap-6">
+                <div className="bg-white border border-[#F3F4F6] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-5 flex flex-col gap-4">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-[#1F2937] border-b border-[#F3F4F6] pb-[13px]"><Ticket size={15} className="text-[#6B7280]" /> Chi tiết giá</h2>
 
-              <div style={{ marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, color: 'rgba(0,0,0,0.4)', background: 'rgba(0,0,0,0.03)', padding: 12, borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)' }}>
-                <Info style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2 }} />
-                <span>Bằng việc bấm Thanh toán, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của An Chuyến.</span>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between text-sm">
+                      <span className="text-[#4B5563]">Vé người lớn (x{seats.length || 1})</span>
+                      <span className="font-medium text-[#1F2937]">{fmt(seatsTotal)}đ</span>
+                    </div>
+                    {amenityLines.map(a => (
+                      <div key={a.label} className="flex items-start justify-between text-sm">
+                        <span className="text-[#4B5563]">{a.label}</span>
+                        <span className={a.free ? 'font-medium text-[#16A34A]' : 'font-medium text-[#1F2937]'}>{a.free ? 'Miễn phí' : `${fmt(a.amount)}đ`}</span>
+                      </div>
+                    ))}
+                    <div className="border-t border-dashed border-[#E5E7EB] pt-3 flex items-start justify-between text-sm">
+                      <span className="text-[#4B5563]">Phí dịch vụ</span>
+                      <span className="font-medium text-[#1F2937]">0đ</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[#E5E7EB] pt-4 flex items-end justify-between">
+                    <span className="text-base font-medium text-[#4B5563]">Tổng tiền:</span>
+                    <span className="text-2xl font-bold text-[#EF4444]">{fmt(finalTotal)}đ</span>
+                  </div>
+
+                  <button
+                    onClick={handlePayment}
+                    disabled={isProcessing || !selectedMethod || !termsAccepted}
+                    className="w-full bg-[#FFC107] rounded-lg py-4 flex items-center justify-center gap-3 text-[#212529] text-lg font-bold shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] hover:brightness-95 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                  >
+                    {isProcessing ? (
+                      <><Loader2 size={18} className="animate-spin" /> Đang xử lý...</>
+                    ) : (
+                      <><Lock size={16} /> Thanh toán {fmt(finalTotal)}đ</>
+                    )}
+                  </button>
+
+                  <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-xl p-[17px] flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-bold text-[#15803D]">Thanh toán an toàn &amp; bảo mật</div>
+                      <div className="text-[10px] text-[#16A34A] mt-1 leading-tight">Thông tin thanh toán của bạn được mã hoá và bảo vệ tuyệt đối.</div>
+                    </div>
+                    <div className="bg-[#DCFCE7] w-9 h-10 rounded-lg flex items-center justify-center shrink-0">
+                      <ShieldCheck size={18} className="text-[#16A34A]" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-1">
+                    {COMMITMENTS.map(c => (
+                      <div key={c.label} className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-[#F3F4F6] flex items-center justify-center shrink-0">
+                          <c.icon size={13} className="text-[#4B5563]" />
+                        </div>
+                        <span className="text-xs text-[#4B5563] leading-tight">{c.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white border border-[#F3F4F6] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-[17px] flex items-center gap-3">
+                  <Phone size={18} className="text-[#4B5563]" />
+                  <span className="text-sm font-bold text-[#1F2937]">1900 1234</span>
+                </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

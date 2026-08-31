@@ -1,48 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Phone, Mail, Save, LogOut, Wallet, Award, Ticket, TrendingUp, ChevronRight, Shield, Bell } from 'lucide-react';
+import {
+  User, Phone, Mail, Save, Wallet, Award, Ticket, TrendingUp, ChevronRight, Shield, Bell,
+  Calendar, Globe, Briefcase, MapPin, Pencil, QrCode,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../../../lib/api';
 
 const TIER_CONFIG = {
   Member: {
     label: 'Thành viên mới',
-    color: 'linear-gradient(135deg, #6b7280, #374151)',
-    textColor: '#9ca3af',
-    bgColor: 'rgba(156,163,175,0.12)',
+    color: 'linear-gradient(153deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
     next: 'Bạc',
     pointsNeeded: 5000,
     currentPoints: 0,
     icon: '🌱',
   },
   Silver: {
-    label: 'Thành viên Bạc',
-    color: 'linear-gradient(135deg, #94a3b8, #475569)',
-    textColor: '#cbd5e1',
-    bgColor: 'rgba(148,163,184,0.12)',
+    label: 'Bạc / Silver',
+    color: 'linear-gradient(153deg, #4a5568 0%, #2d3748 50%, #1a202c 100%)',
     next: 'Vàng',
     pointsNeeded: 15000,
     currentPoints: 2450,
     icon: '🥈',
   },
   Gold: {
-    label: 'Thành viên Vàng',
-    color: 'linear-gradient(135deg, #163328, #f0c94a)',
-    textColor: '#163328',
-    bgColor: 'rgba(22,51,40,0.12)',
+    label: 'Vàng / Gold',
+    color: 'linear-gradient(153deg, #785900 0%, #4f4632 50%, #1a202c 100%)',
     next: 'Kim Cương',
     pointsNeeded: 50000,
     currentPoints: 2450,
     icon: '🥇',
   },
   Platinum: {
-    label: 'Thành viên Kim Cương',
-    color: 'linear-gradient(135deg, #a78bfa, #6366f1)',
-    textColor: '#a5b4fc',
-    bgColor: 'rgba(129,140,248,0.12)',
+    label: 'Kim Cương / Platinum',
+    color: 'linear-gradient(153deg, #7c3aed 0%, #4c1d95 50%, #1a202c 100%)',
     next: 'Tối đa',
     pointsNeeded: 999999,
     currentPoints: 2450,
@@ -50,41 +45,26 @@ const TIER_CONFIG = {
   },
 };
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', height: 48, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
-  borderRadius: 8, color: '#1a1a1a', fontFamily: 'system-ui', fontSize: 14, fontWeight: 500,
-  transition: 'border-color 0.2s, background 0.2s', outline: 'none',
-};
+const inputBase = "w-full bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg pl-[41px] pr-[17px] py-[13px] text-sm text-[#0D1C2E] outline-none transition-colors";
+const inputFocus = "focus:border-[#785900] focus:ring-2 focus:ring-[#785900]/10";
 
-const labelStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase',
-  letterSpacing: '0.15em', fontFamily: 'system-ui', display: 'block', marginBottom: 8,
-};
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <label className="block text-xs font-bold text-[#4F4632] tracking-[0.24px] mb-1.5">{children}</label>;
+}
 
-function FormInput({ icon: Icon, style, ...props }: { icon?: any } & React.InputHTMLAttributes<HTMLInputElement> & { style?: React.CSSProperties }) {
-  const [focused, setFocused] = useState(false);
+function IconInput({ icon: Icon, ...props }: { icon?: any } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <div style={{ position: 'relative' }}>
-      {Icon && <Icon style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(0,0,0,0.3)' }} />}
-      <input
-        {...props}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{
-          ...inputStyle,
-          paddingLeft: Icon ? 44 : 16, paddingRight: 16,
-          borderColor: focused ? '#163328' : 'rgba(0,0,0,0.1)',
-          background: focused ? 'rgba(0,0,0,0.07)' : 'rgba(0,0,0,0.05)',
-          ...style,
-        }}
-      />
+    <div className="relative">
+      {Icon && <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4F4632]/70 pointer-events-none" />}
+      <input {...props} className={`${inputBase} ${inputFocus} ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''}`} />
     </div>
   );
 }
 
 export function ProfilePage() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const { t } = useTranslation();
+  const formRef = useRef<HTMLDivElement>(null);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState<'MALE'|'FEMALE'|'OTHER'|''>('');
@@ -97,9 +77,7 @@ export function ProfilePage() {
   const [message, setMessage] = useState('');
 
   const currentTierStr = user?.loyalty?.tier || 'Member';
-  const tier = {
-    ...(TIER_CONFIG[currentTierStr as keyof typeof TIER_CONFIG] || TIER_CONFIG['Member']),
-  };
+  const tier = { ...(TIER_CONFIG[currentTierStr as keyof typeof TIER_CONFIG] || TIER_CONFIG['Member']) };
   const currentPoints = user?.loyalty?.points || 0;
   tier.currentPoints = currentPoints;
   const progressPercent = Math.min((currentPoints / tier.pointsNeeded) * 100, 100);
@@ -121,7 +99,7 @@ export function ProfilePage() {
   }, [user]);
 
   if (isLoading) return (
-    <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>
+    <div className="min-h-screen flex items-center justify-center bg-[#F8F9FF] text-[#4F4632] text-sm font-medium">
       {t('common.loading')}
     </div>
   );
@@ -132,14 +110,8 @@ export function ProfilePage() {
     setIsSaving(true);
     try {
       await api.put('/auth/profile', {
-        fullName,
-        phone,
-        gender: gender || undefined,
-        address,
-        dob: dob || undefined,
-        emergencyPhone,
-        nationality,
-        occupation
+        fullName, phone, gender: gender || undefined, address,
+        dob: dob || undefined, emergencyPhone, nationality, occupation,
       });
       setMessage(t('profile.saveSuccess'));
       toast.success(t('profile.saveSuccess'));
@@ -151,344 +123,246 @@ export function ProfilePage() {
     }
   };
 
-  const cardStyle: React.CSSProperties = {
-    background: 'rgba(0,0,0,0.025)', border: '1px solid rgba(0,0,0,0.07)', overflow: 'hidden',
-  };
+  const quickLinks = [
+    { icon: Ticket, label: t('profile.myTickets'), sub: t('profile.myTicketsSub'), href: '/my-bookings', color: '#0D1C2E', bg: '#F3F4F6' },
+    { icon: Award, label: t('profile.loyaltyProgram'), sub: t('profile.loyaltyProgramSub'), href: '/loyalty', color: '#854D0E', bg: '#FEFCE8' },
+    { icon: Shield, label: t('profile.security'), sub: t('profile.securitySub'), href: '#', color: '#15803D', bg: '#F0FDF4' },
+    { icon: Bell, label: t('profile.notifications'), sub: t('profile.notificationsSub'), href: '/notifications', color: '#7E22CE', bg: '#FAF5FF' },
+  ];
+
+  const stats = [
+    { icon: Ticket, label: t('profile.totalTrips'), value: bookingsCount.toString() },
+    { icon: Award, label: t('profile.totalPoints'), value: currentPoints.toLocaleString() },
+    { icon: MapPin, label: t('profile.totalKm'), value: '0' },
+    { icon: TrendingUp, label: t('profile.totalSaved'), value: '0đ' },
+  ];
+
+  const benefits = [
+    { icon: '🎫', title: t('profile.benefitPriorityTitle'), desc: t('profile.benefitPriorityDesc') },
+    { icon: '💰', title: t('profile.benefitCashbackTitle'), desc: t('profile.benefitCashbackDesc') },
+    { icon: '🎁', title: t('profile.benefitPromoTitle'), desc: t('profile.benefitPromoDesc') },
+    { icon: '📞', title: t('profile.benefitHotlineTitle'), desc: t('profile.benefitHotlineDesc') },
+    { icon: '⭐', title: t('profile.benefitPointsTitle'), desc: t('profile.benefitPointsDesc') },
+    { icon: '🛡️', title: t('profile.benefitInsuranceTitle'), desc: t('profile.benefitInsuranceDesc') },
+  ];
 
   return (
-    <div style={{ background: '#fcfcfc', color: '#1a1a1a', minHeight: '100vh', paddingTop: 100, paddingBottom: 32, fontFamily: 'system-ui' }}>
-      {/* Page Header */}
-      <div style={{ borderBottom: '1px solid rgba(0,0,0,0.07)', marginBottom: 40, padding: '0 8% 32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 24, height: 1, background: '#163328' }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#163328' }}>Tài khoản</span>
-            </div>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 400, color: '#1a1a1a', margin: 0 }}>{t('profile.title')}</h1>
-            <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 14, marginTop: 4 }}>{t('profile.subtitle')}</p>
-          </div>
-          <button
-            onClick={logout}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 20px',
-              background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171',
-              fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer', borderRadius: 8,
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(248,113,113,0.08)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <LogOut style={{ width: 16, height: 16 }} /> Đăng xuất
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#F8F9FF] pt-[104px] pb-16 font-['Be_Vietnam_Pro',_sans-serif] text-[#0D1C2E]">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-      <div style={{ padding: '0 8%' }}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* ── LEFT COLUMN ── */}
+          <div className="w-full lg:w-[360px] shrink-0 flex flex-col gap-6">
 
-          {/* ===== LEFT COLUMN ===== */}
-          <div className="lg:col-span-1 flex flex-col gap-5">
-
-            {/* Avatar Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
-              <div style={{ height: 80, background: 'linear-gradient(135deg, rgba(22,51,40,0.25), rgba(255,255,255,0.9))', position: 'relative' }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-              </div>
-              <div style={{ padding: '0 24px 24px', marginTop: -40, textAlign: 'center' }}>
-                <div style={{
-                  width: 80, height: 80, background: 'linear-gradient(135deg,#163328,#f0c94a)', color: '#fcfcfc',
-                  borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 28, fontWeight: 800, margin: '0 auto', border: '4px solid #fcfcfc',
-                }}>
+            {/* Profile Card */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full border-2 border-[#FFC107] bg-[#C5CBD3] flex items-center justify-center text-xl font-bold text-white shrink-0">
                   {fullName.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.4rem', fontWeight: 600, color: '#1a1a1a', marginTop: 12 }}>{fullName || 'Tên người dùng'}</h2>
-                <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 13, marginTop: 2 }}>{user.email}</p>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, padding: '6px 14px',
-                  borderRadius: 100, fontSize: 11, fontWeight: 700, background: tier.bgColor, color: tier.textColor,
-                }}>
-                  <span>{tier.icon}</span> {tier.label}
+                <div className="flex flex-col gap-1 min-w-0">
+                  <h2 className="text-xl font-semibold text-[#0D1C2E] truncate">{fullName || t('profile.fullNamePlaceholder')}</h2>
+                  <div className="flex items-center gap-1.5 text-sm text-[#4F4632] truncate"><Mail size={12} className="shrink-0" /> <span className="truncate">{user.email}</span></div>
                 </div>
               </div>
 
-              {/* Quick Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
-                {[
-                  { label: t('profile.trips'), value: bookingsCount.toString() },
-                  { label: t('profile.points'), value: currentPoints.toLocaleString() },
-                  { label: t('profile.tier'), value: tier.label.split(' ')[0] },
-                ].map((stat, i) => (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 8px', borderLeft: i > 0 ? '1px solid rgba(0,0,0,0.07)' : 'none' }}>
-                    <div style={{ fontWeight: 800, color: '#1a1a1a', fontSize: 15 }}>{stat.value}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', fontWeight: 500, marginTop: 2 }}>{stat.label}</div>
+              {/* Membership Card Visual */}
+              <div className="relative rounded-lg border border-[#4B5563] shadow-lg overflow-hidden p-[21px] pt-[29px] pb-[21px] flex flex-col gap-8" style={{ backgroundImage: tier.color }}>
+                <div className="absolute -right-10 -top-8 w-40 h-40 rounded-full bg-white/5 blur-xl pointer-events-none" />
+                <div className="absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-[#FFC107]/10 blur-xl pointer-events-none" />
+                <div className="relative flex items-start justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-[1px] text-gray-400">Thành viên</span>
+                    <span className="text-xl font-bold text-gray-200 tracking-wide leading-tight">{tier.label}</span>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Loyalty Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <div style={{ position: 'relative', background: tier.color, borderRadius: 12, padding: 24, color: '#fff', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: 128, height: 128, background: 'rgba(0,0,0,0.1)', borderRadius: '50%', transform: 'translate(40%,-40%)' }} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, width: 96, height: 96, background: 'rgba(0,0,0,0.1)', borderRadius: '50%', transform: 'translate(-32%,32%)' }} />
-
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-                    <div>
-                      <div style={{ color: 'rgba(0,0,0,0.7)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 4 }}>An Chuyến Member Card</div>
-                      <div style={{ fontWeight: 800, fontSize: 20 }}>{tier.label}</div>
-                    </div>
-                    <div style={{ fontSize: 28 }}>{tier.icon}</div>
+                  <span className="text-2xl leading-none">{tier.icon}</span>
+                </div>
+                <div className="relative flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-gray-300 gap-2">
+                    <span className="shrink-0">{currentPoints.toLocaleString()} PTS</span>
+                    <span className="text-right">{tier.next.toUpperCase()} ({tier.pointsNeeded.toLocaleString()} PTS)</span>
                   </div>
-
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
-                      <span style={{ color: 'rgba(0,0,0,0.7)' }}>{t('profile.currentPoints')}</span>
-                      <span>{tier.currentPoints} / {tier.pointsNeeded} pts → {tier.next}</span>
-                    </div>
-                    <div style={{ width: '100%', height: 8, background: 'rgba(0,0,0,0.2)', borderRadius: 100, overflow: 'hidden' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPercent}%` }}
-                        transition={{ duration: 1.2, ease: 'easeOut' }}
-                        style={{ height: '100%', background: '#fff', borderRadius: 100 }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 11 }}>{t('profile.accumulatedPoints')}</div>
-                      <div style={{ fontWeight: 800, fontSize: 22 }}>{tier.currentPoints.toLocaleString()}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 11 }}>{fullName}</div>
-                      <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 11, marginTop: 2 }}>**** {currentPoints}</div>
-                    </div>
+                  <div className="h-2 rounded-full border border-gray-600/50 bg-gray-700 overflow-hidden shadow-inner">
+                    <motion.div
+                      initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 1.2, ease: 'easeOut' }}
+                      className="h-full rounded-full bg-gradient-to-r from-gray-400 to-gray-200 shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                    />
                   </div>
                 </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex-1 flex items-center justify-center gap-2 bg-[#E5EEFF] rounded-lg py-3 text-xs font-semibold text-[#0D1C2E] tracking-[0.24px] hover:brightness-95 transition-all">
+                  <Pencil size={13} /> Chỉnh sửa
+                </button>
+                <button onClick={() => toast('Tính năng Mã QR đang được phát triển')} className="flex-1 flex items-center justify-center gap-2 bg-[#E5EEFF] rounded-lg py-3 text-xs font-semibold text-[#0D1C2E] tracking-[0.24px] hover:brightness-95 transition-all">
+                  <QrCode size={13} /> Mã QR
+                </button>
               </div>
             </motion.div>
 
             {/* Wallet Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} style={{ ...cardStyle, padding: 20, borderRadius: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 40, height: 40, background: 'rgba(129,140,248,0.12)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Wallet style={{ width: 20, height: 20, color: '#a5b4fc' }} />
-                </div>
-                <div>
-                  <h3 style={{ fontWeight: 800, color: '#1a1a1a', fontSize: 14 }}>{t('profile.walletTitle')}</h3>
-                  <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{t('profile.availableBalance')}</div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#E5EEFF] flex items-center justify-center shrink-0"><Wallet size={18} className="text-[#0D1C2E]" /></div>
+                <div className="flex flex-col gap-1 min-w-0">
+                  <div className="text-xs font-semibold tracking-[0.24px] text-[#4F4632] truncate">{t('profile.walletTitle')}</div>
+                  <div className="text-xl font-semibold text-[#0D1C2E]">{balance.toLocaleString('vi-VN')} đ</div>
                 </div>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#a5b4fc', marginBottom: 16 }}>{balance.toLocaleString('vi-VN')}<span style={{ fontSize: 18, opacity: 0.6 }}>đ</span></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <button style={{ height: 40, background: '#6366f1', color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', borderRadius: 8, cursor: 'pointer' }}>{t('profile.deposit')}</button>
-                <button style={{ height: 40, background: 'transparent', border: '1px solid rgba(165,180,252,0.3)', color: '#a5b4fc', fontWeight: 700, fontSize: 13, borderRadius: 8, cursor: 'pointer' }}>{t('profile.history')}</button>
-              </div>
+              <button className="w-full bg-[#FFC107] rounded-lg py-3 text-xs font-bold tracking-[0.24px] text-[#6D5100] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:brightness-95 transition-all">
+                {t('profile.deposit')}
+              </button>
             </motion.div>
 
             {/* Quick Links */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ ...cardStyle, borderRadius: 12 }}>
-              {[
-                { icon: Ticket, label: t('profile.myTickets'), sub: t('profile.myTicketsSub'), href: '/my-bookings', color: '#163328', bg: 'rgba(22,51,40,0.12)' },
-                { icon: Award, label: t('profile.loyaltyProgram'), sub: t('profile.loyaltyProgramSub'), href: '/loyalty', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
-                { icon: Shield, label: t('profile.security'), sub: t('profile.securitySub'), href: '#', color: '#34d399', bg: 'rgba(52,211,153,0.1)' },
-                { icon: Bell, label: t('profile.notifications'), sub: t('profile.notificationsSub'), href: '/notifications', color: '#c084fc', bg: 'rgba(192,132,252,0.1)' },
-              ].map((item, i, arr) => (
-                <a key={i} href={item.href} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: 16,
-                  borderBottom: i < arr.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                  textDecoration: 'none', transition: 'background 0.2s',
-                }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ width: 36, height: 36, background: item.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <item.icon style={{ width: 16, height: 16, color: item.color }} />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-2 flex flex-col">
+              {quickLinks.map((item, i) => (
+                <a key={i} href={item.href} className="flex items-center justify-between gap-4 p-3 rounded-lg hover:bg-[#F8F9FF] transition-colors">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: item.bg }}>
+                      <item.icon size={18} style={{ color: item.color }} />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-bold text-[#0D1C2E] truncate">{item.label}</span>
+                      <span className="text-[11px] text-[#4F4632] opacity-70 truncate">{item.sub}</span>
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#1a1a1a' }}>{item.label}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{item.sub}</div>
-                  </div>
-                  <ChevronRight style={{ width: 16, height: 16, color: 'rgba(0,0,0,0.25)', flexShrink: 0 }} />
+                  <ChevronRight size={12} className="text-[#4F4632] opacity-50 shrink-0" />
                 </a>
               ))}
             </motion.div>
           </div>
 
-          {/* ===== RIGHT COLUMN ===== */}
-          <div className="lg:col-span-2 flex flex-col gap-5">
+          {/* ── RIGHT COLUMN ── */}
+          <div className="flex-1 min-w-0 flex flex-col gap-8">
 
-            {/* Edit Profile Form */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} style={{ ...cardStyle, borderRadius: 12, padding: '28px 32px' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, background: 'rgba(22,51,40,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <User style={{ width: 16, height: 16, color: '#163328' }} />
-                </div>
-                Thông tin cá nhân
-              </h3>
+            {/* Personal Info Form */}
+            <motion.div ref={formRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[24px] sm:p-[33px] flex flex-col gap-8">
+              <div className="flex items-center gap-2 border-b border-[#D4C5AB] pb-[17px]">
+                <User size={16} className="text-[#0D1C2E]" />
+                <h3 className="text-xl font-semibold text-[#0D1C2E]">{t('profile.personalInfo')}</h3>
+              </div>
 
               {message && (
-                <div style={{
-                  marginBottom: 20, padding: 14, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, borderRadius: 8,
-                  background: message.includes('thành công') ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)',
-                  color: message.includes('thành công') ? '#34d399' : '#f87171',
-                  border: `1px solid ${message.includes('thành công') ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)'}`,
-                }}>
-                  <span>{message.includes('thành công') ? '✅' : '❌'}</span>
+                <div className={`-mt-4 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 ${message === t('profile.saveSuccess') ? 'bg-[#F0FDF4] text-[#15803D] border border-[#BBF7D0]' : 'bg-red-50 text-red-600 border border-red-200'}`}>
                   {message}
                 </div>
               )}
 
-              <form onSubmit={handleSave}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <form onSubmit={handleSave} className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div>
-                    <label style={labelStyle}>{t('profile.fullName')}</label>
-                    <FormInput icon={User} type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder={t('profile.fullNamePlaceholder')} />
+                    <FieldLabel>{t('profile.fullName')}</FieldLabel>
+                    <IconInput icon={User} type="text" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder={t('profile.fullNamePlaceholder')} />
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.phone')}</label>
-                    <FormInput icon={Phone} type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('profile.phonePlaceholder')} />
+                    <FieldLabel>{t('profile.phone')}</FieldLabel>
+                    <IconInput icon={Phone} type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder={t('profile.phonePlaceholder')} />
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.emailLabel')}</label>
-                    <FormInput icon={Mail} type="email" value={user.email} disabled style={{ opacity: 0.5, cursor: 'not-allowed' }} />
+                    <FieldLabel>{t('profile.emailLabel')}</FieldLabel>
+                    <IconInput icon={Mail} type="email" value={user.email} disabled />
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.gender')}</label>
-                    <div style={{ display: 'flex', gap: 20, alignItems: 'center', height: 48 }}>
-                      {['MALE', 'FEMALE', 'OTHER'].map(g => (
-                        <label key={g} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                          <input
-                            type="radio"
-                            name="gender"
-                            value={g}
-                            checked={gender === g}
-                            onChange={(e) => setGender(e.target.value as any)}
-                            style={{ width: 16, height: 16, accentColor: '#163328' }}
-                          />
-                          <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(0,0,0,0.7)' }}>
-                            {g === 'MALE' ? t('profile.genderMale') : g === 'FEMALE' ? t('profile.genderFemale') : t('profile.genderOther')}
-                          </span>
-                        </label>
-                      ))}
+                    <FieldLabel>{t('profile.gender')}</FieldLabel>
+                    <div className="flex items-center gap-6 h-[46px] pl-1">
+                      {(['MALE', 'FEMALE', 'OTHER'] as const).map(g => {
+                        const selected = gender === g;
+                        return (
+                          <label key={g} className="flex items-center gap-2 cursor-pointer select-none">
+                            <span className={`w-[18px] h-[18px] rounded-full border flex items-center justify-center transition-colors ${selected ? 'bg-[#785900] border-[#785900]' : 'bg-[#F8F9FF] border-[#D4C5AB]'}`}>
+                              {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </span>
+                            <input type="radio" name="gender" value={g} checked={selected} onChange={e => setGender(e.target.value as any)} className="sr-only" />
+                            <span className="text-sm font-medium text-[#0D1C2E]">
+                              {g === 'MALE' ? t('profile.genderMale') : g === 'FEMALE' ? t('profile.genderFemale') : t('profile.genderOther')}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.dob')}</label>
-                    <FormInput type="date" value={dob} onChange={(e) => setDob(e.target.value)} style={{ colorScheme: 'dark' }} />
+                    <FieldLabel>{t('profile.dob')}</FieldLabel>
+                    <IconInput icon={Calendar} type="date" value={dob} onChange={e => setDob(e.target.value)} />
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.emergencyPhone')}</label>
-                    <FormInput icon={Phone} type="text" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder={t('profile.emergencyPhonePlaceholder')} />
+                    <FieldLabel>{t('profile.emergencyPhone')}</FieldLabel>
+                    <IconInput icon={Phone} type="text" value={emergencyPhone} onChange={e => setEmergencyPhone(e.target.value)} placeholder={t('profile.emergencyPhonePlaceholder')} />
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.nationality')}</label>
-                    <FormInput type="text" value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder={t('profile.nationalityPlaceholder')} />
+                    <FieldLabel>{t('profile.nationality')}</FieldLabel>
+                    <IconInput icon={Globe} type="text" value={nationality} onChange={e => setNationality(e.target.value)} placeholder={t('profile.nationalityPlaceholder')} />
                   </div>
-
                   <div>
-                    <label style={labelStyle}>{t('profile.occupation')}</label>
-                    <FormInput type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder={t('profile.occupationPlaceholder')} />
+                    <FieldLabel>{t('profile.occupation')}</FieldLabel>
+                    <IconInput icon={Briefcase} type="text" value={occupation} onChange={e => setOccupation(e.target.value)} placeholder={t('profile.occupationPlaceholder')} />
                   </div>
                 </div>
 
-                <div style={{ marginTop: 20 }}>
-                  <label style={labelStyle}>{t('profile.address')}</label>
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder={t('profile.addressPlaceholder')}
-                    style={{
-                      width: '100%', padding: 16, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
-                      borderRadius: 8, color: '#1a1a1a', fontFamily: 'system-ui', fontSize: 14, fontWeight: 500,
-                      minHeight: 100, resize: 'none', outline: 'none',
-                    }}
-                  />
+                <div>
+                  <FieldLabel>{t('profile.address')}</FieldLabel>
+                  <div className="relative">
+                    <MapPin size={16} className="absolute left-3 top-[13px] text-[#4F4632]/70 pointer-events-none" />
+                    <textarea
+                      value={address}
+                      onChange={e => setAddress(e.target.value)}
+                      placeholder={t('profile.addressPlaceholder')}
+                      rows={3}
+                      className={`${inputBase} ${inputFocus} resize-none min-h-[66px]`}
+                    />
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12, paddingTop: 20 }}>
+                <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={isSaving}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8, height: 48, padding: '0 28px',
-                      background: 'linear-gradient(135deg,#163328,#f0c94a)', color: '#fcfcfc', fontWeight: 800, fontSize: 13,
-                      border: 'none', borderRadius: 8, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1,
-                      textTransform: 'uppercase', letterSpacing: '0.05em',
-                    }}
+                    className="flex items-center gap-2 bg-[#FFC107] rounded-lg px-8 py-3 text-xs font-bold uppercase tracking-[0.24px] text-[#6D5100] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:brightness-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <Save style={{ width: 16, height: 16 }} />
+                    <Save size={14} />
                     {isSaving ? t('profile.saving') : t('profile.saveChanges')}
                   </button>
                 </div>
               </form>
             </motion.div>
 
-            {/* Membership Benefits */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ ...cardStyle, borderRadius: 12, padding: '28px 32px' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, background: 'rgba(251,191,36,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Award style={{ width: 16, height: 16, color: '#fbbf24' }} />
-                </div>
-                Quyền lợi thành viên {currentTierStr}
-              </h3>
-              <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', marginBottom: 20 }}>
-                {t('profile.earnMorePointsPrefix')} <strong style={{ color: 'rgba(0,0,0,0.7)' }}>{(tier.pointsNeeded - tier.currentPoints).toLocaleString()}</strong> {t('profile.earnMorePointsSuffix')} {tier.next} {t('profile.earnMorePointsEnd')}
-              </p>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  { icon: '🎫', title: t('profile.benefitPriorityTitle'), desc: t('profile.benefitPriorityDesc') },
-                  { icon: '💰', title: t('profile.benefitCashbackTitle'), desc: t('profile.benefitCashbackDesc') },
-                  { icon: '🎁', title: t('profile.benefitPromoTitle'), desc: t('profile.benefitPromoDesc') },
-                  { icon: '📞', title: t('profile.benefitHotlineTitle'), desc: t('profile.benefitHotlineDesc') },
-                  { icon: '⭐', title: t('profile.benefitPointsTitle'), desc: t('profile.benefitPointsDesc') },
-                  { icon: '🛡️', title: t('profile.benefitInsuranceTitle'), desc: t('profile.benefitInsuranceDesc') },
-                ].map((benefit, i) => (
-                  <div key={i} style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 8, padding: 14, transition: 'background 0.2s' }}>
-                    <div style={{ fontSize: 22, marginBottom: 8 }}>{benefit.icon}</div>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#1a1a1a', marginBottom: 2 }}>{benefit.title}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{benefit.desc}</div>
+            {/* Stats */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-col gap-6">
+              <h3 className="text-xl font-semibold text-[#0D1C2E]">{t('profile.myStats')}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {stats.map((stat, i) => (
+                  <div key={i} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.05)] p-[25px] flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-[#E5EEFF] flex items-center justify-center">
+                      <stat.icon size={18} className="text-[#0D1C2E]" />
+                    </div>
+                    <div className="text-xl font-bold text-[#0D1C2E] text-center">{stat.value}</div>
+                    <div className="text-xs font-medium text-[#4F4632] tracking-[0.24px] text-center">{stat.label}</div>
                   </div>
                 ))}
               </div>
             </motion.div>
 
-            {/* Activity Stats */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} style={{ ...cardStyle, borderRadius: 12, padding: 24 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, background: 'rgba(22,51,40,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingUp style={{ width: 16, height: 16, color: '#163328' }} />
-                </div>
-                Thống kê của tôi
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: t('profile.totalTrips'), value: bookingsCount.toString(), icon: '🚌', color: '#163328' },
-                  { label: t('profile.accumulatedPoints'), value: currentPoints.toLocaleString(), icon: '⭐', color: '#fbbf24' },
-                  { label: t('profile.totalKm'), value: '0 km', icon: '📍', color: '#34d399' },
-                  { label: t('profile.totalSaved'), value: '0đ', icon: '💰', color: '#f0c94a' },
-                ].map((stat, i) => (
-                  <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 8, padding: 16, textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, marginBottom: 8 }}>{stat.icon}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: stat.color }}>{stat.value}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)', marginTop: 2 }}>{stat.label}</div>
+            {/* Membership Benefits */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex flex-col gap-6 pb-10">
+              <div className="flex items-center gap-2">
+                <Award size={16} className="text-[#785900]" />
+                <h3 className="text-xl font-semibold text-[#0D1C2E]">{t('profile.memberBenefits')} {tier.label}</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {benefits.map((b, i) => (
+                  <div key={i} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.05)] p-[21px] flex gap-4 items-start">
+                    <span className="text-3xl leading-none shrink-0">{b.icon}</span>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <div className="text-base font-bold text-[#0D1C2E] leading-tight">{b.title}</div>
+                      <div className="text-xs text-[#4F4632] tracking-[0.24px] leading-snug">{b.desc}</div>
+                    </div>
                   </div>
                 ))}
               </div>
             </motion.div>
           </div>
-
         </div>
       </div>
     </div>

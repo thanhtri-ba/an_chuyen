@@ -58,7 +58,7 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-2">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-2">
       <div className="space-y-1">
         <h1 className="font-bold text-2xl tracking-tight">Đánh Giá</h1>
         <p className="text-muted-foreground text-sm">Duyệt và quản lý đánh giá của khách hàng</p>
@@ -77,7 +77,7 @@ export default function Page() {
           </div>
         </div>
         <CardContent className="p-0">
-          <Table>
+          <Table className="[&_td]:py-4 [&_th]:h-12">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[220px]">Khách hàng</TableHead>
@@ -136,7 +136,7 @@ export default function Page() {
                         variant="ghost"
                         size="icon"
                         onClick={() => void handleDelete(r.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                       >
                         <Trash2 className="size-4" />
                       </Button>

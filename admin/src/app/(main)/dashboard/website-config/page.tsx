@@ -190,7 +190,7 @@ export default function Page() {
                         size="icon"
                         onClick={() => void handleSave(c.id)}
                         disabled={savingKey === c.id || drafts[c.id] === c.value}
-                        className="h-8 w-8 text-muted-foreground hover:text-blue-600"
+                        className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                       >
                         <Save className="size-4" />
                       </Button>
@@ -198,7 +198,7 @@ export default function Page() {
                         variant="ghost"
                         size="icon"
                         onClick={() => void handleDelete(c.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                       >
                         <Trash2 className="size-4" />
                       </Button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Clock, Share2, Gift, Ticket, Copy, Check, ArrowRight } from 'lucide-react';
 import api from '../../../lib/api';
 import { toast } from 'sonner';
@@ -13,39 +13,8 @@ interface Promotion {
   discountPct: number;
   maxDiscount: number | null;
   validUntil: string;
+  logoPath: string | null;
 }
-
-const getStaticPromos = (t: any) => [
-  {
-    id: 'demo1', code: 'SAPA50K', title: t('offers.promo1Title'), discountPct: 0,
-    subtitle: t('offers.promo1Desc'),
-    validUntil: '2026-11-30',
-    img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f78?q=80&w=800&auto=format&fit=crop',
-    badge: t('offers.promo1Badge'),
-    accent: '#d4af37',
-    tag: 'EXPERIENCE',
-  },
-  {
-    id: 'demo2', code: 'VNPAY10', title: t('offers.promo2Title'), discountPct: 10,
-    subtitle: t('offers.promo2Desc'),
-    validUntil: '2026-12-15',
-    img: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=800&auto=format&fit=crop',
-    badge: null,
-    accent: '#d4af37',
-    tag: 'PAYMENT',
-  },
-  {
-    id: 'demo3', code: 'VIP20', title: t('offers.promo3Title'), discountPct: 20,
-    subtitle: t('offers.promo3Desc'),
-    validUntil: '2026-12-31',
-    img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop',
-    badge: 'VIP',
-    accent: '#d4af37',
-    tag: 'MEMBER',
-  },
-];
-
-const FILTER_KEYS = ['filterAll', 'filterNew', 'filterLoyal', 'filterPayment'];
 
 function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: string) => void; index: number }) {
   const [copied, setCopied] = useState(false);
@@ -136,14 +105,14 @@ function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: stri
 
 export function OffersPage() {
   const { t } = useTranslation();
-  const FILTERS = FILTER_KEYS.map(k => ({ key: k, label: t(`offers.${k}`) }));
   const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [activeFilter, setActiveFilter] = useState(FILTER_KEYS[0]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/promotions')
       .then(res => setPromotions(res.data ?? []))
-      .catch(() => {});
+      .catch(() => setPromotions([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleApply = (code: string) => {
@@ -151,13 +120,10 @@ export function OffersPage() {
     toast.success(t('offers.applySuccess').replace('{code}', code));
   };
 
-  const allPromos = [
-    ...getStaticPromos(t),
-    ...promotions.map(p => ({
-      ...p, img: null as string | null, badge: null as string | null,
-      accent: '#d4af37', tag: 'OFFER',
-    })),
-  ];
+  const allPromos = promotions.map(p => ({
+    ...p, img: p.logoPath || null, badge: null as string | null,
+    accent: '#d4af37', tag: 'OFFER',
+  }));
 
   return (
     <div className="bg-[#fcfcfc] text-[#1a1a1a] min-h-screen font-sans">
@@ -195,54 +161,22 @@ export function OffersPage() {
         </div>
       </section>
 
-      {/* ─── FILTER TABS ─── */}
-      <section className="border-b border-gray-100 bg-white sticky top-0 z-40 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 flex gap-8 overflow-x-auto custom-scrollbar">
-          {FILTERS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setActiveFilter(key)}
-              className={`py-5 text-[11px] font-bold tracking-widest uppercase whitespace-nowrap transition-all border-b-2 ${
-                activeFilter === key 
-                  ? 'text-primary border-primary' 
-                  : 'text-gray-400 border-transparent hover:text-gray-600'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── PROMO GRID ─── */}
+      {/* ─── PROMO CARDS (real data from admin) ─── */}
       <section className="px-6 lg:px-12 py-16 max-w-[1400px] mx-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeFilter}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25 }}
-          >
-            {/* Featured large card + 2 stacked */}
-            {allPromos.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-                {allPromos.slice(0, 3).map((promo, idx) => (
-                  <PromoCard key={promo.id} promo={promo} onApply={handleApply} index={idx} />
-                ))}
-              </div>
-            )}
-
-            {/* Extra promos */}
-            {allPromos.length > 3 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {allPromos.slice(3).map((promo, idx) => (
-                  <PromoCard key={promo.id} promo={promo} onApply={handleApply} index={idx + 3} />
-                ))}
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {loading ? (
+          <div className="text-center py-12 text-gray-400 text-sm">Đang tải khuyến mãi...</div>
+        ) : allPromos.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {allPromos.map((promo, idx) => (
+              <PromoCard key={promo.id} promo={promo} onApply={handleApply} index={idx} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+            <Gift className="w-10 h-10 text-gray-300" />
+            <p className="text-gray-400 text-sm">Hiện chưa có chương trình khuyến mãi nào. Quay lại sau nhé!</p>
+          </div>
+        )}
       </section>
 
       {/* ─── DIVIDER ─── */}

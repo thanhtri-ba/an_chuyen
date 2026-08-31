@@ -1,152 +1,123 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Clock, Shield, FileText, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Wifi, Usb, Droplets, Phone, Wind, ShieldCheck, Search, Ticket, Tag, HelpCircle, Bus, X, Armchair, Info, PenLine, Snowflake, Users, Layers, Star, Calendar, ChevronDown, Trash2, Plus, Minus, Lock, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { BookingStepper } from '../../../shared/components/BookingStepper';
 
-interface SeatData {
-  id: string; floor: number; status: 'available' | 'booked' | 'blocked'; price: number;
-}
-interface CheckpointData {
-  id: string; type: 'PICKUP' | 'DROPOFF'; time: string;
-  station: { id: string; name: string; city?: { name: string } };
-}
-interface TripScheduleDetail {
-  id: string; departureTime: string; arrivalTime: string;
-  trip: { busClass: string; busAgent: { name: string; rating: number }; route: { departureCity: { name: string }; arrivalCity: { name: string } }; basePrice?: number };
-  checkpoints: CheckpointData[];
-}
+// --- Types & Mocks ---
+interface SeatData { id: string; floor: number; status: 'available' | 'booked' | 'blocked'; price: number; }
+interface CheckpointData { id: string; type: 'PICKUP' | 'DROPOFF'; time: string; station: { id: string; name: string; city?: { name: string } }; }
+interface TripScheduleDetail { id: string; departureTime: string; arrivalTime: string; trip: { busClass: string; busAgent: { name: string; rating: number }; route: { departureCity: { name: string }; arrivalCity: { name: string } }; basePrice?: number }; checkpoints: CheckpointData[]; }
+interface PassengerForm { name: string; phone: string; email: string; gender: string; dob: string; idNumber: string; nationality: string; }
+const emptyPassenger = (): PassengerForm => ({ name: '', phone: '', email: '', gender: 'Nam', dob: '', idNumber: '', nationality: 'Việt Nam' });
+const AMENITY_PRICES = { water: 10000, towel: 5000, pillow: 30000 };
 
 function parseSeatId(id: string) {
   const m = id.match(/^T(\d+)-(\d+)([A-Z]+)$/);
   if (!m) return null;
   return { floor: parseInt(m[1]), row: parseInt(m[2]), col: m[3] };
 }
-
+// Sequential "A01, A02, ..." display labels in row-major order — shared by SeatMap and the VIP pill so they never disagree.
+function computeSeatLabels(seatsForFloor: SeatData[]): Record<string,string> {
+  const parsed = seatsForFloor.map(s=>({...s,p:parseSeatId(s.id)})).filter(s=>s.p);
+  const rows = [...new Set(parsed.map(s=>s.p!.row))].sort((a,b)=>a-b);
+  const cols = [...new Set(parsed.map(s=>s.p!.col))].sort();
+  let counter=1;
+  const map: Record<string,string> = {};
+  rows.forEach(r=>{
+    cols.forEach(c=>{
+      const seat = parsed.find(s=>s.p!.row===r&&s.p!.col===c);
+      if (seat) map[seat.id] = `A${String(counter++).padStart(2,'0')}`;
+    });
+  });
+  return map;
+}
+// 2+2 layout, 6 rows: a few positions are decorative (luggage rack / no seat). Row 1 (front row) carries a VIP surcharge.
+const GAP_CELLS = new Set(['1-3-C','1-5-A','1-6-D','2-3-C','2-5-A','2-6-D']);
 function generateMockSeats(): SeatData[] {
-  const booked = new Set(['T1-1A','T1-2B','T1-4A','T1-4B','T1-5C','T1-6B','T1-3A','T2-1B','T2-3A','T2-3C','T2-5B','T2-6C','T2-7A']);
-  return [1,2].flatMap(floor =>
-    ['A','B','C'].flatMap(col =>
-      Array.from({length:7},(_,i)=>i+1).map(row => {
-        const id=`T${floor}-${row}${col}`;
-        return {id, floor, status: booked.has(id)?'booked':'available' as const, price: floor===2?185000:155000};
-      })
-    )
-  );
+  const booked = new Set(['T1-1B','T1-4A','T1-4D','T2-1A','T2-4B']);
+  const seats: SeatData[] = [];
+  [1,2].forEach(floor => {
+    for (let row=1; row<=6; row++) {
+      ['A','B','C','D'].forEach(col => {
+        if (GAP_CELLS.has(`${floor}-${row}-${col}`)) return;
+        const id = `T${floor}-${row}${col}`;
+        const base = floor===2?185000:155000;
+        seats.push({ id, floor, status: booked.has(id)?'booked':'available', price: row===1?base+30000:base });
+      });
+    }
+  });
+  return seats;
 }
 
-// ─── SEAT ICON SVG ────────────────────────────────────────────────────────────
-function SeatIcon({ selected, booked, size=44 }: { selected: boolean; booked: boolean; size?: number }) {
-  const fill = booked ? 'rgba(0,0,0,0.06)' : selected ? 'rgba(22,51,40,0.22)' : 'rgba(0,0,0,0.08)';
-  const stroke = booked ? 'rgba(0,0,0,0.08)' : selected ? '#163328' : 'rgba(0,0,0,0.35)';
-  const inner = booked ? 'rgba(0,0,0,0.03)' : selected ? 'rgba(22,51,40,0.18)' : 'rgba(0,0,0,0.05)';
-  const s = size;
+// --- Components ---
+function SeatIcon({ label, selected, booked, vip=false, size=52 }: { label?: string; selected: boolean; booked: boolean; vip?: boolean; size?: number }) {
+  if (booked) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: size*0.167 }} className="flex items-center justify-center bg-[#E9ECEF] text-[#ADB5BD]">
+        <Armchair size={size*0.32} strokeWidth={1.75} />
+      </div>
+    );
+  }
+  // Selected = solid gold fill. VIP-but-unselected keeps a plain white seat with just a gold
+  // outline + badge — a light cream fill here reads almost identical to "selected" at a glance.
+  const bg = selected ? 'bg-[#FFC107]' : 'bg-white';
+  const border = selected ? 'border-[#FFC107]' : vip ? 'border-2 border-[#856404]' : 'border-[#DEE2E6]';
   return (
-    <svg width={s} height={s+10} viewBox={`0 0 44 54`} fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Headrest */}
-      <rect x="6" y="1" width="32" height="10" rx="5" fill={fill} stroke={stroke} strokeWidth="1.2"/>
-      {/* Backrest */}
-      <rect x="4" y="13" width="36" height="24" rx="4" fill={fill} stroke={stroke} strokeWidth="1.2"/>
-      {/* Inner padding */}
-      <rect x="8" y="17" width="28" height="16" rx="2" fill={inner}/>
-      {/* Armrests */}
-      <rect x="0" y="15" width="5" height="18" rx="2.5" fill={fill} stroke={stroke} strokeWidth="1"/>
-      <rect x="39" y="15" width="5" height="18" rx="2.5" fill={fill} stroke={stroke} strokeWidth="1"/>
-      {/* Seat cushion */}
-      <rect x="4" y="39" width="36" height="14" rx="4" fill={fill} stroke={stroke} strokeWidth="1.2"/>
-      <rect x="8" y="42" width="28" height="8" rx="2" fill={inner}/>
-      {/* Selected check */}
-      {selected && (
-        <circle cx="37" cy="7" r="5" fill="#163328">
-          <animate attributeName="r" from="3" to="5" dur="0.2s" fill="freeze"/>
-        </circle>
-      )}
-      {selected && (
-        <path d="M34.5 7L36.5 9L39.5 5" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      )}
-    </svg>
+    <div
+      style={{ width: size, height: size, borderRadius: size*0.167 }}
+      className={`relative flex flex-col items-center justify-center gap-1 border ${bg} ${border} text-[#212529] font-bold transition-all`}
+    >
+      <span style={{fontSize: Math.max(10, size*0.22)}}>{label}</span>
+      {vip && <span className="font-bold uppercase leading-none border border-[#856404] text-[#856404] px-1 py-px rounded" style={{fontSize: Math.max(7, size*0.125)}}>VIP</span>}
+      {selected && <CheckCircle2 size={size*0.22} className="absolute -top-1.5 -right-1.5 text-[#856404] bg-white rounded-full" strokeWidth={2.5} />}
+    </div>
   );
 }
 
-// ─── SEAT MAP ─────────────────────────────────────────────────────────────────
-function SeatMap({ seats, selectedSeats, onToggle }: { seats: SeatData[]; selectedSeats: string[]; onToggle: (id: string, status: string) => void }) {
-  if (!seats.length) return <div className="text-gray-400 text-xs py-10 text-center font-medium">Không có dữ liệu ghế</div>;
+function LegendDot({ selected, booked, vip, size=28 }: { selected: boolean; booked: boolean; vip: boolean; size?: number }) {
+  const bg = booked ? 'bg-[#E9ECEF]' : selected ? 'bg-[#FFC107]' : 'bg-white';
+  const border = booked ? 'border-[#E9ECEF]' : selected ? 'border-[#FFC107]' : vip ? 'border-2 border-[#856404]' : 'border-[#DEE2E6]';
+  return <div style={{width:size,height:size}} className={`rounded-[4px] border ${bg} ${border}`} />;
+}
 
+function SeatMap({ seats, selectedSeats, onToggle, seatSize=48 }: { seats: SeatData[]; selectedSeats: string[]; onToggle: (id: string, status: string) => void; seatSize?: number }) {
+  if (!seats.length) return <div className="text-[#6C757D] text-xs py-10 text-center font-medium">Không có dữ liệu ghế</div>;
   const parsed = seats.map(s=>({...s, p:parseSeatId(s.id)})).filter(s=>s.p);
   const rows = [...new Set(parsed.map(s=>s.p!.row))].sort((a,b)=>a-b);
   const cols = [...new Set(parsed.map(s=>s.p!.col))].sort();
   const aisleAfter = cols.length>=3 ? 1 : -1;
-  const SEAT = 48, GAP = 10, AISLE = 36;
+  const GAP = Math.round(seatSize*0.167), AISLE = Math.round(seatSize*0.667);
+  const prices = parsed.map(s=>s.price);
+  const maxPrice = Math.max(...prices);
+  const minPrice = Math.min(...prices);
+  const labels = computeSeatLabels(seats);
 
   return (
-    <div className="overflow-x-auto no-scrollbar">
-      <div className="inline-block px-4">
-        {/* Col headers */}
-        <div className="flex pl-8 mb-2">
-          {cols.map((col,ci)=>(
-            <div key={col} className="flex">
-              {ci===aisleAfter+1 && <div style={{width:AISLE}}/>}
-              <div style={{width:SEAT, marginRight:ci<cols.length-1&&ci!==aisleAfter?GAP:0}} 
-                className="text-center text-[10px] font-bold tracking-[0.2em] text-primary/50 uppercase">
-                {col}
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Rows */}
+    <div className="flex justify-center w-full">
+      <div className="inline-block">
         {rows.map(rowNum=>(
-          <div key={rowNum} className="flex items-center mb-2.5">
-            <div className="w-6 mr-2 text-right text-[10px] text-gray-400 font-bold shrink-0">{rowNum}</div>
+          <div key={rowNum} className="relative flex items-center" style={{marginBottom: Math.round(seatSize*0.167)}}>
+            <span className="absolute font-semibold text-[#6C757D] text-right" style={{left:-Math.round(seatSize*0.33), fontSize: seatSize*0.19, width: seatSize*0.28}}>{rowNum}</span>
             {cols.map((col,ci)=>{
               const seat = parsed.find(s=>s.p!.row===rowNum&&s.p!.col===col);
               const sel = seat ? selectedSeats.includes(seat.id) : false;
               const avail = seat?.status==='available';
+              const vip = !!seat && maxPrice>minPrice && seat.price===maxPrice;
+              const displayNum = seat ? labels[seat.id] : '';
+
               return (
                 <div key={col} className="flex items-center">
-                  {ci===aisleAfter+1 && (
-                    <div style={{width:AISLE}} className="flex items-center justify-center">
-                      <div className="w-px h-14 bg-gray-100"/>
-                    </div>
-                  )}
+                  {ci===aisleAfter+1 && <div style={{width:AISLE}} />}
                   <motion.div
-                    whileHover={avail&&seat?{scale:1.05,y:-2}:{}}
-                    whileTap={avail&&seat?{scale:0.95}:{}}
+                    whileHover={avail&&seat?{scale:1.05}:{}} whileTap={avail&&seat?{scale:0.95}:{}}
                     onClick={()=>seat&&avail&&onToggle(seat.id,seat.status)}
-                    title={seat?(avail?`Ghế ${col}${rowNum} · ${(seat.price/1000).toFixed(0)}k₫`:'Đã bán'):''}
-                    style={{
-                      width:SEAT,
-                      marginRight:ci<cols.length-1&&ci!==aisleAfter?GAP:0,
-                    }}
-                    className={`relative select-none flex flex-col items-center gap-0.5 transition-opacity ${
-                      !seat ? 'opacity-0' : !avail ? 'opacity-40' : 'opacity-100'
-                    } ${
-                      !seat ? 'cursor-default' : avail ? 'cursor-pointer' : 'cursor-not-allowed'
-                    }`}
+                    style={{marginRight:ci<cols.length-1&&ci!==aisleAfter?GAP:0}}
+                    className={`relative select-none flex flex-col items-center gap-0.5 ${seat ? (avail ? 'cursor-pointer' : 'cursor-not-allowed') : 'cursor-default'}`}
                   >
-                    {seat && (
-                      <>
-                        <SeatIcon selected={sel} booked={!avail} size={SEAT}/>
-                        <span className={`text-[10px] font-bold tracking-wider leading-none mt-1 ${
-                          sel ? 'text-primary' : avail ? 'text-gray-700' : 'text-gray-400'
-                        }`}>
-                          {col}{rowNum}
-                        </span>
-                        {avail&&!sel&&(
-                          <span className="text-[9px] text-gray-400 font-medium">
-                            {(seat.price/1000).toFixed(0)}k
-                          </span>
-                        )}
-                        {sel && (
-                          <motion.div
-                            initial={{scale:0,opacity:0}} animate={{scale:1,opacity:1}}
-                            className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center shadow-md shadow-primary/30"
-                          >
-                            <Check size={10} color="#ffffff" strokeWidth={3.5}/>
-                          </motion.div>
-                        )}
-                      </>
-                    )}
+                    {seat ? <SeatIcon label={displayNum} selected={sel} booked={!avail} vip={vip} size={seatSize}/> : <SeatIcon selected={false} booked size={seatSize}/>}
                   </motion.div>
                 </div>
               );
@@ -158,28 +129,64 @@ function SeatMap({ seats, selectedSeats, onToggle }: { seats: SeatData[]; select
   );
 }
 
-function Field({ label, value, onChange, placeholder, type='text' }: { label:string; value:string; onChange:(v:string)=>void; placeholder:string; type?:string }) {
-  const [f,setF]=useState(false);
+// --- Passenger info step: small field primitives (Tailwind-gray palette per Figma node 9:420) ---
+const infoInputBase = "w-full bg-white border border-[#D1D5DB] rounded-lg px-[17px] py-[11px] text-sm text-[#1F2937] outline-none transition-all disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]";
+const infoInputFocus = "focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20";
+
+function InfoLabel({ children, required }: { children: ReactNode; required?: boolean }) {
+  return <div className="text-xs font-medium text-[#6B7280] mb-1">{children}{required && <span className="text-[#EF4444]"> *</span>}</div>;
+}
+
+function TextField({ label, value, onChange, placeholder, required, disabled, type='text', maxLength, inputMode }: { label:string; value:string; onChange:(v:string)=>void; placeholder?:string; required?:boolean; disabled?:boolean; type?:string; maxLength?:number; inputMode?:'text'|'tel'|'numeric' }) {
   return (
     <div>
-      <div className="text-[10px] text-gray-500 tracking-widest uppercase font-bold mb-3">{label}</div>
-      <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
-        onFocus={()=>setF(true)} onBlur={()=>setF(false)}
-        className={`w-full border px-4 py-3.5 text-sm font-medium text-[#1a1a1a] outline-none transition-all rounded-xl ${
-          f ? 'bg-primary/5 border-primary ring-2 ring-primary/10' : 'bg-white border-gray-200'
-        }`} />
+      <InfoLabel required={required}>{label}</InfoLabel>
+      <input type={type} value={value} disabled={disabled} maxLength={maxLength} inputMode={inputMode}
+        onChange={e=>onChange(maxLength ? e.target.value.replace(/\D/g,'').slice(0,maxLength) : e.target.value)}
+        placeholder={placeholder}
+        className={`${infoInputBase} ${infoInputFocus}`} />
     </div>
   );
 }
 
-// ─── PAGE ─────────────────────────────────────────────────────────────────────
+function DateField({ label, value, onChange, disabled }: { label:string; value:string; onChange:(v:string)=>void; disabled?:boolean }) {
+  const today = new Date().toISOString().split('T')[0];
+  const minDob = new Date(new Date().setFullYear(new Date().getFullYear()-120)).toISOString().split('T')[0];
+  return (
+    <div>
+      <InfoLabel>{label}</InfoLabel>
+      <div className="relative">
+        <Calendar size={16} className="absolute left-[13px] top-1/2 -translate-y-1/2 text-[#6B7280] pointer-events-none" />
+        <input type="date" value={value} disabled={disabled} max={today} min={minDob} onChange={e=>onChange(e.target.value)}
+          className={`${infoInputBase} ${infoInputFocus} pl-[41px]`} />
+      </div>
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options, disabled }: { label:string; value:string; onChange:(v:string)=>void; options:string[]; disabled?:boolean }) {
+  return (
+    <div>
+      <InfoLabel>{label}</InfoLabel>
+      <div className="relative">
+        <select value={value} disabled={disabled} onChange={e=>onChange(e.target.value)}
+          className={`${infoInputBase} ${infoInputFocus} appearance-none pr-[36px] cursor-pointer`}>
+          {options.map(o=><option key={o} value={o}>{o}</option>)}
+        </select>
+        <ChevronDown size={14} className="absolute right-[13px] top-1/2 -translate-y-1/2 text-[#6B7280] pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
+// --- Page Component ---
 export function SeatSelectionPage() {
   const navigate = useNavigate();
   const { tripScheduleId } = useParams<{ tripScheduleId: string }>();
 
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   useEffect(() => {
-    const fn = () => setIsMobile(window.innerWidth < 768);
+    const fn = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', fn);
     return () => window.removeEventListener('resize', fn);
   }, []);
@@ -190,15 +197,11 @@ export function SeatSelectionPage() {
   const [tripDetail, setTripDetail] = useState<TripScheduleDetail|null>(null);
   const [timeLeft, setTimeLeft] = useState(600);
   const [step, setStep] = useState<'seat'|'info'>('seat');
-  const [addInsurance, setAddInsurance] = useState(false);
-  const [needVAT, setNeedVAT] = useState(false);
-  const [isSamePerson, setIsSamePerson] = useState(true);
-  const [pName,setPName] = useState('');
-  const [pPhone,setPPhone] = useState('');
-  const [pEmail,setPEmail] = useState('');
-  const [bName,setBName] = useState('');
-  const [bPhone,setBPhone] = useState('');
-  const [bEmail,setBEmail] = useState('');
+  const [passengers, setPassengers] = useState<PassengerForm[]>([emptyPassenger()]);
+  const [copyFromFirst, setCopyFromFirst] = useState<boolean[]>([false]);
+  const [amenityQty, setAmenityQty] = useState({ water: 0, towel: 0, pillow: 0 });
+  const [usbSelected, setUsbSelected] = useState(true);
+  const [notes, setNotes] = useState('');
   const [pickupPoint,setPickupPoint] = useState('');
   const [dropoffPoint,setDropoffPoint] = useState('');
 
@@ -234,495 +237,622 @@ export function SeatSelectionPage() {
     setSelectedSeats(p=>[...p,id]);
   };
 
+  // One passenger form per selected seat (min 1) — grow/shrink to match as seats are added or removed.
+  useEffect(()=>{
+    const n = Math.max(1, selectedSeats.length);
+    setPassengers(prev=> prev.length===n ? prev : prev.length<n ? [...prev, ...Array.from({length:n-prev.length},emptyPassenger)] : prev.slice(0,n));
+    setCopyFromFirst(prev=> prev.length===n ? prev : prev.length<n ? [...prev, ...Array.from({length:n-prev.length},()=>false)] : prev.slice(0,n));
+  },[selectedSeats.length]);
+
+  const updatePassenger = (idx:number, field:keyof PassengerForm, value:string) => {
+    setPassengers(prev=>prev.map((p,i)=>i===idx?{...p,[field]:value}:p));
+  };
+  const toggleCopyFirst = (idx:number) => {
+    const willCopy = !copyFromFirst[idx];
+    setCopyFromFirst(prev=>prev.map((v,i)=>i===idx?willCopy:v));
+    if(willCopy) setPassengers(prev=>prev.map((p,i)=>i===idx?{...prev[0]}:p));
+  };
+  const removePassenger = (idx:number) => {
+    if(selectedSeats[idx]) toggleSeat(selectedSeats[idx],'available');
+  };
+
   const seatsTotal = selectedSeats.reduce((s,id)=>s+(seats.find(x=>x.id===id)?.price||0),0);
-  const insuranceFee = addInsurance?selectedSeats.length*20000:0;
-  const total = seatsTotal+insuranceFee;
+  const amenitiesTotal = amenityQty.water*AMENITY_PRICES.water + amenityQty.towel*AMENITY_PRICES.towel + amenityQty.pillow*AMENITY_PRICES.pillow;
   const fmt = (n:number)=>new Intl.NumberFormat('vi-VN').format(n);
 
   const floorSeats = seats.filter(s=>s.floor===activeFloor);
-  const floorCount = seats.length?Math.max(...seats.map(s=>s.floor)):2;
-  const availCount = seats.filter(s=>s.floor===activeFloor&&s.status==='available').length;
-  const bookedCount = seats.filter(s=>s.floor===activeFloor&&s.status==='booked').length;
+  const floorCount = seats.length?Math.max(2, ...seats.map(s=>s.floor)):2;
+  // Cheapest available seat on each floor, so the floor-switch tabs show a real price difference
+  // instead of two identically-labelled buttons.
+  const floorFromPrice: Record<number, number> = {};
+  [1,2].forEach(f=>{
+    const prices = seats.filter(s=>s.floor===f).map(s=>s.price);
+    if (prices.length) floorFromPrice[f] = Math.min(...prices);
+  });
+  const floorPrices = floorSeats.map(s=>s.price);
+  const floorMaxPrice = floorPrices.length?Math.max(...floorPrices):0;
+  const floorMinPrice = floorPrices.length?Math.min(...floorPrices):0;
+  const seatLabels = computeSeatLabels(floorSeats);
+  const vipLabels = floorMaxPrice>floorMinPrice
+    ? floorSeats.filter(s=>s.price===floorMaxPrice).map(s=>seatLabels[s.id]).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)))
+    : [];
+  const vipNums = vipLabels.map(l=>parseInt(l.slice(1)));
+  const vipIsContiguous = vipNums.every((n,i)=>i===0||n===vipNums[i-1]+1);
+  const vipRangeLabel = vipLabels.length===0 ? '' : vipLabels.length===1 ? vipLabels[0]
+    : vipIsContiguous ? `${vipLabels[0]} - ${vipLabels[vipLabels.length-1]}`
+    : vipLabels.join(', ');
 
-  const depCity = tripDetail?.trip.route.departureCity.name||'TP.HCM';
-  const arrCity = tripDetail?.trip.route.arrivalCity.name||'Hà Nội';
-  const depTime = tripDetail?new Date(tripDetail.departureTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'10:00';
-  const arrTime = tripDetail?new Date(tripDetail.arrivalTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'22:00';
+  // Display labels ("A05") for selected-seat chips, computed per-floor so cross-floor selections still resolve.
+  const globalSeatLabels: Record<string,string> = {};
+  [...new Set(seats.map(s=>s.floor))].forEach(f=>Object.assign(globalSeatLabels, computeSeatLabels(seats.filter(s=>s.floor===f))));
+  const labelFor = (id:string) => globalSeatLabels[id] || id;
+
+  const depCity = tripDetail?.trip.route.departureCity.name||'TP. Hồ Chí Minh';
+  const arrCity = tripDetail?.trip.route.arrivalCity.name||'Nha Trang';
+  const depTime = tripDetail?new Date(tripDetail.departureTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'07:00';
+  const arrTime = tripDetail?new Date(tripDetail.arrivalTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'15:30';
+  const depDate = tripDetail?new Date(tripDetail.departureTime).toLocaleDateString('vi-VN'):new Date().toLocaleDateString('vi-VN');
   const agentName = tripDetail?.trip.busAgent.name||'Phương Trang';
-  const busClass = tripDetail?.trip.busClass||'EXECUTIVE';
+  const agentRating = tripDetail?.trip.busAgent.rating||4.8;
+  const busClass = tripDetail?.trip.busClass||'Limousine 22 chỗ';
+  // "Giá vé từ" on the trip card is the cheapest fare on the bus, not just the first generated seat.
+  const seatPrice = seats.length ? Math.min(...seats.map(s=>s.price)) : 155000;
+  const avgSelectedSeatPrice = selectedSeats.length ? Math.round(seatsTotal/selectedSeats.length) : seatPrice;
+
+  const validatePassengers=():string|null=>{
+    for(let i=0;i<passengers.length;i++){
+      const p=passengers[i];
+      const label=`Hành khách ${i+1}`;
+      if(!p.name.trim()) return `${label}: vui lòng nhập họ tên`;
+      if(!p.phone.trim()) return `${label}: vui lòng nhập số điện thoại`;
+      if(!/^0\d{9}$/.test(p.phone.trim())) return `${label}: số điện thoại phải có đúng 10 số và bắt đầu bằng 0`;
+      if(p.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email.trim())) return `${label}: email không hợp lệ (phải có dạng ten@example.com)`;
+      if(!p.idNumber.trim()) return `${label}: vui lòng nhập số CMND/CCCD`;
+      if(!/^\d{9}(\d{3})?$/.test(p.idNumber.trim())) return `${label}: số CMND/CCCD phải có 9 hoặc 12 chữ số`;
+      if(p.dob){
+        const dobDate=new Date(p.dob);
+        const today=new Date();
+        if(Number.isNaN(dobDate.getTime())) return `${label}: ngày sinh không hợp lệ`;
+        if(dobDate>today) return `${label}: ngày sinh không thể ở tương lai`;
+        const age=(today.getTime()-dobDate.getTime())/(365.25*24*3600*1000);
+        if(age>120) return `${label}: ngày sinh không hợp lệ (tuổi vượt quá 120)`;
+      }
+    }
+    return null;
+  };
 
   const handleContinue=()=>{
     if(selectedSeats.length===0){toast.error('Chọn ít nhất 1 ghế');return;}
-    if(step==='seat'){setStep('info');window.scrollTo({top:0,behavior:'smooth'});return;}
-    if(!pName||!pPhone||!pEmail){toast.error('Điền đủ thông tin hành khách');return;}
+    if(step==='seat'){setStep('info');return;}
+    const validationError=validatePassengers();
+    if(validationError){toast.error(validationError);return;}
     const pickupLabel = pickupOpts.find(c=>c.id===pickupPoint)?.station.name||'';
     const dropoffLabel = dropoffOpts.find(c=>c.id===dropoffPoint)?.station.name||'';
-    const bookingData={tripScheduleId,seats:selectedSeats,seatsTotal,totalAmount:total,pickupPoint,dropoffPoint,pickupLabel,dropoffLabel,routeLabel:`${depCity} → ${arrCity}`,busAgentName:agentName,addInsurance,insuranceFee,needVAT,passengerInfo:{name:pName,phone:pPhone,email:pEmail},bookerInfo:isSamePerson?null:{name:bName,phone:bPhone,email:bEmail}};
+    const primary = passengers[0];
+    const bookingData={tripScheduleId,seats:selectedSeats,seatsTotal,totalAmount:seatsTotal+amenitiesTotal,pickupPoint,dropoffPoint,pickupLabel,dropoffLabel,routeLabel:`${depCity} → ${arrCity}`,busAgentName:agentName,addInsurance:false,insuranceFee:0,needVAT:false,passengerInfo:{name:primary.name,phone:primary.phone,email:primary.email},bookerInfo:null,passengers,amenities:{nuocSuoi:amenityQty.water,khanLanh:amenityQty.towel,goiTuaCo:amenityQty.pillow,oCamUSB:usbSelected},amenitiesTotal,notes};
     sessionStorage.setItem('pending_booking',JSON.stringify(bookingData));
     localStorage.setItem('pending_booking',JSON.stringify(bookingData));
-    navigate('/booking-review');
+    navigate('/payment');
   };
 
-  const pct = (bookedCount/(floorSeats.length||1))*100;
+  const stepIdx = step==='seat' ? 2 : 3;
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
-
-      {/* ── TOPBAR ── */}
-      <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 lg:px-16 h-16 flex items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-4 lg:gap-6 min-w-0 overflow-hidden">
-            <Link to="/search" className="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-full text-muted-foreground hover:bg-gray-50 hover:text-primary transition-colors shrink-0">
-              <ArrowLeft size={16}/>
+    <div className="h-screen bg-[#F8F9FA] text-[#212529] font-['Be_Vietnam_Pro',_sans-serif] flex overflow-hidden">
+      {/* ── SLIM ICON SIDEBAR ── */}
+      {!isMobile && (
+        <div className="w-[80px] bg-white border-r border-[#DEE2E6] flex flex-col items-center py-6 gap-8 shrink-0 z-50">
+          <Link to="/search" className="flex flex-col items-center gap-1">
+            <div className="w-10 h-10 bg-[rgba(255,193,7,0.1)] rounded-xl flex items-center justify-center text-[#FFC107]">
+              <Search size={18} strokeWidth={2.5} />
+            </div>
+            <span className="text-[10px] font-medium text-[#FFC107]">Tìm vé</span>
+          </Link>
+          {[{icon:Ticket,label:'Vé của tôi',to:'/my-bookings'},{icon:Tag,label:'Ưu đãi',to:'/offers'}].map((item,i)=>(
+            <Link key={i} to={item.to} className="flex flex-col items-center gap-1 text-[#6C757D] hover:text-[#212529] transition-colors">
+              <div className="w-10 h-10 flex items-center justify-center"><item.icon size={18} /></div>
+              <span className="text-[10px] font-medium text-center">{item.label}</span>
             </Link>
-            
-            <div className="flex items-center gap-3 overflow-hidden min-w-0">
-              <span className="font-bold text-sm md:text-base whitespace-nowrap text-[#1a1a1a]">{depCity}</span>
-              <div className="flex items-center gap-2 shrink-0 opacity-60">
-                <div className="w-8 h-[1.5px] bg-primary rounded-full"/>
-                <ArrowRight size={14} className="text-primary"/>
-              </div>
-              <span className="font-bold text-sm md:text-base whitespace-nowrap text-[#1a1a1a]">{arrCity}</span>
-              
-              {!isMobile && (
-                <>
-                  <div className="w-px h-6 bg-gray-200 mx-2" />
-                  <span className="text-xs font-medium text-muted-foreground bg-gray-50 border border-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
-                    {depTime} → {arrTime}
-                  </span>
-                  <span className="text-[10px] font-bold text-primary bg-primary/5 border border-primary/10 px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap">
-                    {busClass}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Steps */}
-          <div className="flex items-center gap-0 shrink-0">
-            {[{k:'seat',l:'Ghế'},{k:'info',l:'Thông tin'},{k:'pay',l:'Thanh toán'}].map((s,i)=>{
-              const active=step===s.k;
-              const done=(s.k==='seat'&&step==='info');
-              return(
-                <div key={s.k} className="flex items-center">
-                  {i>0 && <div className={`w-4 md:w-8 h-px mx-1 md:mx-2 ${done ? 'bg-primary' : 'bg-gray-200'}`}/>}
-                  <div className={`flex items-center gap-2 transition-opacity ${active ? 'opacity-100' : done ? 'opacity-80' : 'opacity-40'}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border transition-colors ${active ? 'bg-primary border-primary text-white' : done ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white border-gray-300 text-gray-400'}`}>
-                      {done ? <Check size={12} strokeWidth={3}/> : i+1}
-                    </div>
-                    {!isMobile && (
-                      <span className={`text-[10px] font-bold uppercase tracking-widest ${active ? 'text-[#1a1a1a]' : 'text-gray-500'}`}>
-                        {s.l}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
+          ))}
+          <div className="flex-1" />
+          <Link to="/contact" className="flex flex-col items-center gap-1 text-[#6C757D] hover:text-[#212529] transition-colors">
+            <div className="w-10 h-10 flex items-center justify-center"><HelpCircle size={18} /></div>
+            <span className="text-[10px] font-medium">Trợ giúp</span>
+          </Link>
         </div>
-      </div>
+      )}
 
-      {/* ── MAIN GRID ── */}
-      <div className={`max-w-7xl mx-auto px-4 md:px-6 lg:px-16 pb-24 lg:pb-12 pt-6 lg:pt-8 grid items-start gap-6 lg:gap-8 ${
-        isMobile ? 'grid-cols-1' : 'grid-cols-[280px_1fr_300px] xl:grid-cols-[300px_1fr_320px]'
-      }`}>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* ── TOPBAR ── */}
+      <BookingStepper
+        activeStep={stepIdx as 2|3}
+        isMobile={isMobile}
+        leftSlot={
+          <Link to="/" className="flex items-center gap-2 shrink-0 mr-6">
+            <ArrowLeft size={16} className="text-[#6C757D]" />
+            <span className="font-bold text-base text-[#212529] hidden sm:inline">An Chuyến</span>
+          </Link>
+        }
+      />
 
-        {/* ══════ LEFT PANEL ══════ */}
-        <div className={`flex flex-col gap-5 ${isMobile ? 'static' : 'sticky top-[86px]'}`}>
+      {/* ── SEAT STEP: 12-col grid matching Figma ── */}
+      {step === 'seat' ? (
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <style>{`
+            .seat-step-grid {
+              display: grid;
+              gap: 1.5rem;
+              grid-template-columns: 1fr;
+              grid-template-areas: "trip" "seat" "extra" "right" "selected";
+              align-items: start;
+            }
+            .seat-col1-wrapper { display: contents; }
+            @media (min-width: 1024px) {
+              .seat-step-grid {
+                grid-template-columns: 3fr 6fr 3fr;
+                /* Only one row: col1 is a single self-contained block (not synced
+                   row-by-row with seat/right), so its height never affects — and is
+                   never inflated by — the taller seat map / right column. */
+                grid-template-areas: "col1 seat right";
+              }
+              .seat-col1-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                grid-area: col1;
+              }
+            }
+          `}</style>
+          <div className="seat-step-grid max-w-[1400px] mx-auto">
 
-          {/* Route card */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)] relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none"/>
-            <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold mb-4">Hành trình</div>
-            
-            <div className="flex gap-4 mb-4">
-              <div className="flex flex-col items-center pt-1 shrink-0">
-                <div className="w-2.5 h-2.5 rounded-full border-2 border-primary bg-white z-10"/>
-                <div className="w-px h-10 my-1 bg-gradient-to-b from-primary/50 to-primary/50" style={{ backgroundImage: 'repeating-linear-gradient(to bottom, rgba(22,51,40,0.5) 0, rgba(22,51,40,0.5) 4px, transparent 4px, transparent 8px)' }}/>
-                <div className="w-2.5 h-2.5 rounded-full bg-primary z-10"/>
-              </div>
-              <div className="flex-1">
-                <div className="text-xl font-bold leading-none text-[#1a1a1a]">{depCity}</div>
-                <div className="text-xs text-gray-500 mt-1.5 mb-4 tracking-wide">{depTime} · Xuất phát</div>
-                
-                <div className="text-xl font-bold leading-none text-[#1a1a1a]">{arrCity}</div>
-                <div className="text-xs text-gray-500 mt-1.5 tracking-wide">{arrTime} · Điểm đến</div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-600">{agentName}</span>
-              <div className="flex items-center gap-1.5 bg-green-50 px-2 py-1 rounded text-green-700">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500"/>
-                <span className="text-[10px] tracking-wide font-medium">Đúng giờ</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Occupancy */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)]">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-[10px] text-gray-400 tracking-widest uppercase font-bold">Tình trạng ghế</span>
-              <span className="text-xs font-medium text-gray-500">{agentName.split(' ')[0]}</span>
-            </div>
-            {/* Occupancy bar */}
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
-              <motion.div
-                initial={{width:0}} animate={{width:`${pct}%`}}
-                transition={{duration:1,ease:'easeOut',delay:0.3}}
-                className="h-full bg-gradient-to-r from-primary/50 to-primary rounded-full"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                {label:'Trống',val:availCount,color:'text-gray-900', bg:'bg-gray-50'},
-                {label:'Đã bán',val:bookedCount,color:'text-gray-400', bg:'bg-gray-50/50'},
-                {label:'Chọn',val:selectedSeats.length,color:'text-primary', bg:'bg-primary/5 border border-primary/10'},
-              ].map(item=>(
-                <div key={item.label} className={`text-center py-2.5 rounded-xl ${item.bg}`}>
-                  <div className={`text-xl font-bold leading-none ${item.color}`}>{item.val}</div>
-                  <div className="text-[9px] text-gray-500 tracking-widest uppercase mt-1.5 font-medium">{item.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Timer */}
-          {selectedSeats.length > 0 && (
-            <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} 
-              className={`rounded-2xl p-4 flex items-center gap-3 border ${timeLeft<120 ? 'bg-red-50 border-red-100' : 'bg-primary/5 border-primary/10'}`}>
-              <Clock size={18} className={timeLeft<120 ? 'text-red-500' : 'text-primary'}/>
-              <div>
-                <div className="text-[9px] text-gray-500 tracking-widest uppercase mb-0.5 font-medium">Giữ chỗ còn lại</div>
-                <div className={`font-mono text-xl font-bold tracking-widest ${timeLeft<120 ? 'text-red-500' : 'text-primary'}`}>
-                  {String(Math.floor(timeLeft/60)).padStart(2,'0')}:{String(timeLeft%60).padStart(2,'0')}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Add-ons */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)]">
-            <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold mb-4">Dịch vụ bổ sung</div>
-            <div className="flex flex-col gap-3">
-              {[
-                {icon:<Shield size={16}/>, title:'Bảo hiểm hành trình', desc:'Tai nạn · Chậm trễ · Hành lý', note:'+20.000₫/ghế', active:addInsurance, toggle:()=>setAddInsurance(p=>!p)},
-                {icon:<FileText size={16}/>, title:'Hóa đơn VAT', desc:'Xuất cho doanh nghiệp', note:'Miễn phí', active:needVAT, toggle:()=>setNeedVAT(p=>!p)},
-              ].map((item,i)=>(
-                <motion.div key={i} whileTap={{scale:0.98}} onClick={item.toggle} 
-                  className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all relative overflow-hidden border ${
-                    item.active ? 'bg-primary/5 border-primary/30' : 'bg-gray-50 border-transparent hover:bg-gray-100'
-                  }`}>
-                  {item.active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary/50" />}
-                  <div className={`shrink-0 ${item.active ? 'text-primary' : 'text-gray-400'}`}>{item.icon}</div>
-                  <div className="flex-1 min-w-0 pr-1">
-                    <div className={`text-xs xl:text-sm font-bold mb-0.5 leading-tight ${item.active ? 'text-[#1a1a1a]' : 'text-gray-600'}`}>{item.title}</div>
-                    <div className="text-[10px] xl:text-xs text-gray-400 leading-tight">{item.desc}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0 pl-2">
-                    <div className={`w-4 h-4 xl:w-5 xl:h-5 rounded-[4px] xl:rounded-md border flex items-center justify-center transition-colors ${
-                      item.active ? 'bg-primary border-primary' : 'bg-white border-gray-300'
-                    }`}>
-                      {item.active && <Check size={12} color="#ffffff" strokeWidth={3}/>}
-                    </div>
-                    <span className={`text-[8px] xl:text-[9px] tracking-wide font-medium whitespace-nowrap ${item.active ? 'text-primary' : 'text-gray-400'}`}>{item.note}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ══════ CENTER: SEAT MAP / FORM ══════ */}
-        <AnimatePresence mode="wait">
-
-          {/* STEP 1: SEAT */}
-          {step==='seat'&&(
-            <motion.div key="seat" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}}>
-              <div className="bg-white border border-gray-100 rounded-[32px] p-6 lg:p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] relative overflow-hidden">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-8 relative z-10">
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold m-0 leading-none text-[#1a1a1a]">Sơ đồ ghế</h2>
-                    <p className="mt-3 text-sm text-gray-500 font-medium">Chọn tối đa 4 ghế · Giá đã bao gồm phí dịch vụ</p>
-                  </div>
-                  {/* Floor tabs */}
-                  {floorCount>1&&(
-                    <div className="flex bg-gray-50 border border-gray-100 rounded-2xl p-1.5 gap-1 shadow-inner">
-                      {Array.from({length:floorCount},(_,i)=>i+1).map(f=>(
-                        <button key={f} onClick={()=>setActiveFloor(f)} 
-                          className={`px-5 py-2.5 rounded-xl cursor-pointer outline-none border-none transition-all ${
-                            activeFloor===f ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-gray-100/50'
-                          }`}>
-                          <div className={`text-xs font-bold tracking-widest uppercase mb-1 transition-colors ${activeFloor===f ? 'text-primary' : 'text-gray-400'}`}>Tầng {f===1?'Dưới':'Trên'}</div>
-                          <div className={`text-[10px] ${activeFloor===f ? 'text-gray-500' : 'text-gray-400'}`}>{seats.filter(s=>s.floor===f&&s.status==='available').length} trống</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Legend */}
-                <div className="flex flex-wrap gap-6 mb-10 pb-6 border-b border-gray-100 relative z-10">
-                  {[
-                    {bg:'bg-gray-100',border:'border-gray-300',label:'Còn trống'},
-                    {bg:'bg-primary/20',border:'border-primary',label:'Đang chọn'},
-                    {bg:'bg-gray-50',border:'border-gray-100',label:'Đã bán',dim:true},
-                  ].map(l=>(
-                    <div key={l.label} className={`flex items-center gap-2.5 ${l.dim ? 'opacity-50' : 'opacity-100'}`}>
-                      <div className={`w-6 h-8 rounded-md border-2 ${l.bg} ${l.border}`}/>
-                      <span className="text-xs font-medium text-gray-600">{l.label}</span>
-                    </div>
-                  ))}
-                  <div className="ml-auto flex items-center gap-3">
-                    <div className="text-xs font-medium text-gray-500">Giá từ</div>
-                    <div className="text-xl font-bold text-primary">{(Math.min(...floorSeats.filter(s=>s.status==='available').map(s=>s.price))/1000).toFixed(0)}k₫</div>
-                  </div>
-                </div>
-
-                {/* Bus shape + seats */}
-                <div className="flex justify-center relative z-10">
-                  <div className="relative">
-                    {/* Bus SVG outline */}
-                    <div className="bg-white border-2 border-gray-100 border-t-4 border-t-primary rounded-[24px_24px_12px_12px] px-4 md:px-10 pb-10 shadow-[0_30px_60px_rgba(0,0,0,0.05)] relative">
-                      {/* Windshield */}
-                      <div className="mx-[-16px] md:mx-[-40px] mb-8 py-4 border-b border-gray-100 flex items-center justify-between px-8 bg-gray-50/50 rounded-t-[20px]">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-5 border-2 border-gray-200 rounded-t-full bg-white"/>
-                          <span className="text-[9px] tracking-[0.35em] uppercase font-bold text-gray-400">Buồng lái</span>
-                        </div>
-                        <div className="w-8 h-5 border-2 border-gray-200 rounded-t-full bg-white scale-x-[-1]"/>
-                      </div>
-                      
-                      <SeatMap seats={floorSeats} selectedSeats={selectedSeats} onToggle={toggleSeat}/>
-                      
-                      {/* Exit markers */}
-                      <div className="absolute -right-0.5 top-[40%] w-1.5 h-8 bg-green-400 rounded-l-md opacity-50" title="Cửa thoát hiểm"/>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* STEP 2: INFO */}
-          {step==='info'&&(
-            <motion.div key="info" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}}>
-              <div className="bg-white border border-gray-100 rounded-[32px] p-6 lg:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.04)] relative">
-                
-                <button onClick={()=>setStep('seat')} className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider mb-8 bg-transparent border-none cursor-pointer p-0">
-                  <ArrowLeft size={14}/> Quay lại chọn ghế
+            {/* Center Column: Seat Map — a sibling grid item (not part of seat-col1-wrapper) so its tall content never inflates the wrapper's rows */}
+            <div style={{ gridArea: 'seat' }} className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-6 flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <button onClick={()=>navigate('/search')} className="w-10 h-10 rounded-full border border-[#DEE2E6] flex items-center justify-center text-[#212529] hover:bg-[#F8F9FA] transition shrink-0">
+                  <ArrowLeft size={14}/>
                 </button>
-                
-                <h2 className="text-3xl md:text-4xl font-bold m-0 mb-3 text-[#1a1a1a]">Thông tin hành khách</h2>
-                <p className="text-sm text-gray-500 font-medium mb-8">Thông tin sẽ được in trên vé — vui lòng điền chính xác</p>
-
-                {/* Pickup/dropoff */}
-                <div className="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100">
-                  <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold mb-5">Điểm đón & trả khách</div>
-                  <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {[
-                      {label:`Đón tại ${depCity}`,opts:pickupOpts,val:pickupPoint,set:setPickupPoint},
-                      {label:`Trả tại ${arrCity}`,opts:dropoffOpts,val:dropoffPoint,set:setDropoffPoint},
-                    ].map(f=>(
-                      <div key={f.label}>
-                        <div className="text-[10px] text-gray-500 tracking-widest mb-3 uppercase font-bold">{f.label}</div>
-                        <select value={f.val} onChange={e=>f.set(e.target.value)} 
-                          className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium text-[#1a1a1a] outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all">
-                          {f.opts.length===0&&<option value="">—</option>}
-                          {f.opts.map(cp=><option key={cp.id} value={cp.id}>{cp.station.name}</option>)}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Passenger */}
-                <div className="mb-8">
-                  <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold mb-5">Thông tin người đi</div>
-                  <div className={`grid gap-5 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    <Field label="Họ và tên *" value={pName} onChange={setPName} placeholder="Nguyễn Văn A"/>
-                    <Field label="Số điện thoại *" value={pPhone} onChange={setPPhone} placeholder="09x xxxx xxxx"/>
-                    <div className={isMobile?'col-span-1':'col-span-2'}>
-                      <Field label="Email nhận vé *" value={pEmail} onChange={setPEmail} placeholder="email@example.com" type="email"/>
-                    </div>
-                  </div>
-                </div>
-
-                <motion.div whileTap={{scale:0.99}} onClick={()=>setIsSamePerson(p=>!p)} 
-                  className={`flex items-center gap-3 cursor-pointer mb-6 p-4 rounded-2xl transition-all select-none border ${
-                    isSamePerson ? 'bg-primary/5 border-primary/20' : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
-                  }`}>
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    isSamePerson ? 'bg-primary border-primary' : 'bg-white border-gray-300'
-                  }`}>
-                    {isSamePerson&&<Check size={12} color="#fcfcfc" strokeWidth={3}/>}
-                  </div>
-                  <span className={`text-sm font-bold ${isSamePerson ? 'text-primary' : 'text-gray-500'}`}>Tôi là người trực tiếp lên xe</span>
-                </motion.div>
-
-                <AnimatePresence>
-                  {!isSamePerson&&(
-                    <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={{opacity:0,height:0}} className="overflow-hidden">
-                      <div className="pt-6 border-t border-gray-100 mb-6">
-                        <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold mb-5">Người đặt vé</div>
-                        <div className={`grid gap-5 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                          <Field label="Họ và tên *" value={bName} onChange={setBName} placeholder="Nguyễn Văn B"/>
-                          <Field label="Số điện thoại *" value={bPhone} onChange={setBPhone} placeholder="09x xxxx xxxx"/>
-                          <div className={isMobile?'col-span-1':'col-span-2'}>
-                            <Field label="Email xác nhận *" value={bEmail} onChange={setBEmail} placeholder="email@example.com" type="email"/>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <h3 className="text-xl font-bold text-[#212529] truncate">Chọn ghế {busClass}</h3>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* ══════ RIGHT PANEL ══════ */}
-        <div className={isMobile ? 'fixed bottom-0 left-0 right-0 z-[200] bg-white/95 backdrop-blur-xl border-t border-gray-100 p-4 pb-6 flex flex-col gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]' : 'sticky top-[86px] flex flex-col gap-5'}>
-
-          {isMobile ? (
-            /* ─ MOBILE: compact bottom bar ─ */
-            <>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  {selectedSeats.length===0 ? (
-                    <p className="m-0 text-sm font-medium text-gray-400">Chạm vào ghế để chọn</p>
-                  ) : (
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                      <AnimatePresence>
-                        {selectedSeats.map(id=>{
-                          const p=parseSeatId(id);
-                          return(
-                            <motion.button key={id}
-                              initial={{scale:0}} animate={{scale:1}} exit={{scale:0}}
-                              onClick={()=>toggleSeat(id,'available')}
-                              className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 rounded-lg px-2.5 py-1 cursor-pointer shrink-0"
-                            >
-                              <span className="text-sm font-bold text-primary">{p?`${p.col}${p.row}`:id}</span>
-                              <X size={12} className="text-primary/50"/>
-                            </motion.button>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </div>
-                  )}
+              <div className="flex flex-wrap items-center gap-3 mb-8">
+                {floorCount > 1 ? [1,2].map(f=>(
+                  <button key={f} onClick={()=>setActiveFloor(f)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${activeFloor===f?'bg-[#FFF3CD] border-[#FFC107] text-[#212529]':'bg-white border-[#DEE2E6] text-[#212529] hover:bg-[#F8F9FA]'}`}>
+                    <Layers size={14} className={activeFloor===f?'text-[#856404]':'text-[#6C757D]'}/>
+                    <span className="flex flex-col items-start leading-tight">
+                      <span>Tầng {f===1?'dưới':'trên'}</span>
+                      {floorFromPrice[f]!=null && <span className="text-[10px] font-normal text-[#856404]">từ {fmt(floorFromPrice[f])}đ</span>}
+                    </span>
+                  </button>
+                )) : null}
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
+                  <Users size={14} className="text-[#6C757D]"/> {floorSeats.length} ghế
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold">Tổng</div>
-                  <div className="text-xl font-bold text-[#1a1a1a] leading-none">
-                    {total>0?`${fmt(total)}₫`:'—'}
-                  </div>
-                </div>
-              </div>
-              <motion.button
-                onClick={handleContinue}
-                disabled={selectedSeats.length===0}
-                whileTap={selectedSeats.length>0?{scale:0.97}:{}}
-                className={`w-full rounded-xl py-3.5 px-4 text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 transition-colors ${
-                  selectedSeats.length===0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-primary text-white cursor-pointer hover:bg-primary/90'
-                }`}
-              >
-                {step==='seat'
-                  ?selectedSeats.length===0?'Chọn ghế để tiếp tục':`Tiếp tục · ${selectedSeats.length} ghế`
-                  :'Xác nhận đặt vé'}
-                {selectedSeats.length>0&&<ArrowRight size={14}/>}
-              </motion.button>
-            </>
-          ) : (
-            /* ─ DESKTOP: full panel cards ─ */
-            <>
-              {/* Selected seats */}
-              <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)]">
-                <div className="flex justify-between items-center mb-5">
-                  <div className="text-[10px] text-gray-400 tracking-widest uppercase font-bold">Ghế đã chọn</div>
-                  {selectedSeats.length>0&&<span className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">{selectedSeats.length}/4</span>}
-                </div>
-                {selectedSeats.length===0?(
-                  <div className="py-6 text-center">
-                    <div className="w-12 h-14 mx-auto mb-3 bg-gray-50 border border-dashed border-gray-200 rounded-xl flex items-center justify-center opacity-60">
-                      <span className="text-2xl">💺</span>
-                    </div>
-                    <div className="text-sm font-medium text-gray-400">Chưa chọn ghế nào<br/><span className="text-xs">Click vào ghế để chọn</span></div>
-                  </div>
-                ):(
-                  <div className="flex flex-wrap gap-2">
-                    <AnimatePresence>
-                      {selectedSeats.map(id=>{
-                        const s=seats.find(x=>x.id===id);
-                        const p=parseSeatId(id);
-                        return(
-                          <motion.div key={id}
-                            initial={{scale:0,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0,opacity:0}}
-                            transition={{type:'spring',stiffness:400,damping:20}}
-                            onClick={()=>toggleSeat(id,'available')}
-                            title="Click để bỏ chọn"
-                            className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 cursor-pointer hover:bg-primary/20 transition-colors"
-                          >
-                            <span className="text-sm font-bold text-primary">{p?`${p.col}${p.row}`:id}</span>
-                            {s&&<span className="text-[10px] font-medium text-primary/70">{fmt(s.price)}đ</span>}
-                            <X size={12} className="text-primary/50 ml-1"/>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
+                {vipRangeLabel && (
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
+                    <span className="border border-[#856404] text-[#856404] text-[10px] font-bold px-1.5 py-0.5 rounded">VIP</span> Ghế VIP: {vipRangeLabel}
                   </div>
                 )}
               </div>
 
-              {/* Price */}
-              <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)]">
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between text-sm text-gray-500 font-medium">
-                    <span>Vé xe · {selectedSeats.length} ghế</span>
-                    <span className="text-[#1a1a1a]">{seatsTotal>0?`${fmt(seatsTotal)}₫`:'—'}</span>
-                  </div>
-                  {addInsurance&&selectedSeats.length>0&&(
-                    <div className="flex justify-between text-sm text-gray-500 font-medium">
-                      <span>Bảo hiểm hành trình</span><span className="text-[#1a1a1a]">{fmt(insuranceFee)}₫</span>
+              <div className="flex-1 flex flex-col items-center gap-6 overflow-auto">
+                <div className="flex items-center justify-center gap-6 flex-wrap">
+                  {[{selected:false,booked:false,vip:true,label:'VIP'},{selected:true,booked:false,vip:false,label:'Đã chọn'},{selected:false,booked:true,vip:false,label:'Đã đặt'},{selected:false,booked:false,vip:false,label:'Trống'}].map((l,i)=>(
+                    <div key={i} className="flex items-center gap-1.5">
+                      <LegendDot selected={l.selected} booked={l.booked} vip={l.vip} size={16}/>
+                      <span className="text-xs text-[#6C757D]">{l.label}</span>
                     </div>
-                  )}
-                  <div className="h-px bg-gray-100 my-1"/>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tổng cộng</span>
-                    <motion.span key={total} initial={{scale:1.1,color:'#f2c118'}} animate={{scale:1,color:'#1a1a1a'}} transition={{duration:0.3}}
-                      className="text-3xl font-bold text-[#1a1a1a] leading-none">
-                      {total>0?`${fmt(total)}₫`:'—'}
-                    </motion.span>
+                  ))}
+                </div>
+
+                <div className="w-full max-w-[420px] py-4 px-8">
+                  <SeatMap seats={floorSeats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={68}/>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center mt-4">
+                <div className="flex items-center gap-2 text-sm text-[#6C757D] bg-[#F8F9FA] border border-[#DEE2E6] rounded-full px-6 py-2.5">
+                  <Info size={14} className="text-[#ADB5BD]"/> Nhấn vào ghế để chọn hoặc bỏ chọn
+                </div>
+              </div>
+            </div>
+
+            {/* Trip Summary + Legend/Guarantee + Selected — mobile: independently orderable grid items (see areas above); desktop: merged into one flex column via .seat-col1-wrapper so its height is fully independent of the seat map / right column. */}
+            <div className="seat-col1-wrapper">
+            <div style={{ gridArea: 'trip' }} className="flex flex-col gap-4">
+              <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex flex-col gap-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-lg font-bold text-[#212529] leading-snug">{depCity} <ArrowRight size={14} className="inline mx-1 text-[#6C757D]"/> {arrCity}</div>
+                  <button onClick={()=>navigate('/search')} className="shrink-0 flex items-center gap-1 text-xs font-medium text-[#212529] border border-[#DEE2E6] rounded-lg px-3 py-1.5 hover:bg-[#F8F9FA] transition-colors">
+                    <PenLine size={11}/> Thay đổi
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-[#6C757D]">
+                  <span>{depDate}</span><span className="text-[#DEE2E6]">•</span><span>{depTime}</span><span className="text-[#DEE2E6]">•</span><span>{busClass}</span>
+                </div>
+                <div className="border-t border-[#DEE2E6] pt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#212529]">
+                    <Bus size={16} className="text-[#6C757D]"/> {agentName}
+                    <span className="flex items-center gap-0.5 text-xs font-bold text-[#212529]"><Star size={11} className="fill-[#FFC107] text-[#FFC107]"/> {agentRating}</span>
+                  </div>
+                  <div className="text-lg font-bold text-[#DC3545]">{fmt(seatPrice)}đ</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Legend + Guarantee — mobile: after seat map; desktop: below trip summary */}
+            <div style={{ gridArea: 'extra' }} className="flex flex-col gap-4">
+              {/* Legend */}
+              <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex items-center justify-between">
+                {[{selected:false,booked:false,vip:false,label:'Ghế trống'},{selected:true,booked:false,vip:false,label:'Ghế đã chọn'},{selected:false,booked:true,vip:false,label:'Ghế đã đặt'},{selected:false,booked:false,vip:true,label:'Ghế VIP'}].map((l,i)=>(
+                  <div key={i} className="flex flex-col items-center gap-2">
+                    <LegendDot selected={l.selected} booked={l.booked} vip={l.vip} size={32}/>
+                    <div className="text-[11px] font-medium text-[#6C757D] text-center leading-tight max-w-[52px]">{l.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-[#EFF4FF] border border-[#CCDBF4] rounded-2xl p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0"><ShieldCheck size={16} className="text-[#2563EB]"/></div>
+                <div>
+                  <div className="text-sm font-bold text-[#212529]">Cam kết vị trí ghế</div>
+                  <div className="text-xs text-[#6C757D] mt-1">Chúng tôi cam kết giữ đúng vị trí ghế bạn đã chọn.</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Seats Summary — always last: bottom of the page on mobile, bottom of left column on desktop */}
+            {selectedSeats.length > 0 && (
+              <div style={{ gridArea: 'selected' }}>
+                <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-sm font-bold text-[#212529]">Ghế bạn đã chọn ({selectedSeats.length})</div>
+                    <button onClick={()=>setSelectedSeats([])} className="text-xs font-medium text-[#DC3545] hover:underline">Xóa tất cả</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {selectedSeats.map(id => {
+                      const seat = seats.find(s => s.id === id);
+                      return (
+                        <div key={id} className="relative border border-[#DEE2E6] rounded-xl p-3">
+                          <div className="text-base font-bold text-[#212529]">{labelFor(id)}</div>
+                          <div className="text-sm text-[#6C757D]">{fmt(seat?.price||0)}đ</div>
+                          <button onClick={()=>toggleSeat(id,'available')} className="absolute top-2 right-2 text-[#6C757D] hover:text-[#DC3545] transition-colors"><X size={12}/></button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="border-t border-[#DEE2E6] pt-4 flex items-center justify-between mb-4">
+                    <span className="text-base text-[#6C757D]">Tạm tính</span>
+                    <span className="text-xl font-bold text-[#DC3545]">{fmt(seatsTotal)}đ</span>
+                  </div>
+                  <button onClick={handleContinue} className="w-full bg-[#FFC107] text-[#212529] text-base font-bold py-3.5 rounded-xl hover:brightness-95 transition-colors flex items-center justify-center gap-2">
+                    Tiếp tục <ArrowRight size={14}/>
+                  </button>
+                </div>
+              </div>
+            )}
+            </div>
+
+            {/* Right Column: Details & Help — a sibling grid item (not part of seat-col1-wrapper), independent height from the left column */}
+            <div style={{ gridArea: 'right' }} className="flex flex-col gap-6">
+              <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex flex-col gap-5">
+                <h3 className="text-lg font-bold text-[#212529]">Thông tin chuyến đi</h3>
+                <div className="relative pl-6 flex flex-col gap-6">
+                  <div className="absolute left-[7px] top-2 bottom-2 w-0.5 border-l-2 border-dashed border-[#DEE2E6]" />
+                  <div className="relative">
+                    <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-[#28A745] border-2 border-white flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white"/></div>
+                    <div className="font-bold text-[#212529] text-base">{depCity}</div>
+                    <div className="text-sm text-[#6C757D] mt-0.5">Bến xe {depCity}</div>
+                    <div className="text-sm text-[#6C757D]">{depTime} - {depDate}</div>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-white border-2 border-[#DC3545] flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-[#DC3545]"/></div>
+                    <div className="font-bold text-[#212529] text-base">{arrCity}</div>
+                    <div className="text-sm text-[#6C757D] mt-0.5">Bến xe {arrCity}</div>
+                    <div className="text-sm text-[#6C757D]">~ {arrTime} - {depDate}</div>
+                  </div>
+                </div>
+                <div className="border-t border-[#DEE2E6] pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-bold text-[#212529] text-base">Nhà xe {agentName}</span>
+                    <span className="flex items-center gap-0.5 text-xs font-medium text-[#212529]"><Star size={11} className="fill-[#FFC107] text-[#FFC107]"/> {agentRating}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="bg-[#F8F9FA] border border-[#DEE2E6] text-[#6C757D] text-xs px-2.5 py-1.5 rounded">{busClass}</span>
+                    <img src="/phuong-trang-bus.jpg" alt={agentName} className="w-16 h-10 rounded object-cover border border-[#DEE2E6]" />
                   </div>
                 </div>
               </div>
 
-              {/* CTA */}
-              <motion.button
-                onClick={handleContinue}
-                disabled={selectedSeats.length===0}
-                whileHover={selectedSeats.length>0?{scale:1.02,boxShadow:'0 10px 32px rgba(212,175,55,0.3)'}:{}}
-                whileTap={selectedSeats.length>0?{scale:0.97}:{}}
-                className={`w-full rounded-2xl py-4 px-4 text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-3 transition-all ${
-                  selectedSeats.length===0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-primary text-white cursor-pointer shadow-lg shadow-primary/20 hover:bg-primary/90'
-                }`}
-              >
-                {step==='seat'
-                  ?selectedSeats.length===0?'Chọn ghế để tiếp tục':`Tiếp tục · ${selectedSeats.length} ghế`
-                  :'Xác nhận đặt vé'}
-                {selectedSeats.length>0&&<ArrowRight size={16}/>}
-              </motion.button>
+              {selectedSeats.length > 0 && (
+                <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-[#212529]">Ghế đã chọn</h3>
+                    <button onClick={()=>{ const el = document.getElementById('seat-map-card'); el?.scrollIntoView({behavior:'smooth', block:'center'}); }} className="flex items-center gap-1 text-sm text-[#2563EB] hover:underline"><PenLine size={12}/> Sửa</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSeats.map(id => (
+                      <span key={id} className="bg-[rgba(255,193,7,0.2)] border border-[#FFC107] text-[#212529] text-sm font-semibold px-3.5 py-1.5 rounded-lg">{labelFor(id)}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              <p className="m-0 text-[10px] text-gray-400 text-center font-medium">
-                Bằng cách tiếp tục bạn đồng ý với{' '}
-                <span className="text-primary underline cursor-pointer hover:text-primary/80">điều khoản dịch vụ</span>
-              </p>
-            </>
-          )}
+              <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5 flex flex-col gap-4">
+                <h3 className="text-base font-bold text-[#212529]">Tiện ích trên xe</h3>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { icon: <Droplets size={16} />, label: 'Nước suối miễn phí' },
+                    { icon: <Wifi size={16} />, label: 'Wifi miễn phí' },
+                    { icon: <Usb size={16} />, label: 'Ổ cắm sạc USB' },
+                    { icon: <Snowflake size={16} />, label: 'Khăn lạnh' },
+                    { icon: <Wind size={16} />, label: 'Điều hòa' },
+                  ].map((a, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm text-[#212529] font-medium">
+                      <span className="text-[#2563EB]">{a.icon}</span>
+                      {a.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-2xl p-5">
+                <div className="font-bold text-[#212529] text-base mb-1">Cần hỗ trợ?</div>
+                <div className="text-sm text-[#6C757D] mb-4">Đội ngũ An Chuyến luôn sẵn sàng hỗ trợ bạn 24/7.</div>
+                <a href="tel:19001234" className="flex items-center justify-center gap-2 border border-[#FFC107] text-[#212529] text-sm font-bold py-3 rounded-xl hover:bg-[#FFF3CD]/40 transition-colors">
+                  <Phone size={14} /> 1900 1234
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
+      ) : (
+      /* ── PASSENGER INFO STEP (Figma node 9:420 — Tailwind-gray palette) ── */
+      <div className="flex-1 overflow-y-auto bg-[#F3F4F6]">
+        <AnimatePresence mode="wait">
+        <motion.div key="info" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} className="flex flex-col lg:flex-row gap-8 max-w-[1280px] mx-auto p-4 lg:p-8">
+
+          {/* ── LEFT COLUMN: Forms ── */}
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <button onClick={()=>setStep('seat')} className="w-10 h-10 rounded-full border border-[#E5E7EB] bg-white flex items-center justify-center text-[#111827] hover:bg-[#F9FAFB] transition shrink-0">
+                <ArrowLeft size={18}/>
+              </button>
+              <h2 className="text-2xl font-bold text-[#111827]">Nhập thông tin hành khách</h2>
+            </div>
+
+            <div className="bg-[#FEFCE8] border border-[#FEF9C3] rounded-lg p-[17px] flex items-start gap-3">
+              <ShieldCheck size={20} className="text-[#CA8A04] shrink-0 mt-0.5"/>
+              <span className="text-sm text-[#374151]">Thông tin của bạn được bảo mật và chỉ sử dụng cho việc đặt vé.</span>
+            </div>
+
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h3 className="text-lg font-bold text-[#111827]">Hành khách ({passengers.length})</h3>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-[#6B7280]">Đăng nhập để tự động điền thông tin</span>
+                <button type="button" className="border border-[#D1D5DB] rounded-lg px-[17px] py-[9px] text-sm font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors">Đăng nhập</button>
+              </div>
+            </div>
+
+            {passengers.map((p, idx) => {
+              const copying = copyFromFirst[idx];
+              const disabled = idx>0 && copying;
+              return (
+                <div key={idx} className="bg-white border border-[#E5E7EB] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-[25px] flex flex-col gap-6">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <h4 className="text-base font-bold text-[#111827]">Hành khách {idx+1} <span className="font-normal text-[#6B7280]">(Người lớn)</span></h4>
+                    <div className="flex items-center gap-4">
+                      {idx>0 && (
+                        <label className="flex items-center gap-2 text-sm text-[#4B5563] cursor-pointer">
+                          <input type="checkbox" checked={copying} onChange={()=>toggleCopyFirst(idx)} className="w-4 h-4 rounded border-[#D1D5DB] accent-[#FFC107]"/>
+                          Sao chép thông tin hành khách 1
+                        </label>
+                      )}
+                      {selectedSeats.length>1 && (
+                        <button onClick={()=>removePassenger(idx)} className="p-1.5 rounded-md text-[#EF4444] hover:bg-red-50 transition-colors"><Trash2 size={18}/></button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="sm:col-span-2"><TextField label="Họ và tên" required disabled={disabled} value={p.name} onChange={v=>updatePassenger(idx,'name',v)} placeholder="Nhập họ tên"/></div>
+                    <TextField label="Số điện thoại" required disabled={disabled} value={p.phone} onChange={v=>updatePassenger(idx,'phone',v)} placeholder="Nhập SĐT (10 số)" type="tel" inputMode="tel" maxLength={10}/>
+                    <SelectField label="Giới tính" disabled={disabled} value={p.gender} onChange={v=>updatePassenger(idx,'gender',v)} options={['Nam','Nữ','Khác']}/>
+                    <div className="sm:col-span-2"><TextField label="Email (để nhận vé)" disabled={disabled} value={p.email} onChange={v=>updatePassenger(idx,'email',v)} placeholder="ten@example.com" type="email"/></div>
+                    <DateField label="Ngày sinh" disabled={disabled} value={p.dob} onChange={v=>updatePassenger(idx,'dob',v)}/>
+                    <TextField label="CMND/CCCD" required disabled={disabled} value={p.idNumber} onChange={v=>updatePassenger(idx,'idNumber',v)} placeholder="9 hoặc 12 số" inputMode="numeric" maxLength={12}/>
+                    <SelectField label="Quốc tịch" disabled={disabled} value={p.nationality} onChange={v=>updatePassenger(idx,'nationality',v)} options={['Việt Nam','Khác']}/>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Add-ons */}
+            <div className="flex flex-col gap-4">
+              <h3 className="text-lg font-bold text-[#111827]">Tiện ích & Yêu cầu thêm</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { key:'water' as const, icon:<Droplets size={18}/>, title:'Nước suối', desc:'10.000đ / chai' },
+                  { key:'towel' as const, icon:<Snowflake size={18}/>, title:'Khăn lạnh', desc:'5.000đ / cái' },
+                  { key:'pillow' as const, icon:<Armchair size={18}/>, title:'Gối tựa cổ', desc:'30.000đ / cái' },
+                ].map(a=>{
+                  const qty = amenityQty[a.key];
+                  const active = qty>0;
+                  return (
+                    <div key={a.key} className={`relative bg-white rounded-xl p-[18px] flex flex-col justify-between gap-4 shadow-[0_1px_1px_rgba(0,0,0,0.05)] ${active ? 'border-2 border-[#FFC107]' : 'border border-[#E5E7EB]'}`}>
+                      <div
+                        onClick={()=>setAmenityQty(q=>({...q, [a.key]: q[a.key]>0?0:1}))}
+                        className={`absolute left-[11px] top-[15px] w-[22px] h-[22px] rounded flex items-center justify-center cursor-pointer transition-colors ${active ? 'bg-[#FFC107]' : 'bg-white border border-[#D1D5DB]'}`}
+                      >
+                        {active && <Check size={14} className="text-[#111827]" strokeWidth={3}/>}
+                      </div>
+                      <div className="pl-8">
+                        <div className="text-sm font-semibold text-[#111827]">{a.title}</div>
+                        <div className="text-xs text-[#6B7280]">{a.desc}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="border border-[#E5E7EB] rounded-lg flex items-center overflow-hidden">
+                          <button onClick={()=>setAmenityQty(q=>({...q,[a.key]:Math.max(0,q[a.key]-1)}))} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:bg-[#F9FAFB] transition-colors"><Minus size={14}/></button>
+                          <span className="w-8 text-center text-sm font-medium text-[#1F2937]">{qty}</span>
+                          <button onClick={()=>setAmenityQty(q=>({...q,[a.key]:q[a.key]+1}))} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:bg-[#F9FAFB] transition-colors"><Plus size={14}/></button>
+                        </div>
+                        <span className="text-[#6B7280]">{a.icon}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className={`relative bg-white rounded-xl p-[18px] flex flex-col justify-between gap-4 shadow-[0_1px_1px_rgba(0,0,0,0.05)] ${usbSelected ? 'border-2 border-[#FFC107]' : 'border border-[#E5E7EB]'}`}>
+                  <div
+                    onClick={()=>setUsbSelected(v=>!v)}
+                    className={`absolute left-[11px] top-[15px] w-[22px] h-[22px] rounded flex items-center justify-center cursor-pointer transition-colors ${usbSelected ? 'bg-[#FFC107]' : 'bg-white border border-[#D1D5DB]'}`}
+                  >
+                    {usbSelected && <Check size={14} className="text-[#111827]" strokeWidth={3}/>}
+                  </div>
+                  <div className="pl-8">
+                    <div className="text-sm font-semibold text-[#111827]">Ổ cắm USB</div>
+                    <div className="text-xs text-[#6B7280]">Miễn phí</div>
+                  </div>
+                  <div className="flex items-center justify-end">
+                    <Usb size={18} className="text-[#6B7280]"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Note */}
+            <div className="bg-white border border-[#E5E7EB] shadow-[0_1px_1px_rgba(0,0,0,0.05)] rounded-xl p-[25px] flex flex-col gap-2">
+              <label className="text-sm font-medium text-[#374151]">Ghi chú (không bắt buộc)</label>
+              <div className="relative">
+                <textarea
+                  value={notes}
+                  maxLength={200}
+                  onChange={e=>setNotes(e.target.value)}
+                  placeholder="Nhập ghi chú hoặc yêu cầu đặc biệt (nếu có)..."
+                  rows={3}
+                  className="w-full bg-white border border-[#D1D5DB] rounded-lg px-[17px] py-[13px] pb-6 text-sm text-[#1F2937] outline-none focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 transition-all resize-none"
+                />
+                <span className="absolute bottom-3 right-3 text-xs text-[#9CA3AF]">{notes.length}/200</span>
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="flex items-center justify-between pt-2">
+              <button onClick={()=>setStep('seat')} className="flex items-center gap-2 border border-[#D1D5DB] bg-white rounded-lg px-[25px] py-[13px] text-base font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors">
+                <ArrowLeft size={20}/> Quay lại
+              </button>
+              <button onClick={handleContinue} className="flex items-center justify-center gap-2 bg-[#FFC107] rounded-lg px-8 py-3 text-base font-bold text-[#111827] hover:brightness-95 transition-colors w-full sm:w-[256px]">
+                Tiếp tục <ArrowRight size={20}/>
+              </button>
+            </div>
+          </div>
+
+          {/* ── RIGHT COLUMN: Summary ── */}
+          <div className="w-full lg:w-[400px] shrink-0">
+            <div className="lg:sticky lg:top-6 bg-white rounded-xl shadow-[0_1px_1.5px_rgba(0,0,0,0.1),0_1px_1px_rgba(0,0,0,0.06)] flex flex-col">
+
+              <div className="border-b border-[#E5E7EB] p-5 flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-[#111827]">Thông tin chuyến đi</h3>
+                  <button onClick={()=>setStep('seat')} className="flex items-center gap-1 text-sm font-medium text-[#2563EB] hover:underline"><PenLine size={14}/> Sửa</button>
+                </div>
+                <div className="flex items-center gap-2 text-base font-bold text-[#111827] pt-2">
+                  {depCity} <ArrowRight size={14} className="text-[#6B7280]"/> {arrCity}
+                </div>
+                <div className="text-sm text-[#6B7280]">{depDate} • {depTime} • {busClass}</div>
+
+                <div className="relative flex flex-col gap-6 pl-6 py-5">
+                  <div className="absolute bg-[#E5E7EB] left-[7px] top-[28px] bottom-[28px] w-0.5"/>
+                  <div className="relative">
+                    <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-white border-4 border-[#22C55E]"/>
+                    <div className="text-sm font-bold text-[#111827]">{depCity}</div>
+                    <div className="text-xs text-[#6B7280] mt-1">Bến xe {depCity}</div>
+                    <div className="text-xs text-[#6B7280]">{depTime} - {depDate}</div>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-white border-4 border-[#EF4444]"/>
+                    <div className="text-sm font-bold text-[#111827]">{arrCity}</div>
+                    <div className="text-xs text-[#6B7280] mt-1">Bến xe {arrCity}</div>
+                    <div className="text-xs text-[#6B7280]">~ {arrTime} - {depDate}</div>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#F3F4F6] pt-[17px] flex items-center justify-between">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-[#111827]">Nhà xe {agentName}</span>
+                      <span className="flex items-center gap-0.5 text-xs text-[#4B5563]"><Star size={12} className="fill-[#FFC107] text-[#FFC107]"/> {agentRating}</span>
+                    </div>
+                    <span className="bg-[#F3F4F6] text-[#6B7280] text-xs px-2 py-1 rounded w-fit">{busClass}</span>
+                  </div>
+                  <img src="/phuong-trang-bus.jpg" alt={agentName} className="w-20 h-11 rounded object-cover shrink-0"/>
+                </div>
+              </div>
+
+              <div className="border-b border-[#E5E7EB] p-5 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[#111827]">Ghế đã chọn</h3>
+                  <button onClick={()=>setStep('seat')} className="flex items-center gap-1 text-sm font-medium text-[#2563EB] hover:underline"><PenLine size={14}/> Sửa</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedSeats.map(id => (
+                    <span key={id} className="bg-[#FEF9C3] border border-[#FDE047] text-[#854D0E] text-sm font-bold px-[13px] py-[5px] rounded-md">{labelFor(id)}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-5 flex flex-col gap-3">
+                <h3 className="text-sm font-bold text-[#111827]">Chi tiết thanh toán</h3>
+                <div className="flex items-start justify-between">
+                  <div className="text-sm text-[#4B5563]">{passengers.length} Vé người lớn</div>
+                  <div className="text-xs text-[#6B7280]">{passengers.length} x {fmt(avgSelectedSeatPrice)}đ</div>
+                  <div className="text-sm font-medium text-[#111827]">{fmt(seatsTotal)}đ</div>
+                </div>
+                {amenityQty.water>0 && (
+                  <div className="flex items-start justify-between">
+                    <div className="text-sm text-[#4B5563]">Nước suối ({amenityQty.water} chai)</div>
+                    <div className="text-xs text-[#6B7280]">{amenityQty.water} x {fmt(AMENITY_PRICES.water)}đ</div>
+                    <div className="text-sm font-medium text-[#111827]">{fmt(amenityQty.water*AMENITY_PRICES.water)}đ</div>
+                  </div>
+                )}
+                {amenityQty.towel>0 && (
+                  <div className="flex items-start justify-between">
+                    <div className="text-sm text-[#4B5563]">Khăn lạnh ({amenityQty.towel} cái)</div>
+                    <div className="text-xs text-[#6B7280]">{amenityQty.towel} x {fmt(AMENITY_PRICES.towel)}đ</div>
+                    <div className="text-sm font-medium text-[#111827]">{fmt(amenityQty.towel*AMENITY_PRICES.towel)}đ</div>
+                  </div>
+                )}
+                {amenityQty.pillow>0 && (
+                  <div className="flex items-start justify-between">
+                    <div className="text-sm text-[#4B5563]">Gối tựa cổ ({amenityQty.pillow} cái)</div>
+                    <div className="text-xs text-[#6B7280]">{amenityQty.pillow} x {fmt(AMENITY_PRICES.pillow)}đ</div>
+                    <div className="text-sm font-medium text-[#111827]">{fmt(amenityQty.pillow*AMENITY_PRICES.pillow)}đ</div>
+                  </div>
+                )}
+                <div className="border-t border-[#E5E7EB] pt-3 flex items-center justify-between">
+                  <span className="text-base font-bold text-[#111827]">Tổng tiền</span>
+                  <span className="text-xl font-bold text-[#DC2626]">{fmt(seatsTotal+amenitiesTotal)}đ</span>
+                </div>
+                <div className="bg-[#F0FDF4] rounded-lg px-4 py-3 flex items-center justify-center gap-2">
+                  <CheckCircle2 size={16} className="text-[#16A34A]"/>
+                  <span className="text-sm font-medium text-[#166534]">Bảo mật thanh toán tuyệt đối</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {[
+                    { icon:<Ticket size={18}/>, label:'Hủy vé dễ dàng' },
+                    { icon:<Phone size={18}/>, label:'Hỗ trợ 24/7' },
+                    { icon:<Lock size={18}/>, label:'Thanh toán an toàn' },
+                  ].map((t,i)=>(
+                    <div key={i} className="flex flex-col items-center gap-1.5 text-center">
+                      <span className="text-[#9CA3AF]">{t.icon}</span>
+                      <span className="text-[11px] text-[#6B7280] leading-tight">{t.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        </AnimatePresence>
+      </div>
+      )}
       </div>
     </div>
   );

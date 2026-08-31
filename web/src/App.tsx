@@ -30,6 +30,7 @@ const DeliveryPage = lazy(() => import('./features/services/pages/DeliveryPage')
 const RentalPage = lazy(() => import('./features/services/pages/RentalPage').then(m => ({ default: m.RentalPage })));
 const TourPage = lazy(() => import('./features/services/pages/TourPage').then(m => ({ default: m.TourPage })));
 const EventsPage = lazy(() => import('./features/services/pages/EventsPage').then(m => ({ default: m.EventsPage })));
+const DestinationDetailPage = lazy(() => import('./features/destinations/pages/DestinationDetailPage').then(m => ({ default: m.DestinationDetailPage })));
 
 // Lazy load optional components
 const FloatingChatLazy = lazy(() => import('./shared/components/FloatingChat').then(m => ({ default: m.FloatingChat })));
@@ -44,10 +45,12 @@ const PageLoadingFallback = memo(() => (
 
 const AppRoutes = memo(() => {
   const location = useLocation();
-  const hideHeaderFooter = location.pathname === '/auth' || 
-                           location.pathname.startsWith('/seat-selection') || 
-                           location.pathname === '/payment' || 
+  const hideHeaderFooter = location.pathname === '/auth' ||
+                           location.pathname.startsWith('/seat-selection') ||
+                           location.pathname === '/payment' ||
                            location.pathname === '/booking-confirmation';
+  // Search page is a fixed-height split view (map + results) with no scroll to reach a footer
+  const hideFooter = hideHeaderFooter || location.pathname === '/search';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -79,12 +82,13 @@ const AppRoutes = memo(() => {
                 <Route path="/tour" element={<TourPage />} />
                 <Route path="/tours" element={<TourPage />} />
                 <Route path="/events" element={<EventsPage />} />
+                <Route path="/destinations/:slug" element={<DestinationDetailPage />} />
               </Routes>
             </AnimatePresence>
           </Suspense>
         </ErrorBoundary>
       </main>
-      {!hideHeaderFooter && <Footer />}
+      {!hideFooter && <Footer />}
       {!hideHeaderFooter && (
         <Suspense fallback={null}>
           <FloatingChatLazy />

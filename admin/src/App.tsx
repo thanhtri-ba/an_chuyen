@@ -22,6 +22,8 @@ const UsersPage = lazy(() => import("@/app/(main)/dashboard/users/page"));
 const ProfilePage = lazy(() => import("@/app/(main)/dashboard/profile/page"));
 const SettingsPage = lazy(() => import("@/app/(main)/dashboard/settings/page"));
 
+const EmployeesPage = lazy(() => import("@/app/(main)/dashboard/employees/page"));
+const VehiclesPage = lazy(() => import("@/app/(main)/dashboard/vehicles/page"));
 const BusAgentsPage = lazy(() => import("@/app/(main)/dashboard/bus-agents/page"));
 const RoutesPage = lazy(() => import("@/app/(main)/dashboard/routes/page"));
 const TripsPage = lazy(() => import("@/app/(main)/dashboard/trips/page"));
@@ -29,6 +31,7 @@ const TripSchedulesPage = lazy(() => import("@/app/(main)/dashboard/trip-schedul
 const BookingsPage = lazy(() => import("@/app/(main)/dashboard/bookings/page"));
 const VouchersPage = lazy(() => import("@/app/(main)/dashboard/vouchers/page"));
 const BannersPage = lazy(() => import("@/app/(main)/dashboard/banners/page"));
+const DestinationsPage = lazy(() => import("@/app/(main)/dashboard/destinations/page"));
 const EventsPage = lazy(() => import("@/app/(main)/dashboard/events/page"));
 const ReviewsPage = lazy(() => import("@/app/(main)/dashboard/reviews/page"));
 const WebsiteConfigPage = lazy(() => import("@/app/(main)/dashboard/website-config/page"));
@@ -204,6 +207,26 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="employees"
+                  element={
+                    <DashboardLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <EmployeesPage />
+                      </Suspense>
+                    </DashboardLayout>
+                  }
+                />
+                <Route
+                  path="vehicles"
+                  element={
+                    <DashboardLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <VehiclesPage />
+                      </Suspense>
+                    </DashboardLayout>
+                  }
+                />
+                <Route
                   path="settings"
                   element={
                     <DashboardLayout>
@@ -229,6 +252,16 @@ export default function App() {
                     <DashboardLayout>
                       <Suspense fallback={<div>Loading...</div>}>
                         <BannersPage />
+                      </Suspense>
+                    </DashboardLayout>
+                  }
+                />
+                <Route
+                  path="destinations"
+                  element={
+                    <DashboardLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <DestinationsPage />
                       </Suspense>
                     </DashboardLayout>
                   }

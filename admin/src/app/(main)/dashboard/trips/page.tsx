@@ -83,7 +83,7 @@ export default function Page() {
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-2">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-2">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="font-bold text-2xl tracking-tight">Chuyến Xe</h1>
@@ -171,7 +171,7 @@ export default function Page() {
           </div>
         </div>
         <CardContent className="p-0">
-          <Table>
+          <Table className="[&_td]:py-4 [&_th]:h-12">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[300px]">Nhà Xe</TableHead>
@@ -235,7 +235,7 @@ export default function Page() {
                         variant="ghost"
                         size="icon"
                         onClick={() => void handleDelete(trip.id)}
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+                        className="h-8 w-8 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                       >
                         <Trash2 className="size-4" />
                       </Button>

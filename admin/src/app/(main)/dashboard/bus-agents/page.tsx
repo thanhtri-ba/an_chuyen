@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Bus, Filter, Plus, Search, Star, Trash2 } from "lucide-react";
+import { Bus, Pencil, Plus, Search, Star, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
 export default function Page() {
   const [busAgents, setBusAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [ratingFilter, setRatingFilter] = useState<"ALL" | "HIGH" | "MID" | "LOW">("ALL");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
 
   async function load() {
     try {
@@ -57,14 +62,45 @@ export default function Page() {
     }
   }
 
-  const filteredAgents = busAgents.filter((agent) => agent.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+  function openEdit(agent: any) {
+    setEditingId(agent.id);
+    setEditName(agent.name || "");
+  }
+
+  async function handleSaveEdit() {
+    if (!editingId || !editName.trim()) return;
+    setIsSaving(true);
+    try {
+      await api.put(`/admin/busAgents/${editingId}`, { name: editName.trim() });
+      setEditingId(null);
+      await load();
+    } catch (error) {
+      console.error("Failed to update bus agent", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const filteredAgents = busAgents.filter((agent) => {
+    const rating = agent.rating || 0;
+    if (ratingFilter === "HIGH" && rating < 4.5) return false;
+    if (ratingFilter === "MID" && (rating < 4.0 || rating >= 4.5)) return false;
+    if (ratingFilter === "LOW" && rating >= 4.0) return false;
+    return agent.name?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+  const ratingCounts = {
+    ALL: busAgents.length,
+    HIGH: busAgents.filter((a) => (a.rating || 0) >= 4.5).length,
+    MID: busAgents.filter((a) => (a.rating || 0) >= 4.0 && (a.rating || 0) < 4.5).length,
+    LOW: busAgents.filter((a) => (a.rating || 0) < 4.0).length,
+  };
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-2">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-2">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="font-bold text-2xl tracking-tight">Nhà Xe</h1>
@@ -100,6 +136,53 @@ export default function Page() {
         </Dialog>
       </div>
 
+      <Dialog open={!!editingId} onOpenChange={(open) => !open && setEditingId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Sửa Nhà Xe</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-sm">Tên nhà xe</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleSaveEdit} disabled={isSaving || !editName.trim()} className="w-full bg-blue-600 text-white hover:bg-blue-700">
+              {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            { key: "ALL", label: "Tất cả" },
+            { key: "HIGH", label: "4.5★ trở lên" },
+            { key: "MID", label: "4.0★ - 4.5★" },
+            { key: "LOW", label: "Dưới 4.0★" },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setRatingFilter(tab.key)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-medium text-sm transition-colors",
+              ratingFilter === tab.key
+                ? "border-[#192B1D] bg-[#192B1D] text-white"
+                : "border-border bg-background text-muted-foreground hover:bg-muted/50",
+            )}
+          >
+            {tab.label}
+            <span className={cn("rounded-full px-1.5 text-xs", ratingFilter === tab.key ? "bg-white/20" : "bg-muted")}>
+              {ratingCounts[tab.key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
         <div className="flex flex-col items-center justify-between gap-4 border-border border-b bg-card p-4 sm:flex-row">
           <div className="relative w-full sm:w-96">
@@ -111,12 +194,9 @@ export default function Page() {
               placeholder="Tìm kiếm nhà xe..."
             />
           </div>
-          <Button variant="outline" size="sm" className="h-9 w-full gap-2 sm:w-auto">
-            <Filter className="size-4" /> Lọc
-          </Button>
         </div>
         <CardContent className="p-0">
-          <Table>
+          <Table className="[&_td]:py-4 [&_th]:h-12">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[300px]">Nhà Xe</TableHead>
@@ -165,14 +245,14 @@ export default function Page() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => void handleDelete(agent.id)}
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(agent)} className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => void handleDelete(agent.id)} className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
