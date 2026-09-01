@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Wifi, Usb, Droplets, Phone, Wind, ShieldCheck, Search, Ticket, Tag, HelpCircle, Bus, X, Armchair, Info, PenLine, Snowflake, Users, Layers, Star, Calendar, ChevronDown, Trash2, Plus, Minus, Lock, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,7 +7,7 @@ import api from '../../../lib/api';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
 
 // --- Types & Mocks ---
-interface SeatData { id: string; floor: number; status: 'available' | 'booked' | 'blocked'; price: number; }
+interface SeatData { id: string; floor: number; status: 'available' | 'booked' | 'blocked' | 'held-by-me'; price: number; }
 interface CheckpointData { id: string; type: 'PICKUP' | 'DROPOFF'; time: string; station: { id: string; name: string; city?: { name: string } }; }
 interface TripScheduleDetail { id: string; departureTime: string; arrivalTime: string; trip: { busClass: string; busAgent: { name: string; rating: number }; route: { departureCity: { name: string }; arrivalCity: { name: string } }; basePrice?: number }; checkpoints: CheckpointData[]; }
 interface PassengerForm { name: string; phone: string; email: string; gender: string; dob: string; idNumber: string; nationality: string; }
@@ -20,7 +20,9 @@ function parseSeatId(id: string) {
   return { floor: parseInt(m[1]), row: parseInt(m[2]), col: m[3] };
 }
 // Sequential "A01, A02, ..." display labels in row-major order — shared by SeatMap and the VIP pill so they never disagree.
-function computeSeatLabels(seatsForFloor: SeatData[]): Record<string,string> {
+// Prefix letter defaults to the seat's own floor (1 -> A, 2 -> B, ...) so floor 2 doesn't
+// reuse "A01" and collide visually with floor 1's own A01.
+function computeSeatLabels(seatsForFloor: SeatData[], prefix?: string): Record<string,string> {
   const parsed = seatsForFloor.map(s=>({...s,p:parseSeatId(s.id)})).filter(s=>s.p);
   const rows = [...new Set(parsed.map(s=>s.p!.row))].sort((a,b)=>a-b);
   const cols = [...new Set(parsed.map(s=>s.p!.col))].sort();
@@ -29,7 +31,10 @@ function computeSeatLabels(seatsForFloor: SeatData[]): Record<string,string> {
   rows.forEach(r=>{
     cols.forEach(c=>{
       const seat = parsed.find(s=>s.p!.row===r&&s.p!.col===c);
-      if (seat) map[seat.id] = `A${String(counter++).padStart(2,'0')}`;
+      if (seat) {
+        const letter = prefix ?? String.fromCharCode(64 + (seat.floor || 1)); // floor 1 -> A, floor 2 -> B
+        map[seat.id] = `${letter}${String(counter++).padStart(2,'0')}`;
+      }
     });
   });
   return map;
@@ -53,26 +58,40 @@ function generateMockSeats(): SeatData[] {
 }
 
 // --- Components ---
+// Tall "capsule" cell per Figma (node 22:212 "Rows N: VIP"): row label sits ABOVE
+// a smaller inner seat box, both wrapped in one rounded card — not a single square
+// with the number inside, which was the old style.
 function SeatIcon({ label, selected, booked, vip=false, size=52 }: { label?: string; selected: boolean; booked: boolean; vip?: boolean; size?: number }) {
+  const width = size;
+  const height = size * 1.35; // shorter than Figma's raw 1:1.71 — reads too elongated at this scale
+  const innerHeight = size * 0.8;
+
   if (booked) {
     return (
-      <div style={{ width: size, height: size, borderRadius: size*0.167 }} className="flex items-center justify-center bg-[#E9ECEF] text-[#ADB5BD]">
-        <Armchair size={size*0.32} strokeWidth={1.75} />
+      <div style={{ width, height, borderRadius: size*0.21 }} className="flex flex-col items-center justify-center gap-1.5 bg-[#F8F9FA] border border-[#DEE2E6]">
+        <span style={{fontSize: Math.max(9, size*0.19)}} className="font-bold text-[#ADB5BD]">{label}</span>
+        <Armchair size={size*0.3} strokeWidth={1.75} className="text-[#ADB5BD]" />
       </div>
     );
   }
-  // Selected = solid gold fill. VIP-but-unselected keeps a plain white seat with just a gold
-  // outline + badge — a light cream fill here reads almost identical to "selected" at a glance.
-  const bg = selected ? 'bg-[#FFC107]' : 'bg-white';
-  const border = selected ? 'border-[#FFC107]' : vip ? 'border-2 border-[#856404]' : 'border-[#DEE2E6]';
+  const outerBg = selected ? 'bg-[#FFF3CD]' : vip ? 'bg-[rgba(255,243,205,0.5)]' : 'bg-white';
+  const outerBorder = selected ? 'border-[#FFC107]' : vip ? 'border-[rgba(133,100,4,0.25)]' : 'border-[#DEE2E6]';
+  const labelColor = selected || vip ? 'text-[#856404]' : 'text-[#212529]';
+  const innerBg = selected ? 'bg-[#FFC107] border-[#FFC107]' : 'bg-[rgba(255,255,255,0.6)] border-[rgba(133,100,4,0.15)]';
+
   return (
     <div
-      style={{ width: size, height: size, borderRadius: size*0.167 }}
-      className={`relative flex flex-col items-center justify-center gap-1 border ${bg} ${border} text-[#212529] font-bold transition-all`}
+      style={{ width, height, borderRadius: size*0.21 }}
+      className={`relative flex flex-col items-center justify-center gap-1.5 border shadow-sm p-1 transition-all ${outerBg} ${outerBorder}`}
     >
-      <span style={{fontSize: Math.max(10, size*0.22)}}>{label}</span>
-      {vip && <span className="font-bold uppercase leading-none border border-[#856404] text-[#856404] px-1 py-px rounded" style={{fontSize: Math.max(7, size*0.125)}}>VIP</span>}
-      {selected && <CheckCircle2 size={size*0.22} className="absolute -top-1.5 -right-1.5 text-[#856404] bg-white rounded-full" strokeWidth={2.5} />}
+      <span style={{fontSize: Math.max(9, size*0.19)}} className={`font-bold ${labelColor}`}>{label}</span>
+      <div
+        style={{ width: size*0.71, height: innerHeight, borderRadius: size*0.11 }}
+        className={`flex items-center justify-center border ${innerBg}`}
+      >
+        {selected && <CheckCircle2 size={size*0.24} className="text-white" strokeWidth={2.5} />}
+        {!selected && vip && <span className="font-bold uppercase text-[rgba(133,100,4,0.5)]" style={{fontSize: Math.max(6, size*0.11)}}>VIP</span>}
+      </div>
     </div>
   );
 }
@@ -88,8 +107,8 @@ function SeatMap({ seats, selectedSeats, onToggle, seatSize=48 }: { seats: SeatD
   const parsed = seats.map(s=>({...s, p:parseSeatId(s.id)})).filter(s=>s.p);
   const rows = [...new Set(parsed.map(s=>s.p!.row))].sort((a,b)=>a-b);
   const cols = [...new Set(parsed.map(s=>s.p!.col))].sort();
-  const aisleAfter = cols.length>=3 ? 1 : -1;
-  const GAP = Math.round(seatSize*0.167), AISLE = Math.round(seatSize*0.667);
+  // Evenly spaced columns (no lopsided aisle-after-col-2 gap) — user asked for 3 equal lanes.
+  const GAP = Math.round(seatSize*0.55);
   const prices = parsed.map(s=>s.price);
   const maxPrice = Math.max(...prices);
   const minPrice = Math.min(...prices);
@@ -99,22 +118,21 @@ function SeatMap({ seats, selectedSeats, onToggle, seatSize=48 }: { seats: SeatD
     <div className="flex justify-center w-full">
       <div className="inline-block">
         {rows.map(rowNum=>(
-          <div key={rowNum} className="relative flex items-center" style={{marginBottom: Math.round(seatSize*0.167)}}>
+          <div key={rowNum} className="relative flex items-center" style={{marginBottom: Math.round(seatSize*0.15)}}>
             <span className="absolute font-semibold text-[#6C757D] text-right" style={{left:-Math.round(seatSize*0.33), fontSize: seatSize*0.19, width: seatSize*0.28}}>{rowNum}</span>
             {cols.map((col,ci)=>{
               const seat = parsed.find(s=>s.p!.row===rowNum&&s.p!.col===col);
               const sel = seat ? selectedSeats.includes(seat.id) : false;
-              const avail = seat?.status==='available';
+              const avail = seat?.status==='available' || seat?.status==='held-by-me';
               const vip = !!seat && maxPrice>minPrice && seat.price===maxPrice;
               const displayNum = seat ? labels[seat.id] : '';
 
               return (
                 <div key={col} className="flex items-center">
-                  {ci===aisleAfter+1 && <div style={{width:AISLE}} />}
                   <motion.div
                     whileHover={avail&&seat?{scale:1.05}:{}} whileTap={avail&&seat?{scale:0.95}:{}}
                     onClick={()=>seat&&avail&&onToggle(seat.id,seat.status)}
-                    style={{marginRight:ci<cols.length-1&&ci!==aisleAfter?GAP:0}}
+                    style={{marginRight:ci<cols.length-1?GAP:0}}
                     className={`relative select-none flex flex-col items-center gap-0.5 ${seat ? (avail ? 'cursor-pointer' : 'cursor-not-allowed') : 'cursor-default'}`}
                   >
                     {seat ? <SeatIcon label={displayNum} selected={sel} booked={!avail} vip={vip} size={seatSize}/> : <SeatIcon selected={false} booked size={seatSize}/>}
@@ -193,7 +211,6 @@ export function SeatSelectionPage() {
 
   const [seats, setSeats] = useState<SeatData[]>(()=>generateMockSeats());
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [activeFloor, setActiveFloor] = useState(1);
   const [tripDetail, setTripDetail] = useState<TripScheduleDetail|null>(null);
   const [timeLeft, setTimeLeft] = useState(600);
   const [step, setStep] = useState<'seat'|'info'>('seat');
@@ -221,17 +238,65 @@ export function SeatSelectionPage() {
     if(dropoffOpts.length&&!dropoffPoint) setDropoffPoint(dropoffOpts[0].id);
   },[tripDetail]);
 
+  // Ghế thực sự giữ trên server (backend LOCKED + lockExpiresAt) — khác với
+  // selectedSeats (UI). heldRef theo dõi seat nào đã hold thành công để biết
+  // seat nào cần release khi bỏ chọn / rời trang / hết giờ.
+  const heldRef = useRef<string[]>([]);
+  const proceedingRef = useRef(false);
+  // Hold/release chỉ áp dụng khi khách đã đăng nhập — trang chọn ghế cho phép
+  // khách vãng lai duyệt & chọn ghế không cần tài khoản (chỉ /payment mới bắt
+  // đăng nhập), và interceptor của api.ts tự redirect sang /auth khi gặp 401,
+  // nên gọi hold khi chưa có token sẽ đá khách ra khỏi trang một cách vô lý.
+  const isLoggedIn = () => !!sessionStorage.getItem('busz_token');
+
+  const releaseSeatsOnServer = (ids: string[]) => {
+    if (!tripScheduleId || ids.length === 0 || !isLoggedIn()) return;
+    api.post(`/trip-schedules/${tripScheduleId}/seats/release`, { seatNumbers: ids }).catch(() => {});
+    heldRef.current = heldRef.current.filter(id => !ids.includes(id));
+  };
+
+  // Rời trang mà không tiếp tục sang thanh toán → nhả hết ghế đang giữ.
+  useEffect(() => {
+    return () => {
+      if (!proceedingRef.current) releaseSeatsOnServer(heldRef.current);
+    };
+  }, []);
+
+  // Đồng bộ ghế được chọn trên UI với hold thật trên server: gọi hold khi thêm
+  // ghế, release khi bỏ chọn. Nếu hold thất bại (ghế vừa bị người khác giữ),
+  // rollback lựa chọn và báo lỗi.
+  useEffect(() => {
+    if (!tripScheduleId || !isLoggedIn()) return;
+    const newlySelected = selectedSeats.filter(id => !heldRef.current.includes(id));
+    const deselected = heldRef.current.filter(id => !selectedSeats.includes(id));
+
+    if (deselected.length > 0) releaseSeatsOnServer(deselected);
+
+    if (newlySelected.length > 0) {
+      api.post(`/trip-schedules/${tripScheduleId}/seats/hold`, { seatNumbers: newlySelected })
+        .then(() => { heldRef.current = [...heldRef.current, ...newlySelected]; })
+        .catch((err) => {
+          toast.error(err?.response?.data?.message || 'Ghế vừa được người khác giữ, vui lòng chọn ghế khác');
+          setSelectedSeats(prev => prev.filter(id => !newlySelected.includes(id)));
+        });
+    }
+  }, [selectedSeats, tripScheduleId]);
+
   useEffect(()=>{
     if(!selectedSeats.length){setTimeLeft(600);return;}
     const iv=setInterval(()=>setTimeLeft(p=>{
-      if(p<=1){clearInterval(iv);setSelectedSeats([]);setStep('seat');toast.error('Hết thời gian giữ chỗ!');return 600;}
+      if(p<=1){
+        clearInterval(iv);
+        releaseSeatsOnServer(heldRef.current);
+        setSelectedSeats([]);setStep('seat');toast.error('Hết thời gian giữ chỗ!');return 600;
+      }
       return p-1;
     }),1000);
     return()=>clearInterval(iv);
   },[selectedSeats.length>0]);
 
   const toggleSeat=(id:string,status:string)=>{
-    if(status!=='available') return;
+    if(status!=='available' && status!=='held-by-me') return;
     if(selectedSeats.includes(id)){setSelectedSeats(p=>p.filter(s=>s!==id));return;}
     if(selectedSeats.length>=4){toast.error('Tối đa 4 ghế');return;}
     setSelectedSeats(p=>[...p,id]);
@@ -260,27 +325,30 @@ export function SeatSelectionPage() {
   const amenitiesTotal = amenityQty.water*AMENITY_PRICES.water + amenityQty.towel*AMENITY_PRICES.towel + amenityQty.pillow*AMENITY_PRICES.pillow;
   const fmt = (n:number)=>new Intl.NumberFormat('vi-VN').format(n);
 
-  const floorSeats = seats.filter(s=>s.floor===activeFloor);
   const floorCount = seats.length?Math.max(2, ...seats.map(s=>s.floor)):2;
-  // Cheapest available seat on each floor, so the floor-switch tabs show a real price difference
-  // instead of two identically-labelled buttons.
+  // Cheapest available seat on each floor, shown next to each floor's header.
   const floorFromPrice: Record<number, number> = {};
   [1,2].forEach(f=>{
     const prices = seats.filter(s=>s.floor===f).map(s=>s.price);
     if (prices.length) floorFromPrice[f] = Math.min(...prices);
   });
-  const floorPrices = floorSeats.map(s=>s.price);
-  const floorMaxPrice = floorPrices.length?Math.max(...floorPrices):0;
-  const floorMinPrice = floorPrices.length?Math.min(...floorPrices):0;
-  const seatLabels = computeSeatLabels(floorSeats);
-  const vipLabels = floorMaxPrice>floorMinPrice
-    ? floorSeats.filter(s=>s.price===floorMaxPrice).map(s=>seatLabels[s.id]).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)))
-    : [];
-  const vipNums = vipLabels.map(l=>parseInt(l.slice(1)));
-  const vipIsContiguous = vipNums.every((n,i)=>i===0||n===vipNums[i-1]+1);
-  const vipRangeLabel = vipLabels.length===0 ? '' : vipLabels.length===1 ? vipLabels[0]
-    : vipIsContiguous ? `${vipLabels[0]} - ${vipLabels[vipLabels.length-1]}`
-    : vipLabels.join(', ');
+
+  // Both floors shown side by side (not a toggle) — VIP-range math per floor.
+  const getFloorInfo = (f: number) => {
+    const fSeats = seats.filter(s=>s.floor===f);
+    const prices = fSeats.map(s=>s.price);
+    const maxP = prices.length?Math.max(...prices):0;
+    const minP = prices.length?Math.min(...prices):0;
+    const labels = computeSeatLabels(fSeats);
+    const vLabels = maxP>minP
+      ? fSeats.filter(s=>s.price===maxP).map(s=>labels[s.id]).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)))
+      : [];
+    const vNums = vLabels.map(l=>parseInt(l.slice(1)));
+    const vContig = vNums.every((n,i)=>i===0||n===vNums[i-1]+1);
+    const vRange = vLabels.length===0 ? '' : vLabels.length===1 ? vLabels[0]
+      : vContig ? `${vLabels[0]} - ${vLabels[vLabels.length-1]}` : vLabels.join(', ');
+    return { seats: fSeats, vipRangeLabel: vRange };
+  };
 
   // Display labels ("A05") for selected-seat chips, computed per-floor so cross-floor selections still resolve.
   const globalSeatLabels: Record<string,string> = {};
@@ -332,6 +400,7 @@ export function SeatSelectionPage() {
     const bookingData={tripScheduleId,seats:selectedSeats,seatsTotal,totalAmount:seatsTotal+amenitiesTotal,pickupPoint,dropoffPoint,pickupLabel,dropoffLabel,routeLabel:`${depCity} → ${arrCity}`,busAgentName:agentName,addInsurance:false,insuranceFee:0,needVAT:false,passengerInfo:{name:primary.name,phone:primary.phone,email:primary.email},bookerInfo:null,passengers,amenities:{nuocSuoi:amenityQty.water,khanLanh:amenityQty.towel,goiTuaCo:amenityQty.pillow,oCamUSB:usbSelected},amenitiesTotal,notes};
     sessionStorage.setItem('pending_booking',JSON.stringify(bookingData));
     localStorage.setItem('pending_booking',JSON.stringify(bookingData));
+    proceedingRef.current = true;
     navigate('/payment');
   };
 
@@ -415,23 +484,15 @@ export function SeatSelectionPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 mb-8">
-                {floorCount > 1 ? [1,2].map(f=>(
-                  <button key={f} onClick={()=>setActiveFloor(f)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${activeFloor===f?'bg-[#FFF3CD] border-[#FFC107] text-[#212529]':'bg-white border-[#DEE2E6] text-[#212529] hover:bg-[#F8F9FA]'}`}>
-                    <Layers size={14} className={activeFloor===f?'text-[#856404]':'text-[#6C757D]'}/>
-                    <span className="flex flex-col items-start leading-tight">
-                      <span>Tầng {f===1?'dưới':'trên'}</span>
-                      {floorFromPrice[f]!=null && <span className="text-[10px] font-normal text-[#856404]">từ {fmt(floorFromPrice[f])}đ</span>}
-                    </span>
-                  </button>
-                )) : null}
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
-                  <Users size={14} className="text-[#6C757D]"/> {floorSeats.length} ghế
+                  <Users size={14} className="text-[#6C757D]"/> {seats.length} ghế
                 </div>
-                {vipRangeLabel && (
-                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
-                    <span className="border border-[#856404] text-[#856404] text-[10px] font-bold px-1.5 py-0.5 rounded">VIP</span> Ghế VIP: {vipRangeLabel}
+                {floorCount > 1 && [1,2].map(f=> floorFromPrice[f]!=null && (
+                  <div key={f} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
+                    <Layers size={14} className="text-[#6C757D]"/>
+                    <span>Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="flex-1 flex flex-col items-center gap-6 overflow-auto">
@@ -444,8 +505,19 @@ export function SeatSelectionPage() {
                   ))}
                 </div>
 
-                <div className="w-full max-w-[420px] py-4 px-8">
-                  <SeatMap seats={floorSeats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={68}/>
+                {/* Both floors shown side by side (per user request) instead of a floor toggle — each in its own framed card */}
+                <div className="w-full flex items-start justify-center gap-6 py-4 px-4 overflow-x-auto">
+                  {(floorCount > 1 ? [1,2] : [1]).map(f => {
+                    const info = getFloorInfo(f);
+                    return (
+                      <div key={f} className="flex flex-col items-center gap-4 shrink-0 bg-[#FAFAFA] border border-[#DEE2E6] rounded-2xl pt-5 pb-6 px-6">
+                        <div className="text-center">
+                          <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
+                        </div>
+                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={52}/>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -508,14 +580,16 @@ export function SeatSelectionPage() {
                     <div className="text-sm font-bold text-[#212529]">Ghế bạn đã chọn ({selectedSeats.length})</div>
                     <button onClick={()=>setSelectedSeats([])} className="text-xs font-medium text-[#DC3545] hover:underline">Xóa tất cả</button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="flex flex-wrap gap-3 mb-4">
                     {selectedSeats.map(id => {
                       const seat = seats.find(s => s.id === id);
                       return (
-                        <div key={id} className="relative border border-[#DEE2E6] rounded-xl p-3">
-                          <div className="text-base font-bold text-[#212529]">{labelFor(id)}</div>
-                          <div className="text-sm text-[#6C757D]">{fmt(seat?.price||0)}đ</div>
-                          <button onClick={()=>toggleSeat(id,'available')} className="absolute top-2 right-2 text-[#6C757D] hover:text-[#DC3545] transition-colors"><X size={12}/></button>
+                        <div key={id} className="flex items-center gap-3 border border-[#DEE2E6] rounded-xl pl-3.5 pr-2 py-2.5 min-w-[220px] flex-1">
+                          <div className="flex-1">
+                            <div className="text-base font-bold text-[#212529] leading-tight">{labelFor(id)}</div>
+                            <div className="text-sm text-[#6C757D] leading-tight mt-0.5">{fmt(seat?.price||0)}đ</div>
+                          </div>
+                          <button onClick={()=>toggleSeat(id,'available')} className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[#ADB5BD] hover:bg-[#FEE2E2] hover:text-[#DC3545] transition-colors"><X size={13}/></button>
                         </div>
                       );
                     })}

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -123,6 +124,81 @@ router.post('/login', async (req, res) => {
     // Don't send password back in response
     const { password: _, ...userWithoutPassword } = user;
     res.json({ token, user: userWithoutPassword });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Quên mật khẩu: phát hành token 1 lần, hết hạn 30 phút, hash trước khi lưu DB
+// (giống cách lưu password) — lộ DB không đồng nghĩa với việc kẻ tấn công có
+// token dùng được. Luôn trả về cùng 1 thông báo dù email có tồn tại hay không,
+// để không lộ email nào đã đăng ký (chống user enumeration).
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Vui lòng nhập email' });
+    }
+
+    const genericResponse = {
+      message: 'Nếu email tồn tại trong hệ thống, chúng tôi đã gửi link đặt lại mật khẩu.',
+    };
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Vẫn trả 200 với thông báo chung — không tiết lộ email có tồn tại hay không.
+      return res.json(genericResponse);
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+    await prisma.passwordResetToken.create({
+      data: { userId: user.id, tokenHash, expiresAt },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    // CHƯA có email provider (SMTP/Resend/SendGrid) được cấu hình trong .env —
+    // log link ra server console để test thủ công. Cần cấu hình email provider
+    // thật trước khi lên production, nếu không người dùng sẽ không nhận được gì.
+    console.log(`[forgot-password] Reset link for ${email}: ${resetLink}`);
+
+    const responseBody: Record<string, string> =
+      process.env.NODE_ENV === 'development' ? { ...genericResponse, devResetLink: resetLink } : genericResponse;
+
+    res.json(responseBody);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Thiếu token hoặc mật khẩu mới' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      return res.status(400).json({ message: 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: resetToken.userId }, data: { password: hashedPassword } }),
+      prisma.passwordResetToken.update({ where: { id: resetToken.id }, data: { usedAt: new Date() } }),
+    ]);
+
+    res.json({ message: 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.' });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
   }

@@ -55,9 +55,14 @@ export class BookingService {
         throw new Error(`Ghế không tồn tại trên chuyến xe này: ${missingSeats.join(', ')}`);
       }
 
-      // Lớp 2: Kiểm tra xem tất cả ghế có trống không
+      // Lớp 2: Kiểm tra xem tất cả ghế có trống không (kiểm tra sớm để trả lỗi rõ ràng).
+      // Ghế đang được CHÍNH userId này "hold" (giữ tạm lúc chọn ghế, xem seat.service.ts)
+      // cũng được coi là hợp lệ — đó là luồng bình thường khi khách hoàn tất thanh toán
+      // sau khi đã giữ ghế. Đây CHƯA đủ để chống race condition — việc chống trùng ghế
+      // thật sự nằm ở updateMany có điều kiện bên dưới.
       for (const seat of seats) {
-        if (seat.status !== SeatStatus.AVAILABLE) {
+        const heldByMe = seat.status === SeatStatus.LOCKED && seat.lockedBy === userId;
+        if (seat.status !== SeatStatus.AVAILABLE && !heldByMe) {
           throw new Error(`Ghế ${seat.seatNumber} đã có người đặt hoặc đang giữ chỗ!`);
         }
       }
@@ -95,7 +100,33 @@ export class BookingService {
         }
       }
 
-      // 3. Tạo Booking
+      // 3. Khoá ghế TRƯỚC khi tạo booking, bằng update có điều kiện status: AVAILABLE.
+      // Đây là bước chống trùng ghế thật sự: nếu 2 request đồng thời cùng qua bước
+      // check ở trên, chỉ MỘT request update trúng đủ số ghế (count === seats.length) —
+      // request còn lại sẽ update được ít ghế hơn (ghế đã bị bên kia khoá trước),
+      // phát hiện qua count lệch và rollback toàn bộ transaction.
+      const lockResult = await tx.seat.updateMany({
+        where: {
+          id: { in: seats.map(s => s.id) },
+          OR: [
+            { status: SeatStatus.AVAILABLE },
+            { status: SeatStatus.LOCKED, lockedBy: userId }
+          ]
+        },
+        data: {
+          status: isWalletPayment ? SeatStatus.BOOKED : SeatStatus.LOCKED,
+          // Xoá thông tin "hold" tạm — ghế giờ khoá bởi Booking thật (seatBookings.lockedAt),
+          // không còn phụ thuộc lockExpiresAt của cơ chế hold nữa.
+          lockedBy: null,
+          lockExpiresAt: null
+        }
+      });
+
+      if (lockResult.count !== seats.length) {
+        throw new Error('Một hoặc nhiều ghế vừa được người khác đặt trước. Vui lòng chọn lại ghế.');
+      }
+
+      // 4. Tạo Booking
       const booking = await tx.booking.create({
         data: {
           userId,
@@ -120,7 +151,7 @@ export class BookingService {
         include: { passengers: true }
       });
 
-      // 4. Tạo vé (Ticket) cho từng hành khách
+      // 5. Tạo vé (Ticket) cho từng hành khách
       // Cast booking to any to bypass TS error if Prisma types are outdated
       const bookingWithPassengers = booking as any;
       if (bookingWithPassengers.passengers && bookingWithPassengers.passengers.length > 0) {
@@ -132,16 +163,6 @@ export class BookingService {
           }))
         });
       }
-
-      // 5. Khoá ghế: đã thanh toán ví → BOOKED (bán hẳn), còn lại → LOCKED (giữ chỗ chờ thanh toán)
-      await tx.seat.updateMany({
-        where: {
-          id: { in: seats.map(s => s.id) }
-        },
-        data: {
-          status: isWalletPayment ? SeatStatus.BOOKED : SeatStatus.LOCKED
-        }
-      });
 
       // 6. Lưu thông tin phương thức thanh toán (nếu có)
       if (paymentMethod) {

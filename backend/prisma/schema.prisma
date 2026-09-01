@@ -47,8 +47,25 @@ model User {
   rentalBookings       RentalBooking[]
   tourBookings         TourBooking[]
   deliveryOrders       DeliveryOrder[]
+  passwordResetTokens  PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  // Chỉ lưu hash của token (sha256), không lưu token gốc — giống cách lưu password,
+  // để lộ DB không đồng nghĩa với lộ token dùng được.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model DeviceSession {
@@ -438,6 +455,8 @@ model Seat {
   tripScheduleId String
   seatNumber     String
   status         SeatStatus @default(AVAILABLE)
+  lockedBy       String? // userId đang giữ ghế (giữ chỗ tạm thời trước khi tạo Booking)
+  lockExpiresAt  DateTime? // Hết hạn giữ chỗ — quá giờ này ghế được coi như AVAILABLE trở lại
 
   tripSchedule TripSchedule  @relation(fields: [tripScheduleId], references: [id], onDelete: Cascade)
   bookings     SeatBooking[]
