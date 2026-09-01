@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronRight, MailIcon, PlusCircleIcon } from "lucide-react";
+import { useState } from "react";
+
+import { ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
@@ -82,6 +83,11 @@ function hasSubItems(item: NavMainItem): item is NavMainParentItem {
 
 export function NavMain({ items }: NavMainProps) {
   const path = useLocation().pathname;
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({});
+
+  const toggleGroup = (groupId: number) => {
+    setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
 
   const isItemActive = (item: NavMainItem) => {
     if (hasSubItems(item)) {
@@ -101,51 +107,45 @@ export function NavMain({ items }: NavMainProps) {
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupContent className="flex flex-col gap-2">
-          <SidebarMenu>
-            <SidebarMenuItem className="flex items-center gap-2">
-              <SidebarMenuButton
-                tooltip="Quick Create"
-                className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+      {items.map((group) => {
+        const isCollapsed = Boolean(collapsedGroups[group.id]);
+        return (
+          <SidebarGroup
+            key={group.id}
+            className="rounded-lg border border-sidebar-border/60 bg-sidebar-accent/20 py-2 group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent"
+          >
+            {group.label && (
+              <SidebarGroupLabel
+                onClick={() => toggleGroup(group.id)}
+                className="flex cursor-pointer select-none items-center justify-between gap-1 font-bold text-sidebar-foreground group-data-[collapsible=icon]:pointer-events-none"
               >
-                <PlusCircleIcon />
-                <span>Quick Create</span>
-              </SidebarMenuButton>
-              <Button
-                size="icon"
-                className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
-                variant="outline"
-              >
-                <MailIcon />
-                <span className="sr-only">Inbox</span>
-              </Button>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      {items.map((group) => (
-        <SidebarGroup key={group.id}>
-          {group.label && (
-            <SidebarGroupLabel className="group-data-[collapsible=icon]:pointer-events-none">
-              {group.label}
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {group.items.map((item) => (
-                <NavItem
-                  key={item.id}
-                  item={item}
-                  isItemActive={isItemActive}
-                  isSubItemActive={isSubItemActive}
-                  isSubmenuOpen={isSubmenuOpen}
+                <span>{group.label}</span>
+                <ChevronRight
+                  className={cn(
+                    "size-3.5 shrink-0 transition-transform duration-200",
+                    !isCollapsed && "rotate-90",
+                  )}
                 />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
+              </SidebarGroupLabel>
+            )}
+            {!isCollapsed && (
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => (
+                    <NavItem
+                      key={item.id}
+                      item={item}
+                      isItemActive={isItemActive}
+                      isSubItemActive={isSubItemActive}
+                      isSubmenuOpen={isSubmenuOpen}
+                    />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            )}
+          </SidebarGroup>
+        );
+      })}
     </>
   );
 }

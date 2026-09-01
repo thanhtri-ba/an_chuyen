@@ -333,7 +333,7 @@ const en: Translations = {
     },
     destinations: {
       sub: "Explore the best",
-      title: "Popular Destinations",
+      title: "All Destinations",
       viewAll: "View all destinations"
     },
     promo: {

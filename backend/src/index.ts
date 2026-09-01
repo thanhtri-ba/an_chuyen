@@ -78,6 +78,8 @@ import { walletRoutes } from './modules/wallet/wallet.routes';
 import { rentalRoutes } from './modules/rental/rental.routes';
 import { tourRoutes } from './modules/tour/tour.routes';
 import { eventRoutes } from './modules/event/event.routes';
+import { destinationRoutes } from './modules/destination/destination.routes';
+import { bannerRoutes } from './modules/banner/banner.routes';
 import { deliveryRoutes } from './modules/delivery/delivery.routes';
 import seatRoutes from './modules/seat/seat.routes';
 import paymentRoutes from './modules/payment/payment.routes';
@@ -93,6 +95,8 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/tours', tourRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/destinations', destinationRoutes);
+app.use('/api/banners', bannerRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/trip-schedules', seatRoutes);
 app.use('/api/payments', paymentRoutes);
@@ -117,18 +121,18 @@ function mapCityName(input: string | undefined): string | undefined {
   const clean = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, "").replace(/\s+/g, "");
   
   const mapping: Record<string, string> = {
-    tphcm: 'TP.HCM',
-    hcm: 'TP.HCM',
-    saigon: 'TP.HCM',
-    saison: 'TP.HCM', // Map 'Sài Sòn' / 'saison' typo
-    hochiminh: 'TP.HCM',
+    tphcm: 'TP. Hồ Chí Minh',
+    hcm: 'TP. Hồ Chí Minh',
+    saigon: 'TP. Hồ Chí Minh',
+    saison: 'TP. Hồ Chí Minh', // Map 'Sài Sòn' / 'saison' typo
+    hochiminh: 'TP. Hồ Chí Minh',
     hanoi: 'Hà Nội',
     dalat: 'Đà Lạt',
     nhatrang: 'Nha Trang',
     vungtau: 'Vũng Tàu',
     danang: 'Đà Nẵng',
     cantho: 'Cần Thơ',
-    sapa: 'Sapa',
+    sapa: 'Sa Pa',
     hoian: 'Hội An',
     phuquoc: 'Phú Quốc',
     haiphong: 'Hải Phòng',

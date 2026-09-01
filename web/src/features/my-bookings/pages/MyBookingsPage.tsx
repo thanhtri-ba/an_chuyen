@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Ticket, Calendar, Clock, Download, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle, Ban } from 'lucide-react';
+import { Ticket, Calendar, Clock, Download, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle, Ban, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import type { Booking } from '../../../types';
+import { TrackingMap } from '../../../shared/components/TrackingMap';
 
 /* ─── STATUS ─── */
 const STATUS_MAP: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
@@ -29,7 +30,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /* ─── TICKET CARD ─── */
-function TicketCard({ booking, index, onCancel }: { booking: Booking; index: number; onCancel: (id: string) => void }) {
+function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMobile }: { booking: Booking; index: number; isActiveTracking: boolean; onTrack: () => void; onCancel: (id: string) => void; isMobile: boolean }) {
   const depTime = booking.tripSchedule?.departureTime;
   const departureDate = depTime ? new Date(depTime) : new Date(booking.createdAt);
   const depCity = booking.tripSchedule?.trip?.route?.departureCity?.name || 'Điểm đi';
@@ -57,132 +58,114 @@ function TicketCard({ booking, index, onCancel }: { booking: Booking; index: num
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07, duration: 0.45 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
       style={{
-        background: 'rgba(0,0,0,0.025)',
-        border: '1px solid rgba(0,0,0,0.07)',
+        background: isActiveTracking && !isMobile ? '#f0fdf4' : 'rgba(0,0,0,0.025)',
+        border: isActiveTracking && !isMobile ? '1px solid #4ade80' : '1px solid rgba(0,0,0,0.07)',
         overflow: 'hidden',
-        transition: 'border-color 0.3s',
+        transition: 'all 0.3s',
       }}
-      whileHover={{ borderColor: 'rgba(22,51,40,0.25)' }}
+      whileHover={{ borderColor: isActiveTracking && !isMobile ? '#4ade80' : 'rgba(22,51,40,0.25)' }}
     >
-      {/* Top accent line based on status */}
       <div style={{ height: 2, background: STATUS_MAP[booking.status]?.color || '#163328', opacity: 0.6 }} />
 
-      <div style={{ padding: '28px 28px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '88px 1px 1fr', gap: 0, alignItems: 'stretch' }}>
-
-          {/* Date column */}
-          <div style={{ paddingRight: 24, paddingBottom: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+      <div style={{ padding: '24px 24px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '70px 1px 1fr', gap: 0, alignItems: 'stretch' }}>
+          
+          <div style={{ paddingRight: 20, paddingBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', fontFamily: 'system-ui', marginBottom: 4 }}>
-                {departureDate.toLocaleDateString('vi-VN', { month: 'short' })}
-              </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '3rem', fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
-                {departureDate.getDate()}
-              </div>
-              <div style={{ fontSize: 9, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui', marginTop: 4 }}>
-                {departureDate.getFullYear()}
-              </div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', fontFamily: 'system-ui', marginBottom: 4 }}>{departureDate.toLocaleDateString('vi-VN', { month: 'short' })}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '2.5rem', fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>{departureDate.getDate()}</div>
+              <div style={{ fontSize: 9, color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui', marginTop: 4 }}>{departureDate.getFullYear()}</div>
             </div>
             <StatusBadge status={booking.status} />
           </div>
 
-          {/* Divider — dashed */}
           <div style={{ background: 'none', borderLeft: '1px dashed rgba(0,0,0,0.1)', position: 'relative' }}>
-            {/* Notch top */}
-            <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: '#fcfcfc', border: '1px dashed rgba(0,0,0,0.1)' }} />
-            {/* Notch bottom */}
-            <div style={{ position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: '#fcfcfc', border: '1px dashed rgba(0,0,0,0.1)' }} />
+            <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', width: 12, height: 12, borderRadius: '50%', background: '#fcfcfc', border: '1px dashed rgba(0,0,0,0.1)' }} />
+            <div style={{ position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)', width: 12, height: 12, borderRadius: '50%', background: '#fcfcfc', border: '1px dashed rgba(0,0,0,0.1)' }} />
           </div>
 
-          {/* Trip info */}
-          <div style={{ padding: '0 0 28px 24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div style={{ padding: '0 0 20px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
               <div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.35rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 6px', lineHeight: 1.2 }}>
-                  {agentName}
-                </h3>
-                <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.3)', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-                  #{booking.id.slice(0, 8).toUpperCase()}
-                </div>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '1.2rem', fontWeight: 500, color: '#1a1a1a', margin: '0 0 4px', lineHeight: 1.2 }}>{agentName}</h3>
+                <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.3)', fontFamily: 'monospace', letterSpacing: '0.1em' }}>#{booking.id.slice(0, 8).toUpperCase()}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 700, color: '#163328', lineHeight: 1 }}>
-                  {new Intl.NumberFormat('vi-VN').format(booking.totalAmount)}₫
-                </div>
-                <div style={{ fontSize: 10, color: isPaid ? '#4ade80' : '#163328', fontFamily: 'system-ui', fontWeight: 700, marginTop: 4, letterSpacing: '0.05em' }}>
-                  {isPaid ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'}
-                </div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.4rem', fontWeight: 700, color: '#163328', lineHeight: 1 }}>{new Intl.NumberFormat('vi-VN').format(booking.totalAmount)}₫</div>
+                <div style={{ fontSize: 9, color: isPaid ? '#4ade80' : '#163328', fontFamily: 'system-ui', fontWeight: 700, marginTop: 4, letterSpacing: '0.05em' }}>{isPaid ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'}</div>
               </div>
             </div>
 
-            {/* Route row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)', marginBottom: 14 }}>
-              <MapPin size={11} style={{ color: '#163328', flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', fontFamily: 'system-ui' }}>{depCity}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)', marginBottom: 10 }}>
+              <MapPin size={10} style={{ color: '#163328', flexShrink: 0 }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1a1a1a', fontFamily: 'system-ui' }}>{depCity}</span>
               <div style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(to right, rgba(22,51,40,0.3) 0, rgba(22,51,40,0.3) 4px, transparent 4px, transparent 8px)' }} />
-              <ArrowRight size={11} style={{ color: '#163328', flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', fontFamily: 'system-ui' }}>{arrCity}</span>
+              <ArrowRight size={10} style={{ color: '#163328', flexShrink: 0 }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1a1a1a', fontFamily: 'system-ui' }}>{arrCity}</span>
             </div>
 
-            {/* Meta */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20, fontSize: 11, color: 'rgba(0,0,0,0.35)', fontFamily: 'system-ui' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 10, color: 'rgba(0,0,0,0.35)', fontFamily: 'system-ui' }}>
               {booking.seatNumbers?.length > 0 && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Ticket size={10} /> Ghế: {booking.seatNumbers.join(', ')}
-                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Ticket size={10} /> Ghế: {booking.seatNumbers.join(', ')}</span>
               )}
               {depTime && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Clock size={10} /> {new Date(depTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={10} /> {new Date(depTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+      <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, background: isActiveTracking && !isMobile ? '#dcfce7' : 'transparent' }}>
         <div>
           {canCancel && (
             <button
-              onClick={handleCancel}
-              disabled={isCancelling}
+              onClick={handleCancel} disabled={isCancelling}
               style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: 'none', border: '1px solid rgba(248,113,113,0.3)',
-                color: '#f87171', padding: '8px 18px', cursor: isCancelling ? 'not-allowed' : 'pointer',
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-                fontFamily: 'system-ui', transition: 'all 0.2s', opacity: isCancelling ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid rgba(248,113,113,0.3)',
+                color: '#f87171', padding: '6px 14px', cursor: isCancelling ? 'not-allowed' : 'pointer', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                fontFamily: 'system-ui', transition: 'all 0.2s', opacity: isCancelling ? 0.5 : 1, borderRadius: 6
               }}
             >
-              <Ban size={11} /> {isCancelling ? 'Đang hủy...' : 'Hủy vé'}
+              <Ban size={10} /> {isCancelling ? 'Đang hủy...' : 'Hủy vé'}
             </button>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: 'none', border: '1px solid rgba(0,0,0,0.1)',
-            color: 'rgba(0,0,0,0.5)', padding: '8px 18px', cursor: 'pointer',
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-            fontFamily: 'system-ui', transition: 'all 0.2s',
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onTrack} style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: isActiveTracking ? '#16a34a' : 'white', border: isActiveTracking ? '1px solid #16a34a' : '1px solid rgba(0,0,0,0.1)',
+            color: isActiveTracking ? 'white' : 'rgba(0,0,0,0.6)', padding: '6px 14px', cursor: 'pointer', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+            fontFamily: 'system-ui', transition: 'all 0.2s', borderRadius: 6
           }}>
-            <Download size={11} /> Tải vé
+            <MapPin size={10} /> {isActiveTracking ? 'Đang theo dõi' : 'Theo dõi'}
           </button>
           <button style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: '#163328', border: 'none',
-            color: '#fcfcfc', padding: '8px 20px', cursor: 'pointer',
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-            fontFamily: 'system-ui',
+            display: 'flex', alignItems: 'center', gap: 6, background: '#163328', border: 'none', color: '#fcfcfc', padding: '6px 16px', cursor: 'pointer',
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'system-ui', borderRadius: 6
           }}>
-            Chi tiết <ArrowRight size={11} />
+            Chi tiết <ArrowRight size={10} />
           </button>
         </div>
       </div>
+
+      {/* MOBILE MAP EXPAND */}
+      <AnimatePresence>
+        {isMobile && isActiveTracking && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+            <div style={{ padding: '0 24px 24px' }}>
+              <div style={{ height: 400, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)' }}>
+                <TrackingMap 
+                  originCoords={[10.814, 106.711]} destCoords={[11.944, 108.444]} currentLocation={[11.2, 107.5]}
+                  originName={depCity} destName={arrCity}
+                  statusText={booking.status === 'CONFIRMED' ? 'Xe đang di chuyển' : 'Đã dừng'}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -190,21 +173,11 @@ function TicketCard({ booking, index, onCancel }: { booking: Booking; index: num
 /* ─── EMPTY ─── */
 function EmptyState({ type }: { type: 'upcoming' | 'past' }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      style={{ textAlign: 'center', padding: '80px 0' }}
-    >
-      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '5rem', color: 'rgba(22,51,40,0.15)', marginBottom: 24 }}>
-        {type === 'upcoming' ? '✦' : '◇'}
-      </div>
-      <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 400, color: 'rgba(0,0,0,0.5)', margin: '0 0 12px' }}>
-        {type === 'upcoming' ? 'Chưa có chuyến đi sắp tới' : 'Lịch sử chuyến đi trống'}
-      </h3>
-      <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.25)', fontFamily: 'system-ui', maxWidth: 340, margin: '0 auto' }}>
-        {type === 'upcoming'
-          ? 'Hãy đặt vé ngay để trải nghiệm dịch vụ xe khách cao cấp của An Chuyến!'
-          : 'Các chuyến đi đã hoàn thành hoặc đã hủy sẽ hiển thị ở đây.'}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '80px 0' }}>
+      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '4rem', color: 'rgba(22,51,40,0.15)', marginBottom: 20 }}>{type === 'upcoming' ? '✦' : '◇'}</div>
+      <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.4rem', fontWeight: 400, color: 'rgba(0,0,0,0.5)', margin: '0 0 10px' }}>{type === 'upcoming' ? 'Chưa có chuyến đi sắp tới' : 'Lịch sử chuyến đi trống'}</h3>
+      <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.25)', fontFamily: 'system-ui', maxWidth: 300, margin: '0 auto' }}>
+        {type === 'upcoming' ? 'Hãy đặt vé ngay để trải nghiệm dịch vụ xe khách cao cấp của An Chuyến!' : 'Các chuyến đi đã hoàn thành hoặc đã hủy sẽ hiển thị ở đây.'}
       </p>
     </motion.div>
   );
@@ -216,6 +189,14 @@ export function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeTrackingId, setActiveTrackingId] = useState<string | null>(null);
+  
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -226,133 +207,151 @@ export function MyBookingsPage() {
     }
   }, [user]);
 
+  // Set default tracking id on load
+  useEffect(() => {
+    if (!loading && activeTab === 'upcoming' && bookings.length > 0 && !activeTrackingId) {
+      const upcoming = bookings.filter(b => ['CONFIRMED', 'PENDING', 'PENDING_PAYMENT'].includes(b.status));
+      if (upcoming.length > 0) setActiveTrackingId(upcoming[0].id);
+    }
+  }, [loading, activeTab, bookings]);
+
   const handleCancelBooking = (bookingId: string) => {
-    setBookings(prev => prev.map(b =>
-      b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
-    ));
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'CANCELLED' } : b));
   };
 
-  if (isLoading) return (
-    <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>
-      Đang tải...
-    </div>
-  );
+  if (isLoading) return <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>Đang tải...</div>;
   if (!user) return <Navigate to="/auth" />;
 
   const upcoming = bookings.filter(b => ['CONFIRMED', 'PENDING', 'PENDING_PAYMENT'].includes(b.status));
   const past = bookings.filter(b => ['COMPLETED', 'CANCELLED', 'REFUNDED', 'REFUNDING'].includes(b.status));
   const totalSpent = bookings.filter(b => b.paymentStatus === 'PAID').reduce((s, b) => s + (b.totalAmount || 0), 0);
   const shown = activeTab === 'upcoming' ? upcoming : past;
+  
+  const trackedBooking = bookings.find(b => b.id === activeTrackingId);
 
   return (
     <div style={{ background: '#fcfcfc', color: '#1a1a1a', minHeight: '100vh', paddingTop: 100 }}>
-
       {/* ─── HEADER ─── */}
-      <div style={{ padding: '0 8% 56px' }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          {/* Eyebrow */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+      <div style={{ padding: '0 6% 40px', maxWidth: 1600, margin: '0 auto' }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <div style={{ width: 24, height: 1, background: '#163328' }} />
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#163328', fontFamily: 'system-ui' }}>
-              Tài khoản
-            </span>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#163328', fontFamily: 'system-ui' }}>Tài khoản</span>
           </div>
-
-          <h1 style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 'clamp(2.2rem, 3.5vw, 4rem)',
-            fontWeight: 400, color: '#1a1a1a', lineHeight: 1.1, margin: '0 0 40px',
-          }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(2.2rem, 3.5vw, 3.5rem)', fontWeight: 400, color: '#1a1a1a', lineHeight: 1.1, margin: '0 0 32px' }}>
             Chuyến đi <em style={{ color: '#163328' }}>của tôi</em>
           </h1>
-
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: 0 }}>
-            {[
-              { label: 'Tổng chuyến đi', value: bookings.length, icon: Ticket },
-              { label: 'Sắp khởi hành', value: upcoming.length, icon: Calendar },
-              { label: 'Tổng chi tiêu', value: totalSpent > 0 ? new Intl.NumberFormat('vi-VN').format(totalSpent) + '₫' : '—', icon: CreditCard },
-            ].map((stat, i) => (
-              <div key={i} style={{
-                flex: 1, padding: '20px 28px',
-                borderRight: i < 2 ? '1px solid rgba(0,0,0,0.07)' : 'none',
-                borderTop: '1px solid rgba(0,0,0,0.07)',
-                borderBottom: '1px solid rgba(0,0,0,0.07)',
-                borderLeft: i === 0 ? '1px solid rgba(0,0,0,0.07)' : 'none',
-              }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui', marginBottom: 8 }}>
-                  {stat.label}
-                </div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.8rem', fontWeight: 600, color: i === 2 ? '#163328' : '#1a1a1a', lineHeight: 1 }}>
-                  {stat.value}
-                </div>
+          <div style={{ display: 'flex', gap: 0, maxWidth: 600 }}>
+            {[{ label: 'Tổng chuyến đi', value: bookings.length }, { label: 'Sắp khởi hành', value: upcoming.length }, { label: 'Tổng chi tiêu', value: totalSpent > 0 ? new Intl.NumberFormat('vi-VN').format(totalSpent) + '₫' : '—' }].map((stat, i) => (
+              <div key={i} style={{ flex: 1, padding: '16px 20px', borderRight: i < 2 ? '1px solid rgba(0,0,0,0.07)' : 'none', borderTop: '1px solid rgba(0,0,0,0.07)', borderBottom: '1px solid rgba(0,0,0,0.07)', borderLeft: i === 0 ? '1px solid rgba(0,0,0,0.07)' : 'none' }}>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui', marginBottom: 6 }}>{stat.label}</div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', fontWeight: 600, color: i === 2 ? '#163328' : '#1a1a1a', lineHeight: 1 }}>{stat.value}</div>
               </div>
             ))}
           </div>
         </motion.div>
       </div>
 
-      {/* ─── GOLD DIVIDER ─── */}
-      <div style={{ margin: '0 8%', height: 1, background: 'linear-gradient(to right, transparent, rgba(22,51,40,0.4), transparent)' }} />
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 6%' }}>
+        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(22,51,40,0.2), transparent)' }} />
+      </div>
 
-      {/* ─── TABS + CONTENT ─── */}
-      <div style={{ padding: '0 8% 100px' }}>
+      {/* ─── SPLIT LAYOUT ─── */}
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 6% 100px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '40px', marginTop: 32 }}>
+        
+        {/* LEFT PANE: TICKETS */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(0,0,0,0.06)', marginBottom: 24 }}>
+            {[ { key: 'upcoming', label: 'Sắp khởi hành', count: upcoming.length }, { key: 'past', label: 'Lịch sử', count: past.length } ].map(tab => (
+              <button
+                key={tab.key} onClick={() => setActiveTab(tab.key as 'upcoming' | 'past')}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  fontFamily: 'system-ui', display: 'flex', alignItems: 'center', gap: 8, color: activeTab === tab.key ? '#163328' : 'rgba(0,0,0,0.3)',
+                  borderBottom: activeTab === tab.key ? '2px solid #163328' : '2px solid transparent', transition: 'all 0.2s',
+                }}
+              >
+                {tab.label}
+                {tab.count > 0 && <span style={{ background: activeTab === tab.key ? '#163328' : 'rgba(0,0,0,0.1)', color: activeTab === tab.key ? '#fcfcfc' : 'rgba(0,0,0,0.4)', fontSize: 8, fontWeight: 900, padding: '2px 6px', borderRadius: 2, fontFamily: 'system-ui' }}>{tab.count}</span>}
+              </button>
+            ))}
+          </div>
 
-        {/* Tab bar */}
-        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(0,0,0,0.06)', margin: '40px 0 40px' }}>
-          {[
-            { key: 'upcoming', label: 'Sắp khởi hành', count: upcoming.length },
-            { key: 'past', label: 'Lịch sử', count: past.length },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as 'upcoming' | 'past')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                padding: '14px 28px',
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-                fontFamily: 'system-ui', display: 'flex', alignItems: 'center', gap: 8,
-                color: activeTab === tab.key ? '#163328' : 'rgba(0,0,0,0.3)',
-                borderBottom: activeTab === tab.key ? '2px solid #163328' : '2px solid transparent',
-                transition: 'all 0.2s',
-              }}
-            >
-              {tab.label}
-              {tab.count > 0 && (
-                <span style={{
-                  background: activeTab === tab.key ? '#163328' : 'rgba(0,0,0,0.1)',
-                  color: activeTab === tab.key ? '#fcfcfc' : 'rgba(0,0,0,0.4)',
-                  fontSize: 9, fontWeight: 900, padding: '2px 7px',
-                  borderRadius: 2, fontFamily: 'system-ui',
-                }}>
-                  {tab.count}
-                </span>
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {loading ? (
+                Array.from({ length: 2 }).map((_, i) => <div key={i} style={{ height: 180, background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }} />)
+              ) : shown.length === 0 ? (
+                <EmptyState type={activeTab} />
+              ) : (
+                shown.map((b, i) => (
+                  <TicketCard 
+                    key={b.id} booking={b} index={i} 
+                    isActiveTracking={activeTrackingId === b.id} 
+                    onTrack={() => setActiveTrackingId(activeTrackingId === b.id ? null : b.id)} 
+                    onCancel={handleCancelBooking} 
+                    isMobile={isMobile}
+                  />
+                ))
               )}
-            </button>
-          ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Cards */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-          >
-            {loading ? (
-              Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} style={{ height: 180, background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }} />
-              ))
-            ) : shown.length === 0 ? (
-              <EmptyState type={activeTab} />
-            ) : (
-              shown.map((b, i) => <TicketCard key={b.id} booking={b} index={i} onCancel={handleCancelBooking} />)
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {/* RIGHT PANE: DESKTOP MAP */}
+        {!isMobile && (
+          <div style={{ width: '50%', flexShrink: 0, position: 'sticky', top: 100, height: 'calc(100vh - 120px)' }}>
+            <div className="w-full h-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden flex flex-col">
+              {trackedBooking ? (
+                <>
+                  <div className="h-[60%] relative">
+                    <TrackingMap 
+                      originCoords={[10.814, 106.711]} // Mock coords
+                      destCoords={[11.944, 108.444]} 
+                      currentLocation={[11.2, 107.5]}
+                      originName={trackedBooking.tripSchedule?.trip?.route?.departureCity?.name}
+                      destName={trackedBooking.tripSchedule?.trip?.route?.arrivalCity?.name}
+                      statusText={trackedBooking.status === 'CONFIRMED' ? 'Xe đang di chuyển' : 'Đã dừng'}
+                    />
+                  </div>
+                  <div className="h-[40%] bg-white p-8 flex flex-col justify-center">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+                        <Map className="text-green-600" size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-2xl font-bold text-gray-900 m-0">Định vị trực tiếp</h3>
+                        <p className="text-sm font-medium text-gray-500 m-0">Vị trí xe được cập nhật mỗi 30 giây</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Dự kiến đến</div>
+                        <div className="text-xl font-bold text-gray-900">
+                           {trackedBooking.tripSchedule?.arrivalTime 
+                              ? new Date(trackedBooking.tripSchedule.arrivalTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                              : '18:30'}
+                        </div>
+                      </div>
+                      <div className="w-px h-10 bg-slate-200"></div>
+                      <div>
+                        <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Biển số xe</div>
+                        <div className="text-xl font-bold text-gray-900">51B-123.45</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-10 text-center">
+                  <MapPin size={48} className="text-gray-300 mb-4" />
+                  <h3 className="font-serif text-2xl font-bold text-gray-900 mb-2">Bản đồ lộ trình</h3>
+                  <p className="text-sm font-medium text-gray-500 max-w-sm">Chọn "Theo dõi" trên một chuyến đi để xem vị trí trực tiếp của xe trên bản đồ.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

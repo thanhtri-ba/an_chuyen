@@ -291,12 +291,42 @@ model Bus {
   type            String
   capacity        Int
   status          String    @default("Active")
+  year            Int? // Đời xe
+  lastMaintenance DateTime?
   nextMaintenance DateTime?
 
   busAgent      BusAgent?      @relation(fields: [busAgentId], references: [id])
   tripSchedules TripSchedule[]
 
   @@map("buses")
+}
+
+model Employee {
+  id           String   @id @default(uuid())
+  name         String
+  role         String // DRIVER | ASSISTANT
+  phone        String?
+  workLocation String? // Vị trí làm việc / bến xe phụ trách
+  shift        String? // MORNING | AFTERNOON | NIGHT
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  assignments TripStaffAssignment[]
+
+  @@map("employees")
+}
+
+model TripStaffAssignment {
+  id             String @id @default(uuid())
+  tripScheduleId String
+  employeeId     String
+  role           String // DRIVER | ASSISTANT
+
+  tripSchedule TripSchedule @relation(fields: [tripScheduleId], references: [id], onDelete: Cascade)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([tripScheduleId, role])
+  @@map("trip_staff_assignments")
 }
 
 model BusImage {
@@ -354,13 +384,14 @@ model TripSchedule {
   durationMins  Int
   busId         String?
 
-  bus         Bus?         @relation(fields: [busId], references: [id])
-  bookings    Booking[]
-  checkpoints Checkpoint[]
-  seats       Seat[]
-  prices      TripPrice[]
-  parcels     Parcel[]
-  trip        Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  bus             Bus?                   @relation(fields: [busId], references: [id])
+  bookings        Booking[]
+  checkpoints     Checkpoint[]
+  seats           Seat[]
+  prices          TripPrice[]
+  parcels         Parcel[]
+  trip            Trip                   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  staffAssignments TripStaffAssignment[]
 
   @@index([departureTime])
   @@index([tripId, departureTime]) // Index quan trọng cho Search
@@ -563,6 +594,29 @@ model Banner {
   updatedAt DateTime @updatedAt
 
   @@map("banners")
+}
+
+model Destination {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  country       String
+  location      String
+  desc          String
+  heroImg       String
+  rating        String   @default("5.0")
+  reviewCount   String   @default("0")
+  bestSeason    String?
+  languages     String?
+  about         String[]
+  itinerary     Json     @default("[]")
+  gallery       String[]
+  priceFrom     Int      @default(0)
+  discount      String   @default("0%")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("destinations")
 }
 
 model Event {

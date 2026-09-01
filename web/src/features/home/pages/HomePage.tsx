@@ -1,8 +1,28 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar, Users, ArrowRight, CheckCircle, UserCheck, ShieldCheck, Headphones, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Search, MapPin, Calendar, Users, ArrowRight, CheckCircle, UserCheck, ShieldCheck, Headphones, Star, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import type { DestinationDetail } from '../../destinations/data';
+import { fetchDestinations } from '../../destinations/data';
+import { api } from '../../../lib/api';
+
+interface Banner {
+  id: string;
+  title: string;
+  imageUrl: string;
+  targetUrl?: string | null;
+}
+
+interface ReviewItem {
+  id: string;
+  name: string;
+  avatar: string;
+  rating: number;
+  text: string;
+  route: string;
+  date: string;
+}
 
 export function HomePage() {
   const { t } = useTranslation();
@@ -14,17 +34,28 @@ export function HomePage() {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
   const [passengers, setPassengers] = useState(1);
+  const [destinationQuery, setDestinationQuery] = useState('');
+  const [popularDestinations, setPopularDestinations] = useState<DestinationDetail[]>([]);
+  const [banner, setBanner] = useState<Banner | null>(null);
+  const [reviews, setReviews] = useState<ReviewItem[]>([]);
 
   const SUGGESTED_CITIES = [
     'TP.HCM', 'Hà Nội', 'Đà Nẵng', 'Đà Lạt', 'Nha Trang', 'Vũng Tàu', 'Sapa', 'Hải Phòng', 'Cần Thơ', 'Huế'
   ];
 
-  const POPULAR_ROUTES = [
-    { location: 'Greece', desc: 'White-washed beauty over the Aegean Sea.', rating: '4.8', count: '1,230', img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=600&auto=format&fit=crop' },
-    { location: 'Bali, Indonesia', desc: 'Tropical paradise with rich culture and nature.', rating: '4.7', count: '980', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=600&auto=format&fit=crop' },
-    { location: 'Swiss Alps', desc: 'Scenic landscapes and breathtaking adventures.', rating: '4.9', count: '1,110', img: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=600&auto=format&fit=crop' },
-    { location: 'Maldives', desc: 'Luxury and tranquility in crystal-clear waters.', rating: '4.8', count: '1,340', img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=600&auto=format&fit=crop' },
-  ];
+  useEffect(() => {
+    fetchDestinations().then(setPopularDestinations);
+    api.get<Banner[]>('/banners', { params: { platform: 'web' } })
+      .then(res => setBanner(res.data?.[0] ?? null))
+      .catch(() => setBanner(null));
+    api.get<ReviewItem[]>('/reviews')
+      .then(res => setReviews(res.data ?? []))
+      .catch(() => setReviews([]));
+  }, []);
+
+  const filteredRoutes = popularDestinations.filter(r =>
+    r.location.toLowerCase().includes(destinationQuery.toLowerCase())
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,59 +219,98 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ===== POPULAR DESTINATIONS ===== */}
-      <section className="px-6 lg:px-12 py-16 bg-[#fcfcfc] max-w-[1400px] mx-auto">
-        <div className="w-full px-4 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-            <div>
-              <div className="text-xs font-bold text-secondary tracking-widest uppercase mb-2">{t('roamora.destinations.sub')}</div>
-              <h2 className="text-3xl md:text-4xl font-display text-[#1a1a1a] font-medium">{t('roamora.destinations.title')}</h2>
+      {/* ===== ALL DESTINATIONS ===== */}
+      <section className="px-6 lg:px-12 py-12 bg-[#F8F9FF] max-w-[1400px] mx-auto rounded-[24px]">
+        <div className="w-full flex flex-col gap-12">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <div className="flex flex-col gap-2">
+              <div className="text-[12px] font-semibold text-[#785900] tracking-[0.6px] uppercase">{t('roamora.destinations.sub')}</div>
+              <h2 className="text-2xl font-bold text-[#0D1C2E]">{t('roamora.destinations.title')}</h2>
             </div>
-            <button className="text-sm font-semibold text-[#1a1a1a] hover:text-primary flex items-center gap-2 transition-colors border border-gray-200 px-4 py-2 rounded-full shadow-sm hover:shadow-md">
-              {t('roamora.destinations.viewAll')} <ArrowRight size={16} />
-            </button>
+            <div className="flex gap-4 items-center flex-wrap">
+              <div className="relative">
+                <Search size={18} className="absolute left-[13px] top-1/2 -translate-y-1/2 text-[#6B7280]" />
+                <input
+                  type="text"
+                  value={destinationQuery}
+                  onChange={e => setDestinationQuery(e.target.value)}
+                  placeholder="Tìm kiếm điểm đến..."
+                  className="bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg pl-[41px] pr-[17px] py-[10px] text-sm text-[#0D1C2E] placeholder:text-[#6B7280] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-[256px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <button className="flex items-center gap-2 bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg px-[17px] py-[9px] text-sm text-[#0D1C2E] shadow-[0px_1px_1px_rgba(0,0,0,0.05)] hover:bg-white transition-colors">
+                <SlidersHorizontal size={16} /> Bộ lọc
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {POPULAR_ROUTES.map((r, i) => (
-              <motion.div key={i} whileHover={{ y: -5 }} className="group relative h-[400px] rounded-2xl overflow-hidden cursor-pointer shadow-sm border border-gray-100">
-                <img src={r.img} alt={r.location} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                
-                <div className="absolute top-4 left-4 bg-white/95 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold text-[#1a1a1a] shadow-sm">
-                  <MapPin size={12} className="text-gray-400" /> {r.location}
-                </div>
+          {filteredRoutes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredRoutes.map((r, i) => (
+                <motion.div key={i} whileHover={{ y: -5 }} className="group relative h-[400px] rounded-[12px] overflow-hidden shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+                  <Link to={`/destinations/${r.slug}`} className="absolute inset-0">
+                    <img src={r.heroImg} alt={r.location} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-                <div className="absolute bottom-6 left-6 text-white pr-6">
-                  <h3 className="text-2xl font-semibold mb-1">{r.location}</h3>
-                  <p className="text-sm text-white/90 mb-3 font-light">{r.desc}</p>
-                  <div className="flex items-center gap-1 text-sm font-semibold text-white">
-                    <Star size={14} className="text-secondary fill-secondary" /> {r.rating} <span className="text-white/70 font-normal">({r.count})</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                    <div className="absolute top-4 left-4 backdrop-blur-[2px] bg-[#F8F9FF]/90 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-semibold text-[#0D1C2E] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+                      <MapPin size={12} className="text-[#785900]" /> {r.location}
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-2 text-white">
+                      <h3 className="text-xl font-bold">{r.location}</h3>
+                      <p className="text-sm text-gray-200 leading-tight">{r.desc}</p>
+                      <div className="flex items-center gap-1.5 text-xs font-semibold pt-2">
+                        <Star size={14} className="text-secondary fill-secondary" /> {r.rating} <span className="text-gray-300 font-normal">({r.reviewCount})</span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 flex flex-col items-center justify-center text-[#585E6C] bg-white rounded-xl border border-dashed border-[#D4C5AB]">
+              <Search size={32} className="mb-3 text-[#D4C5AB]" />
+              <span className="text-sm font-semibold">Không tìm thấy điểm đến nào</span>
+            </div>
+          )}
         </div>
       </section>
 
       {/* ===== PROMO BANNER ===== */}
       <section className="px-6 lg:px-12 py-16 bg-[#fcfcfc] max-w-[1400px] mx-auto">
         <div className="w-full px-4 lg:px-8 relative rounded-3xl overflow-hidden h-[300px] flex items-center px-10 md:px-16 mx-4 lg:mx-8" style={{ width: 'calc(100% - 2rem)' }}>
-          <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop" alt="Promo" className="absolute inset-0 w-full h-full object-cover" />
+          <img
+            src={banner?.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop'}
+            alt={banner?.title || 'Promo'}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-[#163328]/95 to-[#163328]/50" />
-          
+
           <div className="relative z-10 text-white max-w-lg">
             <div className="text-sm font-semibold text-secondary mb-3">{t('roamora.promo.sub')}</div>
-            <h2 className="text-4xl md:text-5xl font-display mb-4 font-medium">
-              {t('roamora.promo.title1')} <span className="text-secondary font-serif italic text-6xl">{t('roamora.promo.title2')}</span> {t('roamora.promo.title3')}
-            </h2>
+            {banner ? (
+              <h2 className="text-4xl md:text-5xl font-display mb-4 font-medium">{banner.title}</h2>
+            ) : (
+              <h2 className="text-4xl md:text-5xl font-display mb-4 font-medium">
+                {t('roamora.promo.title1')} <span className="text-secondary font-serif italic text-6xl">{t('roamora.promo.title2')}</span> {t('roamora.promo.title3')}
+              </h2>
+            )}
             <p className="text-lg text-white/90 mb-8 font-light">{t('roamora.promo.desc')}</p>
-            <button className="bg-white text-[#1a1a1a] hover:bg-gray-100 px-6 py-3 rounded-full font-semibold flex items-center gap-3 transition-colors text-sm shadow-md">
+            <button
+              onClick={() => {
+                const url = banner?.targetUrl || '/offers';
+                if (/^https?:\/\//i.test(url)) {
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                  navigate(url);
+                }
+              }}
+              className="bg-white text-[#1a1a1a] hover:bg-gray-100 px-6 py-3 rounded-full font-semibold flex items-center gap-3 transition-colors text-sm shadow-md"
+            >
               {t('roamora.promo.btn')} <ArrowRight size={16} />
             </button>
           </div>
-          
+
           {/* Decorative plane line */}
           <svg className="absolute top-1/2 left-1/2 w-64 h-32 opacity-50 hidden lg:block text-white" viewBox="0 0 100 50" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4">
             <path d="M0 40 Q 30 50 60 20 T 100 10" />
@@ -248,6 +318,37 @@ export function HomePage() {
           </svg>
         </div>
       </section>
+
+      {/* ===== CUSTOMER REVIEWS ===== */}
+      {reviews.length > 0 && (
+        <section className="px-6 lg:px-12 py-16 bg-[#fcfcfc] max-w-[1400px] mx-auto">
+          <div className="w-full px-4 lg:px-8">
+            <div className="text-xs font-bold text-secondary tracking-widest uppercase mb-2">Khách hàng nói gì</div>
+            <h2 className="text-3xl md:text-4xl font-display text-[#1a1a1a] font-medium mb-8">Đánh giá từ hành khách</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {reviews.slice(0, 6).map((r) => (
+                <div key={r.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                  <div className="flex items-center gap-1 mb-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={14} className={i < r.rating ? 'text-secondary fill-secondary' : 'text-gray-200 fill-gray-200'} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-4">{r.text}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                      {r.avatar}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[#1a1a1a]">{r.name}</div>
+                      <div className="text-xs text-gray-400">{r.route}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ===== TRUSTED BY ===== */}
       <section className="px-6 lg:px-12 py-16 bg-[#fcfcfc] border-b border-gray-100 max-w-[1400px] mx-auto">

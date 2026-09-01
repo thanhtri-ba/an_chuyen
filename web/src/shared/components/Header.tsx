@@ -247,7 +247,7 @@ export function Header() {
           textColor
         )}
       >
-        <div className="w-full flex items-center justify-between px-6 lg:px-12 relative z-10 max-w-[1400px] mx-auto">
+        <div className="w-full flex items-center justify-between px-6 lg:px-16 relative z-10">
           
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">

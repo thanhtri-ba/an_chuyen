@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { ArrowRight, Map as MapIcon, MapPin, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowRight, Map as MapIcon, MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,12 @@ export default function Page() {
   const [arrivalCityId, setArrivalCityId] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [durationMins, setDurationMins] = useState("");
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDepartureCityId, setEditDepartureCityId] = useState("");
+  const [editArrivalCityId, setEditArrivalCityId] = useState("");
+  const [editBasePrice, setEditBasePrice] = useState("");
+  const [editDurationMins, setEditDurationMins] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -81,10 +87,37 @@ export default function Page() {
     }
   }
 
+  function openEdit(route: any) {
+    setEditingId(route.id);
+    setEditDepartureCityId(route.departureCityId || route.departureCity?.id || "");
+    setEditArrivalCityId(route.arrivalCityId || route.arrivalCity?.id || "");
+    setEditBasePrice(route.basePrice ? String(route.basePrice) : "");
+    setEditDurationMins(route.durationMins ? String(route.durationMins) : "");
+  }
+
+  async function handleSaveEdit() {
+    if (!editingId || !editDepartureCityId || !editArrivalCityId) return;
+    setIsSaving(true);
+    try {
+      await api.put(`/admin/routes/${editingId}`, {
+        departureCityId: editDepartureCityId,
+        arrivalCityId: editArrivalCityId,
+        basePrice: editBasePrice ? Number(editBasePrice) : undefined,
+        durationMins: editDurationMins ? Number(editDurationMins) : undefined,
+      });
+      setEditingId(null);
+      await load();
+    } catch (error) {
+      console.error("Failed to update route", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-2">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-2">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="font-bold text-2xl tracking-tight">Tuyến Đường</h1>
@@ -154,6 +187,65 @@ export default function Page() {
         </Dialog>
       </div>
 
+      {/* Edit dialog */}
+      <Dialog open={!!editingId} onOpenChange={(open) => !open && setEditingId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Sửa Tuyến Đường</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="edit-route-departure" className="font-medium text-sm">Điểm đi</label>
+              <select
+                id="edit-route-departure"
+                value={editDepartureCityId}
+                onChange={(e) => setEditDepartureCityId(e.target.value)}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">-- Chọn thành phố --</option>
+                {cities.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="edit-route-arrival" className="font-medium text-sm">Điểm đến</label>
+              <select
+                id="edit-route-arrival"
+                value={editArrivalCityId}
+                onChange={(e) => setEditArrivalCityId(e.target.value)}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">-- Chọn thành phố --</option>
+                {cities.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="edit-route-price" className="font-medium text-sm">Giá cơ bản (đ)</label>
+                <Input id="edit-route-price" type="number" placeholder="150000" value={editBasePrice} onChange={(e) => setEditBasePrice(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="edit-route-duration" className="font-medium text-sm">Thời gian (phút)</label>
+                <Input id="edit-route-duration" type="number" placeholder="180" value={editDurationMins} onChange={(e) => setEditDurationMins(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={handleSaveEdit}
+              disabled={isSaving || !editDepartureCityId || !editArrivalCityId}
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
         <div className="flex flex-col items-center justify-between gap-4 border-border border-b bg-card p-4 sm:flex-row">
           <div className="relative w-full sm:w-96">
@@ -167,7 +259,7 @@ export default function Page() {
           </div>
         </div>
         <CardContent className="p-0">
-          <Table>
+          <Table className="[&_td]:py-4 [&_th]:h-12">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[350px]">Lộ trình</TableHead>
@@ -225,14 +317,24 @@ export default function Page() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => void handleDelete(route.id)}
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(route)}
+                          className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => void handleDelete(route.id)}
+                          className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

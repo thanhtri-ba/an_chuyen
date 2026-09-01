@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { Image as ImageIcon, Plus, Search, Trash2 } from "lucide-react";
+import { Image as ImageIcon, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
 export default function Page() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -21,6 +23,12 @@ export default function Page() {
   const [imageUrl, setImageUrl] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
   const [platform, setPlatform] = useState("all");
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editTargetUrl, setEditTargetUrl] = useState("");
+  const [editPlatform, setEditPlatform] = useState("all");
 
   const load = useCallback(async () => {
     try {
@@ -69,14 +77,50 @@ export default function Page() {
     }
   }
 
-  const filtered = items.filter((b) => b.title?.toLowerCase().includes(searchQuery.toLowerCase()));
+  function openEdit(item: any) {
+    setEditingId(item.id);
+    setEditTitle(item.title || "");
+    setEditImageUrl(item.imageUrl || "");
+    setEditTargetUrl(item.targetUrl || "");
+    setEditPlatform(item.platform || "all");
+  }
+
+  async function handleSaveEdit() {
+    if (!editingId || !editTitle.trim() || !editImageUrl.trim()) return;
+    setIsSaving(true);
+    try {
+      await api.put(`/admin/banners/${editingId}`, {
+        title: editTitle.trim(),
+        imageUrl: editImageUrl.trim(),
+        targetUrl: editTargetUrl.trim() || undefined,
+        platform: editPlatform,
+      });
+      setEditingId(null);
+      await load();
+    } catch (error) {
+      console.error("Failed to update banner", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const filtered = items.filter((b) => {
+    if (statusFilter === "ACTIVE" && !b.isActive) return false;
+    if (statusFilter === "INACTIVE" && b.isActive) return false;
+    return b.title?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+  const filterCounts = {
+    ALL: items.length,
+    ACTIVE: items.filter((b) => b.isActive).length,
+    INACTIVE: items.filter((b) => !b.isActive).length,
+  };
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-2">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-2">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="font-bold text-2xl tracking-tight">Banner</h1>
@@ -156,6 +200,72 @@ export default function Page() {
         </Dialog>
       </div>
 
+      <Dialog open={!!editingId} onOpenChange={(open) => !open && setEditingId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Sửa Banner</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-sm">Tiêu đề</label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-sm">Link ảnh</label>
+              <Input value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-sm">Link đích (tuỳ chọn)</label>
+              <Input value={editTargetUrl} onChange={(e) => setEditTargetUrl(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-sm">Nền tảng</label>
+              <select
+                value={editPlatform}
+                onChange={(e) => setEditPlatform(e.target.value)}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="all">Tất cả</option>
+                <option value="web">Web</option>
+                <option value="app">App</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleSaveEdit} disabled={isSaving} className="w-full bg-blue-600 text-white hover:bg-blue-700">
+              {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            { key: "ALL", label: "Tất cả" },
+            { key: "ACTIVE", label: "Hoạt động" },
+            { key: "INACTIVE", label: "Tạm dừng" },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setStatusFilter(tab.key)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-medium text-sm transition-colors",
+              statusFilter === tab.key
+                ? "border-[#192B1D] bg-[#192B1D] text-white"
+                : "border-border bg-background text-muted-foreground hover:bg-muted/50",
+            )}
+          >
+            {tab.label}
+            <span className={cn("rounded-full px-1.5 text-xs", statusFilter === tab.key ? "bg-white/20" : "bg-muted")}>
+              {filterCounts[tab.key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <Card className="overflow-hidden rounded-xl border-border shadow-sm">
         <div className="flex flex-col items-center justify-between gap-4 border-border border-b bg-card p-4 sm:flex-row">
           <div className="relative w-full sm:w-96">
@@ -169,7 +279,7 @@ export default function Page() {
           </div>
         </div>
         <CardContent className="p-0">
-          <Table>
+          <Table className="[&_td]:py-4 [&_th]:h-12">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[320px]">Banner</TableHead>
@@ -216,14 +326,14 @@ export default function Page() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => void handleDelete(b.id)}
-                        className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(b)} className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => void handleDelete(b.id)} className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
