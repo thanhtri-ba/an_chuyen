@@ -18,11 +18,14 @@ interface CreateBookingParams {
   pickupPointId?: string | null;
   dropoffPointId?: string | null;
   promoCode?: string | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }
 
 export class BookingService {
   static async createBooking(data: CreateBookingParams) {
-    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId, promoCode } = data;
+    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId, promoCode, contactName, contactPhone, contactEmail } = data;
 
     // Lớp 3: Idempotency (Chống Spam). 
     // Trong thực tế, có thể lưu idempotencyKey vào một bảng riêng hoặc cột trong Booking để check.
@@ -234,6 +237,18 @@ export class BookingService {
         });
       }
 
+      // 8. Lưu lại thông tin liên hệ chính để gợi ý điền nhanh ở lần đặt vé sau —
+      // chỉ lưu khi khách thực sự cung cấp SĐT (không suy đoán/mượn dữ liệu từ
+      // nơi khác), upsert theo (userId, phone) nên đặt lại vé cùng SĐT chỉ cập
+      // nhật tên/email mới nhất thay vì tạo bản ghi trùng.
+      if (contactPhone) {
+        await tx.contact.upsert({
+          where: { userId_phone: { userId, phone: contactPhone } },
+          create: { userId, phone: contactPhone, name: contactName || passengers[0]?.name || '', email: contactEmail || null },
+          update: { name: contactName || passengers[0]?.name || undefined, email: contactEmail || null },
+        });
+      }
+
       return booking;
     }, {
       maxWait: 15000, // 15s max wait to acquire transaction lock
@@ -242,13 +257,20 @@ export class BookingService {
   }
 
   // Cho khách tự huỷ booking của mình khi còn ở trạng thái PENDING_PAYMENT
-  // (chưa thanh toán / chưa được admin xác nhận). Giải phóng ghế về AVAILABLE
-  // để tránh rò rỉ tồn kho ghế — trước đây xoá booking không nhả ghế lại.
+  // (chưa thanh toán) hoặc CONFIRMED (đã thanh toán qua ví, xe chưa khởi hành).
+  // Giải phóng ghế về AVAILABLE để tránh rò rỉ tồn kho ghế. Nếu đã thanh toán
+  // qua ví, hoàn tiền vào ví theo % của CancellationPolicy nhà xe (dựa trên số
+  // giờ còn lại tới giờ khởi hành) — trước đây booking đã CONFIRMED không thể
+  // huỷ được và tiền trong ví bị mất trắng dù trạng thái Payment.REFUNDED đã
+  // tồn tại sẵn trong schema nhưng chưa từng được set ở đâu.
   static async cancelBooking(userId: string, bookingId: string) {
     return await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
-        include: { seatBookings: true },
+        include: {
+          seatBookings: true,
+          tripSchedule: { include: { trip: { include: { busAgent: { include: { policies: true } } } } } },
+        },
       });
 
       if (!booking) {
@@ -257,8 +279,11 @@ export class BookingService {
       if (booking.userId !== userId) {
         throw new Error('Bạn không có quyền huỷ booking này');
       }
-      if (booking.status !== 'PENDING_PAYMENT') {
-        throw new Error('Chỉ có thể huỷ booking đang chờ thanh toán');
+      if (booking.status !== 'PENDING_PAYMENT' && booking.status !== 'CONFIRMED') {
+        throw new Error('Không thể huỷ booking ở trạng thái hiện tại');
+      }
+      if (booking.tripSchedule.departureTime <= new Date()) {
+        throw new Error('Chuyến xe đã khởi hành, không thể huỷ vé');
       }
 
       const seatIds = booking.seatBookings.map((sb) => sb.seatId);
@@ -267,18 +292,60 @@ export class BookingService {
         data: { status: SeatStatus.AVAILABLE },
       });
 
-      const updated = await tx.booking.update({
-        where: { id: bookingId },
-        data: { status: 'CANCELLED' },
-      });
-
       const payment = await tx.payment.findUnique({ where: { bookingId } });
-      if (payment && payment.status === 'PENDING') {
+      const wasPaidByWallet = booking.status === 'CONFIRMED' && payment?.status === 'PAID' && payment.method &&
+        WALLET_METHOD_VALUES.has(payment.method);
+
+      let refundAmount = 0;
+      if (wasPaidByWallet) {
+        const hoursUntilDeparture =
+          (booking.tripSchedule.departureTime.getTime() - Date.now()) / (1000 * 60 * 60);
+        const policies = booking.tripSchedule.trip.busAgent.policies
+          .slice()
+          .sort((a, b) => b.hoursBefore - a.hoursBefore);
+        const matchedPolicy = policies.find((p) => hoursUntilDeparture >= p.hoursBefore);
+        const refundPct = matchedPolicy ? matchedPolicy.refundPct : 0;
+        refundAmount = Math.round(booking.totalAmount * (refundPct / 100));
+
+        if (refundAmount > 0) {
+          await tx.wallet.update({
+            where: { userId },
+            data: { balance: { increment: refundAmount } },
+          });
+          await tx.walletTransaction.create({
+            data: {
+              userId,
+              amount: refundAmount,
+              type: 'REFUND',
+              description: `Hoàn tiền huỷ vé chuyến ${booking.tripScheduleId} (${refundPct}%)`,
+              referenceId: booking.id,
+            },
+          });
+        }
+
+        await tx.payment.update({
+          where: { id: payment!.id },
+          data: { status: 'REFUNDED' },
+        });
+      } else if (payment && payment.status === 'PENDING') {
         await tx.payment.update({
           where: { id: payment.id },
           data: { status: 'FAILED' },
         });
       }
+
+      const updated = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: wasPaidByWallet ? 'REFUNDED' : 'CANCELLED' },
+      });
+
+      await tx.bookingTimeline.create({
+        data: {
+          bookingId,
+          status: wasPaidByWallet ? 'REFUNDED' : 'CANCELLED',
+          note: wasPaidByWallet ? `Huỷ vé, hoàn ${refundAmount.toLocaleString('vi-VN')}đ vào ví` : 'Huỷ vé',
+        },
+      });
 
       return updated;
     });

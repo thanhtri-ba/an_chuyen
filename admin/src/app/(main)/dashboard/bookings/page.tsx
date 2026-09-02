@@ -35,6 +35,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   store: "Tiền mặt tại cửa hàng",
   wallet: "Ví An Chuyến",
   cod: "Thanh toán khi lên xe (COD)",
+  bank_transfer: "Chuyển khoản ngân hàng (QR)",
 };
 
 export default function Page() {

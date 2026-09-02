@@ -6,12 +6,14 @@ import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
 import { DatePicker } from '../../../shared/components/DatePicker';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // --- Types & Mocks ---
 interface SeatData { id: string; floor: number; status: 'available' | 'booked' | 'blocked' | 'held-by-me'; price: number; }
 interface CheckpointData { id: string; type: 'PICKUP' | 'DROPOFF'; time: string; station: { id: string; name: string; city?: { name: string } }; }
 interface TripScheduleDetail { id: string; departureTime: string; arrivalTime: string; trip: { busClass: string; busAgent: { name: string; rating: number }; route: { departureCity: { name: string }; arrivalCity: { name: string } }; basePrice?: number }; checkpoints: CheckpointData[]; }
 interface PassengerForm { name: string; phone: string; email: string; gender: string; dob: string; idNumber: string; nationality: string; }
+interface SavedContact { id: string; name: string; phone: string; email: string | null; }
 const emptyPassenger = (): PassengerForm => ({ name: '', phone: '', email: '', gender: 'Nam', dob: '', idNumber: '', nationality: 'Việt Nam' });
 const AMENITY_PRICES = { water: 10000, towel: 5000, pillow: 30000 };
 
@@ -218,6 +220,20 @@ export function SeatSelectionPage() {
   const [notes, setNotes] = useState('');
   const [pickupPoint,setPickupPoint] = useState('');
   const [dropoffPoint,setDropoffPoint] = useState('');
+  const { user } = useAuth();
+  const [savedContacts, setSavedContacts] = useState<SavedContact[]>([]);
+
+  // Gợi ý điền nhanh từ những hành khách khách đã dùng ở lần đặt vé trước —
+  // chỉ hiển thị, không tự động áp vào form để tránh gán nhầm nếu tài khoản
+  // dùng chung cho nhiều người.
+  useEffect(() => {
+    if (!user) { setSavedContacts([]); return; }
+    api.get('/contacts').then(res => setSavedContacts(res.data?.data || [])).catch(() => setSavedContacts([]));
+  }, [user]);
+
+  const applySavedContact = (contact: SavedContact) => {
+    setPassengers(prev => prev.map((p, i) => i === 0 ? { ...p, name: contact.name, phone: contact.phone, email: contact.email || p.email } : p));
+  };
 
   useEffect(()=>{
     if(!tripScheduleId) return;
@@ -698,11 +714,26 @@ export function SeatSelectionPage() {
 
             <div className="flex items-center justify-between flex-wrap gap-3">
               <h3 className="text-lg font-bold text-[#111827]">Hành khách ({passengers.length})</h3>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[#6B7280]">Đăng nhập để tự động điền thông tin</span>
-                <button type="button" className="border border-[#D1D5DB] rounded-lg px-[17px] py-[9px] text-sm font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors">Đăng nhập</button>
-              </div>
+              {!user && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[#6B7280]">Đăng nhập để tự động điền thông tin</span>
+                  <button type="button" onClick={() => navigate(`/auth?returnUrl=${encodeURIComponent(window.location.pathname)}`)}
+                    className="border border-[#D1D5DB] rounded-lg px-[17px] py-[9px] text-sm font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors">Đăng nhập</button>
+                </div>
+              )}
             </div>
+
+            {user && savedContacts.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-[#6B7280] mr-1">Gợi ý từ lần đặt trước:</span>
+                {savedContacts.map(c => (
+                  <button type="button" key={c.id} onClick={() => applySavedContact(c)}
+                    className="border border-[#FDE68A] bg-[#FFFBEB] rounded-full px-4 py-1.5 text-sm font-medium text-[#92400E] hover:bg-[#FEF3C7] transition-colors">
+                    {c.name} · {c.phone}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {passengers.map((p, idx) => {
               const copying = copyFromFirst[idx];

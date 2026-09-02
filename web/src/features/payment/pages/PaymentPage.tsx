@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck, Ticket, Tag, HelpCircle, Search, PenLine, Users, CreditCard, Info,
-  Phone, ChevronRight, Star, Loader2, Check, Lock, RotateCcw, Headphones, Zap, Landmark, Store,
+  Phone, ChevronRight, Star, Loader2, Check, Lock, RotateCcw, Headphones, Zap, Landmark, Store, QrCode,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
@@ -26,6 +26,7 @@ const WALLETS = [
 ];
 
 const OTHER_METHODS = [
+  { key: 'bank_transfer', label: 'Chuyển khoản ngân hàng (Quét mã QR)', icon: QrCode, logos: [] as string[] },
   { key: 'card', label: 'Visa / Mastercard / JCB', icon: CreditCard, logos: ['/payment/visa.jpg', '/payment/mastercard.svg'] },
   { key: 'atm', label: 'Thẻ ATM nội địa / Internet Banking', icon: Landmark, logos: [] as string[] },
   { key: 'store', label: 'Thanh toán tại cửa hàng tiện lợi', icon: Store, logos: ['/payment/circlek.jpg', '/payment/ministop.png'] },
@@ -133,6 +134,9 @@ export function PaymentPage() {
         dropoffPointId: pendingBooking.dropoffPoint,
         notes: pendingBooking.notes || '',
         promoCode: appliedPromo?.code,
+        contactName: pendingBooking.passengerInfo.name,
+        contactPhone: pendingBooking.passengerInfo.phone,
+        contactEmail: pendingBooking.passengerInfo.email || undefined,
       });
 
       const booking = res.data?.data;
@@ -149,6 +153,26 @@ export function PaymentPage() {
         dropoffLabel: pendingBooking.dropoffLabel,
         departureTime: tripDetail?.departureTime,
       }));
+
+      if (selectedMethod === 'vnpay') {
+        // Booking vừa tạo ở trạng thái chờ thanh toán (ghế đang giữ, chưa
+        // BOOKED hẳn) — chuyển sang cổng VNPay thật, KHÔNG xoá pending_booking
+        // và KHÔNG coi là đã đặt xong cho tới khi VNPay xác nhận (return URL).
+        const vnpayRes = await api.post('/vnpay/create-url', { bookingId: booking.id });
+        if (vnpayRes.data?.paymentUrl) {
+          window.location.href = vnpayRes.data.paymentUrl;
+          return;
+        }
+        throw new Error('Không thể tạo giao dịch VNPay');
+      }
+
+      if (selectedMethod === 'bank_transfer') {
+        // Không có gateway xác nhận tự động — hiện mã QR, admin xác nhận thủ
+        // công sau khi thấy tiền về (giống luồng COD). Giữ pending_booking để
+        // trang QR còn dùng nếu khách reload.
+        navigate(`/payment/bank-transfer?bookingId=${booking.id}&amount=${booking.totalAmount ?? finalTotal}`);
+        return;
+      }
 
       sessionStorage.removeItem('pending_booking');
       navigate('/booking-confirmation');

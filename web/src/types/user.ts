@@ -9,6 +9,7 @@ export interface User {
   profile?: {
     address?: string;
     dob?: string;
+    idCard?: string;
     emergencyPhone?: string;
     nationality?: string;
     occupation?: string;

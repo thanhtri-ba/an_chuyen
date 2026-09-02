@@ -11,6 +11,7 @@ const mockTx = {
   ticket: { createMany: jest.fn() },
   payment: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
   walletTransaction: { create: jest.fn() },
+  bookingTimeline: { create: jest.fn() },
 };
 
 const mockPrismaClient = {
@@ -122,12 +123,22 @@ describe('BookingService.createBooking', () => {
 describe('BookingService.cancelBooking', () => {
   beforeEach(resetMocks);
 
-  it('releases seats and cancels a PENDING_PAYMENT booking owned by the caller', async () => {
+  const FUTURE_DEPARTURE = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h from now
+  const PAST_DEPARTURE = new Date(Date.now() - 60 * 60 * 1000);
+
+  function tripScheduleWithPolicies(departureTime: Date, policies: { hoursBefore: number; refundPct: number }[]) {
+    return { departureTime, trip: { busAgent: { policies } } };
+  }
+
+  it('releases seats and cancels a PENDING_PAYMENT booking owned by the caller (no refund, nothing was charged)', async () => {
     mockTx.booking.findUnique.mockResolvedValue({
       id: 'booking-1',
       userId: 'user-1',
       status: 'PENDING_PAYMENT',
+      totalAmount: 200000,
+      tripScheduleId: 'trip-1',
       seatBookings: [{ seatId: 'seat-a' }],
+      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, []),
     });
     mockTx.booking.update.mockResolvedValue({ id: 'booking-1', status: 'CANCELLED' });
     mockTx.payment.findUnique.mockResolvedValue(null);
@@ -142,6 +153,43 @@ describe('BookingService.cancelBooking', () => {
       where: { id: 'booking-1' },
       data: { status: 'CANCELLED' },
     });
+    expect(mockTx.wallet.update).not.toHaveBeenCalled();
+  });
+
+  it('refunds the wallet according to the cancellation policy when cancelling a CONFIRMED, wallet-paid booking', async () => {
+    mockTx.booking.findUnique.mockResolvedValue({
+      id: 'booking-1',
+      userId: 'user-1',
+      status: 'CONFIRMED',
+      totalAmount: 200000,
+      tripScheduleId: 'trip-1',
+      seatBookings: [{ seatId: 'seat-a' }],
+      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, [
+        { hoursBefore: 24, refundPct: 80 },
+        { hoursBefore: 2, refundPct: 30 },
+      ]),
+    });
+    mockTx.payment.findUnique.mockResolvedValue({ id: 'payment-1', status: 'PAID', method: 'busz-wallet' });
+    mockTx.booking.update.mockResolvedValue({ id: 'booking-1', status: 'REFUNDED' });
+
+    await BookingService.cancelBooking('user-1', 'booking-1');
+
+    // 48h before departure matches the 24h-before tier (80%) not the 2h-before tier
+    expect(mockTx.wallet.update).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
+      data: { balance: { increment: 160000 } },
+    });
+    expect(mockTx.walletTransaction.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ amount: 160000, type: 'REFUND' }) })
+    );
+    expect(mockTx.payment.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: { status: 'REFUNDED' },
+    });
+    expect(mockTx.booking.update).toHaveBeenCalledWith({
+      where: { id: 'booking-1' },
+      data: { status: 'REFUNDED' },
+    });
   });
 
   it('rejects cancelling a booking that belongs to a different user', async () => {
@@ -150,6 +198,7 @@ describe('BookingService.cancelBooking', () => {
       userId: 'other-user',
       status: 'PENDING_PAYMENT',
       seatBookings: [],
+      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, []),
     });
 
     await expect(BookingService.cancelBooking('user-1', 'booking-1')).rejects.toThrow(
@@ -157,16 +206,31 @@ describe('BookingService.cancelBooking', () => {
     );
   });
 
-  it('rejects cancelling a booking that is no longer PENDING_PAYMENT', async () => {
+  it('rejects cancelling a booking that is already COMPLETED/CANCELLED', async () => {
+    mockTx.booking.findUnique.mockResolvedValue({
+      id: 'booking-1',
+      userId: 'user-1',
+      status: 'COMPLETED',
+      seatBookings: [],
+      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, []),
+    });
+
+    await expect(BookingService.cancelBooking('user-1', 'booking-1')).rejects.toThrow(
+      /Không thể huỷ/
+    );
+  });
+
+  it('rejects cancelling once the trip has already departed', async () => {
     mockTx.booking.findUnique.mockResolvedValue({
       id: 'booking-1',
       userId: 'user-1',
       status: 'CONFIRMED',
       seatBookings: [],
+      tripSchedule: tripScheduleWithPolicies(PAST_DEPARTURE, []),
     });
 
     await expect(BookingService.cancelBooking('user-1', 'booking-1')).rejects.toThrow(
-      /Chỉ có thể huỷ/
+      /đã khởi hành/
     );
   });
 });

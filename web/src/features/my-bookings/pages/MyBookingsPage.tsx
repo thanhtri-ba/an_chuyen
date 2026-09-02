@@ -30,7 +30,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /* ─── TICKET CARD ─── */
-function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMobile }: { booking: Booking; index: number; isActiveTracking: boolean; onTrack: () => void; onCancel: (id: string) => void; isMobile: boolean }) {
+function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMobile }: { booking: Booking; index: number; isActiveTracking: boolean; onTrack: () => void; onCancel: (id: string, status: string) => void; isMobile: boolean }) {
   const depTime = booking.tripSchedule?.departureTime;
   const departureDate = depTime ? new Date(depTime) : new Date(booking.createdAt);
   const depCity = booking.tripSchedule?.trip?.route?.departureCity?.name || 'Điểm đi';
@@ -61,9 +61,10 @@ function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMob
     if (!confirm('Bạn có chắc muốn hủy vé này không?')) return;
     setIsCancelling(true);
     try {
-      await api.post(`/bookings/${booking.id}/cancel`);
-      toast.success('Hủy vé thành công');
-      onCancel(booking.id);
+      const { data } = await api.post(`/bookings/${booking.id}/cancel`);
+      const newStatus = data?.data?.status || 'CANCELLED';
+      toast.success(newStatus === 'REFUNDED' ? 'Hủy vé thành công. Tiền đã được hoàn vào ví.' : 'Hủy vé thành công');
+      onCancel(booking.id, newStatus);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Không thể hủy vé. Vui lòng thử lại.');
     } finally {
@@ -232,8 +233,8 @@ export function MyBookingsPage() {
     }
   }, [loading, activeTab, bookings]);
 
-  const handleCancelBooking = (bookingId: string) => {
-    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'CANCELLED' } : b));
+  const handleCancelBooking = (bookingId: string, status: string) => {
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b));
   };
 
   if (isLoading) return <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>Đang tải...</div>;

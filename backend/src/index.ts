@@ -83,9 +83,12 @@ import { destinationRoutes } from './modules/destination/destination.routes';
 import { bannerRoutes } from './modules/banner/banner.routes';
 import { heroRoutes } from './modules/hero/hero.routes';
 import { hotelRoutes } from './modules/hotel/hotel.routes';
+import { contactRoutes } from './modules/contact/contact.routes';
 import { deliveryRoutes } from './modules/delivery/delivery.routes';
 import seatRoutes from './modules/seat/seat.routes';
 import paymentRoutes from './modules/payment/payment.routes';
+import { vnpayRoutes } from './modules/payment/vnpay.routes';
+import { bankTransferRoutes } from './modules/payment/bank-transfer.routes';
 
 app.use('/api/auth', authLimiter, authRoutes);
 
@@ -102,9 +105,12 @@ app.use('/api/destinations', destinationRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/hero-slides', heroRoutes);
 app.use('/api/hotels', hotelRoutes);
+app.use('/api/contacts', contactRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/trip-schedules', seatRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/vnpay', vnpayRoutes);
+app.use('/api/bank-transfer', bankTransferRoutes);
 
 app.get('/', (req, res) => {
   res.send('An Chuyến Backend API is running!');

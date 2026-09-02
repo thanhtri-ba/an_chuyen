@@ -15,7 +15,7 @@ datasource db {
 model User {
   id              String    @id @default(uuid())
   email           String?   @unique // Có thể null nếu đăng nhập bằng SĐT thuần
-  phone           String    @unique // Bắt buộc cho App
+  phone           String?   @unique // Bắt buộc khi đăng ký bằng SĐT; null khi tạo qua Google (chưa có SĐT)
   password        String?
   fullName        String
   role            String    @default("user")
@@ -91,6 +91,7 @@ model Profile {
   userId         String    @unique
   address        String?
   dob            String?
+  idCard         String? // Số CCCD/CMND của chủ tài khoản (khác Passenger.idCard — đó là của từng hành khách theo vé)
   emergencyPhone String?
   nationality    String?
   occupation     String?
@@ -583,6 +584,8 @@ model Review {
 // OTHER APP MODULES
 // ==========================================
 
+// Thông tin hành khách được lưu lại tự động sau mỗi lần đặt vé thành công —
+// lần sau khách chỉ cần chọn gợi ý thay vì gõ lại toàn bộ (tên/SĐT/email).
 model Contact {
   id        String   @id @default(uuid())
   userId    String
@@ -593,6 +596,7 @@ model Contact {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, phone])
   @@map("contacts")
 }
 

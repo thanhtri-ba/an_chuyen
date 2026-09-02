@@ -16,9 +16,12 @@ const TripSearchPage = lazy(() => import('./features/trip-search/pages/TripSearc
 const SeatSelectionPage = lazy(() => import('./features/seat-selection/pages/SeatSelectionPage').then(m => ({ default: m.SeatSelectionPage })));
 const PaymentPage = lazy(() => import('./features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const BookingConfirmationPage = lazy(() => import('./features/booking-confirmation/pages/BookingConfirmationPage').then(m => ({ default: m.BookingConfirmationPage })));
+const VnpayResultPage = lazy(() => import('./features/payment/pages/VnpayResultPage').then(m => ({ default: m.VnpayResultPage })));
+const BankTransferQRPage = lazy(() => import('./features/payment/pages/BankTransferQRPage').then(m => ({ default: m.BankTransferQRPage })));
 const AuthPage = lazy(() => import('./features/auth/pages/AuthPage').then(m => ({ default: m.AuthPage })));
 const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./features/auth/pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const CompleteProfilePage = lazy(() => import('./features/auth/pages/CompleteProfilePage').then(m => ({ default: m.CompleteProfilePage })));
 const ProfilePage = lazy(() => import('./features/profile/pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const MyBookingsPage = lazy(() => import('./features/my-bookings/pages/MyBookingsPage').then(m => ({ default: m.MyBookingsPage })));
 const OffersPage = lazy(() => import('./features/offers/pages/OffersPage').then(m => ({ default: m.OffersPage })));
@@ -52,8 +55,11 @@ const AppRoutes = memo(() => {
   const hideHeaderFooter = location.pathname === '/auth' ||
                            location.pathname === '/forgot-password' ||
                            location.pathname === '/reset-password' ||
+                           location.pathname === '/complete-profile' ||
                            location.pathname.startsWith('/seat-selection') ||
                            location.pathname === '/payment' ||
+                           location.pathname === '/payment/vnpay-result' ||
+                           location.pathname === '/payment/bank-transfer' ||
                            location.pathname === '/booking-confirmation';
   // Search page is a fixed-height split view (map + results) with no scroll to reach a footer
   const hideFooter = hideHeaderFooter || location.pathname === '/search';
@@ -71,9 +77,12 @@ const AppRoutes = memo(() => {
                 <Route path="/seat-selection/:tripScheduleId" element={<PageTransition><SeatSelectionPage /></PageTransition>} />
                 <Route path="/payment" element={<ProtectedRoute><PageTransition><PaymentPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/booking-confirmation" element={<ProtectedRoute><PageTransition><BookingConfirmationPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/payment/vnpay-result" element={<ProtectedRoute><PageTransition><VnpayResultPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/payment/bank-transfer" element={<ProtectedRoute><PageTransition><BankTransferQRPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
                 <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />
                 <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
+                <Route path="/complete-profile" element={<PageTransition><CompleteProfilePage /></PageTransition>} />
                 <Route path="/profile" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
                 <Route path="/my-bookings" element={<ProtectedRoute><PageTransition><MyBookingsPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/offers" element={<PageTransition><OffersPage /></PageTransition>} />
