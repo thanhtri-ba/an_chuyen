@@ -18,6 +18,18 @@ tourRoutes.get('/', async (req, res, next) => {
   }
 });
 
+tourRoutes.get('/:id', async (req, res, next) => {
+  try {
+    const tour = await prisma.tour.findUnique({ where: { id: req.params.id } });
+    if (!tour || !tour.isActive) {
+      return res.status(404).json({ error: 'Tour not found' });
+    }
+    res.json(tour);
+  } catch (error) {
+    next(error);
+  }
+});
+
 tourRoutes.post('/book', async (req, res, next) => {
   try {
     const { userId, tourId, startDate, pax, totalAmount } = req.body;

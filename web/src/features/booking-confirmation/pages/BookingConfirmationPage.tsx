@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
+import { jsPDF } from 'jspdf';
+import { toast } from 'sonner';
 
 // Confetti particle component
 function ConfettiParticle({ delay, color }: { delay: number; color: string }) {
@@ -63,6 +65,59 @@ export function BookingConfirmationPage() {
 
   const fmtDate = (d: Date) => d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const fmtDateTime = (d: Date) => `${fmtDate(d)} - ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+
+  const handleDownloadPdf = () => {
+    if (!booking) return;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const marginX = 48;
+    let y = 56;
+    const line = (text: string, size = 11, bold = false) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(size);
+      doc.text(text, marginX, y);
+      y += size + 8;
+    };
+
+    line('AN CHUYẾN — VÉ XE KHÁCH ĐIỆN TỬ', 16, true);
+    line(`Mã vé: ${lookupCode}    Mã đặt chỗ: ${booking.bookingId?.toUpperCase() || '—'}`);
+    y += 6;
+    if (booking.pickupLabel || booking.dropoffLabel) line(`Hành trình: ${booking.pickupLabel || '—'} → ${booking.dropoffLabel || '—'}`);
+    line(`Tuyến xe: ${booking.routeLabel || '—'}`);
+    line(`Nhà xe: ${booking.busAgentName || '—'}`);
+    line(`Ghế: ${booking.seats?.join(', ') || '—'}`, 11, true);
+    if (departure) {
+      line(`Ngày đi: ${fmtDate(departure)}`);
+      line(`Giờ đi: ${departure.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`);
+    }
+    y += 6;
+    line(`Tổng tiền: ${new Intl.NumberFormat('vi-VN').format(booking.totalAmount)} đ (đã bao gồm VAT)`, 12, true);
+    if (paymentMethodLabel) line(`Phương thức thanh toán: ${paymentMethodLabel}`);
+    if (bookingDate) line(`Thời gian đặt: ${fmtDateTime(bookingDate)}`);
+    y += 12;
+    line('Vui lòng có mặt tại điểm đón trước giờ khởi hành ít nhất 30 phút.', 9);
+    line('Xuất trình mã vé hoặc CMND/CCCD khi lên xe. Chúc bạn thượng lộ bình an!', 9);
+
+    doc.save(`ve-xe-${lookupCode}.pdf`);
+  };
+
+  const handleShare = async () => {
+    if (!booking) return;
+    const shareText = `Vé xe An Chuyến — ${booking.routeLabel || ''} — Mã vé: ${lookupCode}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Vé xe An Chuyến', text: shareText, url: qrValue });
+      } catch {
+        // user cancelled the native share sheet — no-op
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${qrValue}`);
+      toast.success('Đã sao chép thông tin vé vào bộ nhớ tạm');
+    } catch {
+      toast.error('Không thể sao chép. Vui lòng thử lại.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F3EE] pt-24 pb-16 flex flex-col items-center justify-start p-4 font-['Inter',_sans-serif] text-[#0C0D0B]">
@@ -220,10 +275,10 @@ export function BookingConfirmationPage() {
               <Link to="/my-bookings" className="flex-1 min-w-[130px] flex items-center justify-center gap-2 h-11 px-3 rounded-md border border-[#827660] bg-[#F8F9FF] text-xs font-semibold text-[#0C0D0B] hover:bg-[#F5F3EE] transition-colors text-center">
                 <Eye size={14} /> Xem chi tiết hành trình
               </Link>
-              <button className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md border border-[#827660] bg-[#F8F9FF] text-xs font-semibold text-[#0C0D0B] hover:bg-[#F5F3EE] transition-colors">
+              <button onClick={handleShare} disabled={!booking} className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md border border-[#827660] bg-[#F8F9FF] text-xs font-semibold text-[#0C0D0B] hover:bg-[#F5F3EE] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <Share2 size={14} /> Chia sẻ vé
               </button>
-              <button className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md bg-[#785900] hover:bg-[#5E4700] text-white text-xs font-bold transition-colors">
+              <button onClick={handleDownloadPdf} disabled={!booking} className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md bg-[#785900] hover:bg-[#5E4700] text-white text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <Download size={14} /> Tải vé PDF
               </button>
             </div>

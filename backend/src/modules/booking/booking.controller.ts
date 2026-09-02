@@ -18,7 +18,15 @@ const createBookingSchema = z.object({
   dropoffPointId: z.string().optional(),
   // Backend BỎ QUA totalAmount nếu client gửi lên
   totalAmount: z.number().optional(),
-  paymentMethod: z.string().nullable().optional()
+  paymentMethod: z.string().nullable().optional(),
+  // Mã giảm giá do khách nhập — backend tự tra cứu & tính lại discount, không tin số
+  // tiền/phần trăm giảm mà client có thể gửi kèm.
+  promoCode: z.string().trim().min(1).optional(),
+  // Thông tin liên hệ chính (hành khách đầu tiên) — dùng để lưu lại làm gợi ý
+  // điền nhanh cho lần đặt vé sau, không bắt buộc.
+  contactName: z.string().trim().min(1).optional(),
+  contactPhone: z.string().trim().min(1).optional(),
+  contactEmail: z.string().trim().email().optional().or(z.literal(''))
 });
 
 export const createBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

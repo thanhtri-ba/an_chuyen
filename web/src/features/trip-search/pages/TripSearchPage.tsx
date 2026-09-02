@@ -1,12 +1,18 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeftRight, Star, MapPin, Search, Calendar, ChevronDown, Bus, ArrowRight, Plus, Minus, LocateFixed, Info, Shield, Headphones } from 'lucide-react';
+import { ArrowLeftRight, Star, MapPin, Search, Calendar, ChevronDown, Bus, ArrowRight, Plus, Minus, LocateFixed, Shield, Headphones, X, Clock, Wifi, Droplets, Usb, Snowflake } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { cn } from '../../../shared/utils/cn';
+import { RouteMap } from '../../../shared/components/RouteMap';
+import { SearchEmptyIllustration } from '../../../shared/components/SearchEmptyIllustration';
+
+const FACILITY_ICON: Record<string, any> = { 'Wifi': Wifi, 'Nước suối': Droplets, 'USB': Usb, 'Điều hòa': Snowflake };
 
 const pinIcon = (color: string) => L.divIcon({
   className: 'custom-icon',
@@ -72,6 +78,12 @@ function buildWaypoints(origin: [number, number], dest: [number, number]): [numb
   return [origin, ...ordered, dest];
 }
 
+// Mock fallback trips (no real backend data for this route/date) carry small numeric ids
+// like 1/2/3 — not a real tripScheduleId — so any endpoint keyed by it would 404/return nothing.
+function isRealTripId(id: unknown) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
+}
+
 function splitVehicleType(type: string) {
   const match = type.match(/^(.*)\s(\d+\s*chỗ)$/);
   if (match) return [match[1].trim(), match[2].trim()];
@@ -87,6 +99,11 @@ export function TripSearchPage() {
   const searchDestination = searchParams.get('destination') || '';
   const searchDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
   const searchPassengers = searchParams.get('passengers') || '1';
+  const searchReturnDate = searchParams.get('returnDate') || '';
+  // True only once the user has actually submitted a search (URL carries real
+  // origin/destination) — landing on /search with no params should prompt for a
+  // search, not silently show a fake TP.HCM→Nha Trang result set.
+  const hasSearched = Boolean(searchOrigin.trim() && searchDestination.trim());
 
   const [trips, setTrips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,13 +115,29 @@ export function TripSearchPage() {
   const [formDest, setFormDest] = useState(searchDestination);
   const [formDate, setFormDate] = useState(searchDate);
   const [formPass, setFormPass] = useState(searchPassengers);
-  const [isReturn, setIsReturn] = useState(false);
+  const [isReturn, setIsReturn] = useState(!!searchReturnDate);
+  const nextDay = (d: string) => { const dt = new Date(d); dt.setDate(dt.getDate() + 1); return dt.toISOString().split('T')[0]; };
+  const [formReturnDate, setFormReturnDate] = useState(searchReturnDate || nextDay(searchDate));
   const [vehicleType, setVehicleType] = useState('Tất cả');
   const [activeField, setActiveField] = useState<'origin'|'dest'|null>(null);
   const [selectedTripId, setSelectedTripId] = useState<number|string|null>(null);
   const [sortBy, setSortBy] = useState<'default'|'price'|'depTime'|'duration'>('default');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const tripCardRefs = useRef<Record<string, HTMLDivElement|null>>({});
+
+  const [detailTripId, setDetailTripId] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailTab, setDetailTab] = useState(0);
+  useEffect(() => {
+    if (!detailTripId) { setDetailData(null); return; }
+    setDetailTab(0);
+    setDetailLoading(true);
+    api.get(`/trip-schedules/${detailTripId}`)
+      .then(res => setDetailData(res.data?.data ?? null))
+      .catch(() => setDetailData(null))
+      .finally(() => setDetailLoading(false));
+  }, [detailTripId]);
 
   const handleSelectTrip = (tripId: number|string) => {
     setSelectedTripId(tripId);
@@ -167,6 +200,10 @@ export function TripSearchPage() {
   const destCoords = getCityCoords(effectiveDest);
   const mapCenter: [number, number] = [(originCoords[0] + destCoords[0]) / 2, (originCoords[1] + destCoords[1]) / 2];
 
+  // Was hardcoded to a literal "300.000đ" regardless of the actual search results — derive it
+  // from the real trips list instead, so it matches whatever route/date is currently shown.
+  const cheapestTripPrice = trips.length ? Math.min(...trips.map(t => t.price)) : null;
+
   const [routePath, setRoutePath] = useState<[number, number][]>([originCoords, destCoords]);
   const [routeDistance, setRouteDistance] = useState('...');
   const [routeDuration, setRouteDuration] = useState('...');
@@ -197,11 +234,21 @@ export function TripSearchPage() {
 
   useEffect(() => {
     setPage(1);
+    if (!hasSearched) {
+      setTrips([]);
+      setHasMore(false);
+      setIsLoading(false);
+      return;
+    }
     const fetchTrips = async () => {
       setIsLoading(true);
       try {
+        // Use effectiveOrigin/effectiveDest (fallback-applied), not the raw searchOrigin/searchDestination —
+        // those are '' when the URL has no ?origin=/&destination= (e.g. landing on /search directly), which
+        // made the backend's `if (origin || destination)` filter skip entirely and return ALL trips, while
+        // the map/header still showed the fallback route. Results and map must search on the same values.
         const res = await api.get('/trips', {
-          params: { origin: searchOrigin, destination: searchDestination, date: searchDate, passengers: searchPassengers, page: 1, limit: 10 }
+          params: { origin: effectiveOrigin, destination: effectiveDest, date: searchDate, passengers: searchPassengers, page: 1, limit: 10 }
         });
 
         if (res.data && res.data.data && res.data.data.length > 0) {
@@ -219,7 +266,7 @@ export function TripSearchPage() {
       }
     };
     fetchTrips();
-  }, [searchOrigin, searchDestination, searchDate, searchPassengers]);
+  }, [hasSearched, searchOrigin, searchDestination, searchDate, searchPassengers]);
 
   const mapTripFromApi = (item: any) => {
     const busAgent = item.trip?.busAgent;
@@ -248,7 +295,7 @@ export function TripSearchPage() {
     setIsLoadingMore(true);
     try {
       const res = await api.get('/trips', {
-        params: { origin: searchOrigin, destination: searchDestination, date: searchDate, passengers: searchPassengers, page: nextPage, limit: 10 }
+        params: { origin: effectiveOrigin, destination: effectiveDest, date: searchDate, passengers: searchPassengers, page: nextPage, limit: 10 }
       });
       const newTrips = res.data?.data?.length ? res.data.data.map(mapTripFromApi) : [];
       setTrips(prev => [...prev, ...newTrips]);
@@ -268,7 +315,9 @@ export function TripSearchPage() {
   ];
 
   const handleSearch = () => {
-    setSearchParams({ origin: formOrigin, destination: formDest, date: formDate, passengers: formPass });
+    const params: Record<string, string> = { origin: formOrigin, destination: formDest, date: formDate, passengers: formPass };
+    if (isReturn) params.returnDate = formReturnDate;
+    setSearchParams(params);
   };
 
   const formattedDate = new Date(searchDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -388,20 +437,36 @@ export function TripSearchPage() {
               </div>
 
               {/* Date & Return */}
-              <div className="flex items-start gap-4">
-                <label className="flex-1 bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg p-[13px] flex items-center justify-between cursor-pointer">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-[#585E6C]">Ngày đi</span>
-                    <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} className="text-base font-bold text-[#0D1C2E] outline-none bg-transparent cursor-pointer relative z-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0" />
-                  </div>
-                  <Calendar size={18} className="text-[#585E6C] shrink-0" />
-                </label>
-                <div className="flex items-center gap-3 h-[62px] shrink-0">
-                  <span className="text-sm font-medium text-[#585E6C]">Khứ hồi</span>
-                  <div className={cn("w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors border border-[#D4C5AB]", isReturn ? 'bg-[#FFC107]' : 'bg-[#EDEBE3]')} onClick={() => setIsReturn(!isReturn)}>
-                    <div className={cn("w-[18px] h-[18px] bg-white rounded-full transition-transform shadow-sm", isReturn ? 'translate-x-4' : 'translate-x-0')} />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-4">
+                  <label className="flex-1 bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg p-[13px] flex items-center justify-between cursor-pointer">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-[#585E6C]">Ngày đi</span>
+                      <input type="date" value={formDate} onChange={e => {
+                        const v = e.target.value;
+                        setFormDate(v);
+                        // Keep the return date after the departure date if it would otherwise fall before/on it.
+                        if (formReturnDate <= v) setFormReturnDate(nextDay(v));
+                      }} className="text-base font-bold text-[#0D1C2E] outline-none bg-transparent cursor-pointer relative z-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0" />
+                    </div>
+                    <Calendar size={18} className="text-[#585E6C] shrink-0" />
+                  </label>
+                  <div className="flex items-center gap-3 h-[62px] shrink-0">
+                    <span className="text-sm font-medium text-[#585E6C]">Khứ hồi</span>
+                    <div className={cn("w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors border border-[#D4C5AB]", isReturn ? 'bg-[#FFC107]' : 'bg-[#EDEBE3]')} onClick={() => setIsReturn(!isReturn)}>
+                      <div className={cn("w-[18px] h-[18px] bg-white rounded-full transition-transform shadow-sm", isReturn ? 'translate-x-4' : 'translate-x-0')} />
+                    </div>
                   </div>
                 </div>
+                {isReturn && (
+                  <label className="bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg p-[13px] flex items-center justify-between cursor-pointer">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-[#585E6C]">Ngày về</span>
+                      <input type="date" value={formReturnDate} min={nextDay(formDate)} onChange={e => setFormReturnDate(e.target.value)} className="text-base font-bold text-[#0D1C2E] outline-none bg-transparent cursor-pointer relative z-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0" />
+                    </div>
+                    <Calendar size={18} className="text-[#585E6C] shrink-0" />
+                  </label>
+                )}
               </div>
 
               {/* Ticket Count & Vehicle Type */}
@@ -435,7 +500,7 @@ export function TripSearchPage() {
           </div>
 
           {/* Results List */}
-          <div className="px-6 pb-8">
+          <div id="trip-results-list" className="px-6 pb-8">
             <div className="flex items-center justify-between pt-2 pb-4 relative">
               <h2 className="text-xl font-semibold text-[#0D1C2E]">Chuyến xe gợi ý</h2>
               <button
@@ -467,9 +532,14 @@ export function TripSearchPage() {
 
             <div className="flex flex-col gap-4">
               {isLoading ? (
-                [1, 2, 3].map(i => <div key={i} className="h-32 bg-[#EFF4FF] rounded-xl animate-pulse" />)
+                <div className="py-12">
+                  <SearchEmptyIllustration title="Đang tìm chuyến xe phù hợp..." compact />
+                </div>
               ) : sortedTrips.length > 0 ? (
                 sortedTrips.map((trip, idx) => {
+                  // "Featured" (idx 0) used to get the exact same gold-border treatment as an
+                  // actually-selected card — made it look like two trips were selected at once
+                  // when the user picked a different one. Only real selection gets that highlight now.
                   const isFeatured = idx === 0;
                   const badge = COMPANY_BADGE[trip.company];
                   const [typeLine1, typeLine2] = splitVehicleType(trip.type);
@@ -483,7 +553,7 @@ export function TripSearchPage() {
                         "bg-white rounded-xl p-[18px] flex flex-col gap-4 transition-all duration-200 cursor-pointer active:scale-[0.98]",
                         isSelected
                           ? "border-2 border-[#785900] shadow-[0_8px_16px_-4px_rgba(120,89,0,0.25)] ring-2 ring-[#785900]/20 -translate-y-0.5"
-                          : isFeatured ? "border-2 border-[#785900] shadow-[0_4px_6px_rgba(0,0,0,0.05)]" : "border border-[#D4C5AB] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:border-[#785900]/50"
+                          : "border border-[#D4C5AB] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:border-[#785900]/50"
                       )}
                     >
                       <div className="flex items-start justify-between w-full">
@@ -515,27 +585,37 @@ export function TripSearchPage() {
                         </div>
                       </div>
 
-                      <div className="w-full border-t border-[#D4C5AB] pt-[13px] flex items-end justify-between">
-                        <div className="flex flex-col gap-1">
+                      <div className="w-full border-t border-[#D4C5AB] pt-[13px] flex items-end justify-between gap-2">
+                        <div className="flex flex-col gap-1 min-w-0">
                           <span className="text-lg font-bold text-[#BA1A1A] leading-7">
                             {new Intl.NumberFormat('vi-VN').format(trip.price)}đ
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             {badge && (
                               badge.outline
-                                ? <span className="border rounded-[2px] px-[5px] py-px text-[10px] font-bold" style={{ borderColor: badge.text, color: badge.text }}>{badge.label}</span>
-                                : <span className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ backgroundColor: badge.bg, color: badge.text }}>{badge.label}</span>
+                                ? <span className="shrink-0 border rounded-[2px] px-[5px] py-px text-[10px] font-bold" style={{ borderColor: badge.text, color: badge.text }}>{badge.label}</span>
+                                : <span className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ backgroundColor: badge.bg, color: badge.text }}>{badge.label}</span>
                             )}
-                            <span className="text-xs font-medium text-[#0D1C2E]">{trip.company}</span>
-                            <span className="flex items-center gap-0.5 text-xs font-bold text-[#785900]">
+                            <span className="text-xs font-medium text-[#0D1C2E] truncate">{trip.company}</span>
+                            <span className="shrink-0 flex items-center gap-0.5 text-xs font-bold text-[#785900]">
                               <Star size={10} className="fill-[#785900] text-[#785900]" /> {trip.rating}
                             </span>
                           </div>
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); navigate(`/seat-selection/${trip.id}`); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Mock fallback trips (no real backend data for this route/date) carry
+                            // small numeric ids like 1/2/3 — not a real tripScheduleId — navigating
+                            // would land on a seat page with nothing to load. Say so instead of a dead end.
+                            if (!isRealTripId(trip.id)) {
+                              toast.info('Chuyến này chỉ là gợi ý minh hoạ, chưa có dữ liệu ghế thật. Vui lòng chọn chuyến khác hoặc đổi ngày tìm kiếm.');
+                              return;
+                            }
+                            navigate(`/seat-selection/${trip.id}`);
+                          }}
                           className={cn(
-                            "rounded-md px-[17px] py-[7px] text-sm font-bold transition-colors",
+                            "rounded-md px-[17px] py-[7px] text-sm font-bold transition-colors shrink-0 whitespace-nowrap",
                             isFeatured ? "border border-[#785900] text-[#785900] hover:bg-[#785900]/10" : "border border-[#D4C5AB] text-[#0D1C2E] hover:bg-[#F8F9FF]"
                           )}
                         >
@@ -545,6 +625,14 @@ export function TripSearchPage() {
                     </div>
                   );
                 })
+              ) : !hasSearched ? (
+                <div className="py-12">
+                  <SearchEmptyIllustration
+                    title="Nhập điểm đi, điểm đến để tìm chuyến xe"
+                    subtitle="Điền thông tin ở form bên trên rồi bấm Tìm chuyến xe."
+                    compact
+                  />
+                </div>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-[#585E6C] bg-[#EFF4FF] rounded-xl border border-dashed border-[#D4C5AB]">
                   <Search size={32} className="mb-3 text-[#D4C5AB]" />
@@ -583,12 +671,18 @@ export function TripSearchPage() {
               <div className="flex items-center gap-2 text-sm font-bold text-[#0D1C2E]">
                 {effectiveOrigin} <ArrowRight size={14} className="text-[#585E6C]" /> {effectiveDest}
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#585E6C] pt-0.5">
+              <div className="flex items-center gap-2 text-xs text-[#585E6C] pt-0.5 flex-wrap">
                 <span>{formattedDate}</span>
                 <span>•</span>
                 <span>{searchPassengers} vé</span>
                 <span>•</span>
                 <span>{vehicleType === 'Tất cả' ? 'Tất cả loại xe' : vehicleType}</span>
+                {searchReturnDate && (
+                  <>
+                    <span>•</span>
+                    <span className="font-medium text-[#785900]">Khứ hồi: về {new Date(searchReturnDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                  </>
+                )}
               </div>
             </div>
             <button className="bg-[#D4E4FC] border border-[#D4C5AB] rounded-lg px-[13px] py-[7px] text-sm font-medium text-[#0D1C2E] hover:bg-[#c8dcf9] transition-colors shrink-0">
@@ -622,79 +716,310 @@ export function TripSearchPage() {
           </div>
         )}
 
-        {/* Bottom Summary Card Overlay */}
-        <div className="absolute bottom-6 left-6 right-6 z-[400] bg-[#F8F9FF] border border-[#D4C5AB] rounded-2xl p-[25px] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
-          <div className="flex items-center justify-between pb-4">
-            <h3 className="text-xl font-semibold text-[#0D1C2E]">Tóm tắt hành trình</h3>
-            <div className="bg-[#FFC107] rounded-full px-3 py-1 flex items-center gap-2">
-              <Info size={12} className="text-[#261A00]" />
-              <span className="text-xs font-bold text-[#261A00]">Thông tin chi tiết</span>
-            </div>
+        {/* Bottom Summary Card Overlay — only once a trip is actually selected; before
+            that there's no single schedule to summarize, so it stays off instead of
+            showing a "searching" placeholder over the map. */}
+        {selectedTripId && (
+        <div className="absolute bottom-4 left-4 right-4 z-[400] bg-white border border-[#D4C5AB] rounded-lg p-3.5 shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+          <div className="pb-2.5">
+            <h3 className="text-base font-bold text-[#0D1C2E]">Tóm tắt hành trình</h3>
           </div>
 
-          <div className="grid grid-cols-12 gap-6">
-            {/* Route Timeline */}
-            <div className="col-span-5 border-r border-[#D4C5AB] pr-px pb-2 flex flex-col gap-6 relative">
-              <div className="absolute left-[11px] top-4 bottom-4 w-[2px] bg-[#785900]/20" />
-              <div className="flex gap-4 items-start">
-                <div className="w-6 h-6 rounded-full bg-[#FFC107] flex items-center justify-center shrink-0 z-10">
-                  <MapPin size={12} className="text-[#261A00]" />
+          <div className="flex flex-col gap-2.5">
+            {/* Route Timeline — full width row so long station names have room before truncating */}
+            <div className="border-b border-[#D4C5AB] pb-2.5 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-start gap-1.5 min-w-0">
+                    <div className="w-4 h-4 rounded-full bg-[#FFC107] flex items-center justify-center shrink-0">
+                      <MapPin size={9} className="text-[#261A00]" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-[#0D1C2E] truncate">{getStationName(effectiveOrigin)}</span>
+                      <span className="text-[10px] text-[#585E6C] truncate">{effectiveOrigin}</span>
+                    </div>
+                  </div>
+                  <ArrowRight size={11} className="text-[#585E6C] shrink-0" />
+                  <div className="flex items-start gap-1.5 min-w-0">
+                    <div className="w-4 h-4 rounded-full bg-[#FFDAD6] flex items-center justify-center shrink-0">
+                      <MapPin size={9} className="text-[#BA1A1A]" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-[#0D1C2E] truncate">{getStationName(effectiveDest)}</span>
+                      <span className="text-[10px] text-[#585E6C] truncate">{effectiveDest}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold text-[#0D1C2E]">{getStationName(effectiveOrigin)}</span>
-                  <span className="text-xs text-[#585E6C]">{effectiveOrigin}</span>
-                </div>
-              </div>
-              <div className="flex gap-4 items-start">
-                <div className="w-6 h-6 rounded-full bg-[#FFDAD6] flex items-center justify-center shrink-0 z-10">
-                  <MapPin size={12} className="text-[#BA1A1A]" />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold text-[#0D1C2E]">{getStationName(effectiveDest)}</span>
-                  <span className="text-xs text-[#585E6C]">{effectiveDest}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => {
+                      const best = sortedTrips[0];
+                      if (!best || !isRealTripId(best.id)) {
+                        toast.info('Chưa có chuyến xe thật để xem chi tiết. Vui lòng tìm chuyến trước.');
+                        return;
+                      }
+                      setDetailTripId(String(best.id));
+                    }}
+                    className="rounded-full px-5 py-2 text-sm font-medium text-[#0D1C2E] border border-[#D4C5AB] hover:bg-[#F8F9FF] transition-colors"
+                  >
+                    Chi tiết
+                  </button>
+                  <button
+                    onClick={() => {
+                      const best = sortedTrips[0];
+                      if (!best) { toast.info('Chưa có chuyến xe nào để chọn ghế. Vui lòng tìm chuyến trước.'); return; }
+                      if (!isRealTripId(best.id)) {
+                        toast.info('Chuyến này chỉ là gợi ý minh hoạ, chưa có dữ liệu ghế thật. Vui lòng chọn chuyến khác hoặc đổi ngày tìm kiếm.');
+                        return;
+                      }
+                      navigate(`/seat-selection/${best.id}`);
+                    }}
+                    className="rounded-full px-5 py-2 text-sm font-bold border border-[#785900] text-[#785900] hover:bg-[#785900]/10 transition-colors whitespace-nowrap"
+                  >
+                    Chọn ghế
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Stats & Highlights */}
-            <div className="col-span-7 flex flex-col gap-4">
-              <div className="flex gap-3">
-                <div className="flex-1 bg-[#EFF4FF] border border-[#D4C5AB] rounded-xl flex flex-col items-center p-[13px] gap-1">
-                  <MapPin size={18} className="text-[#585E6C] mb-1" />
-                  <span className="text-[10px] font-medium text-[#585E6C] tracking-wide uppercase">Khoảng cách</span>
-                  <span className="text-base font-bold text-[#0D1C2E]">{routeDistance}</span>
+            <div className="flex flex-col gap-2.5">
+              <div className="flex gap-1.5 pb-2.5 border-b border-[#D4C5AB]">
+                <div className="flex-1 bg-[#EFF4FF] rounded-md flex flex-col items-center justify-center p-2">
+                  <MapPin size={13} className="text-[#585E6C] mb-1" />
+                  <span className="text-[9px] font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-0.5">Khoảng cách</span>
+                  <span className="text-sm font-semibold text-[#0D1C2E]">{routeDistance}</span>
                 </div>
-                <div className="flex-1 bg-[#EFF4FF] border border-[#D4C5AB] rounded-xl flex flex-col items-center p-[13px] gap-1">
-                  <Calendar size={18} className="text-[#585E6C] mb-1" />
-                  <span className="text-[10px] font-medium text-[#585E6C] tracking-wide uppercase">Thời gian</span>
-                  <span className="text-base font-bold text-[#0D1C2E]">{routeDuration}</span>
+                <div className="flex-1 bg-[#EFF4FF] rounded-md flex flex-col items-center justify-center p-2">
+                  <Calendar size={13} className="text-[#585E6C] mb-1" />
+                  <span className="text-[9px] font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-0.5">Thời gian</span>
+                  <span className="text-sm font-semibold text-[#0D1C2E]">{routeDuration}</span>
                 </div>
-                <div className="flex-1 bg-[#EFF4FF] border border-[#785900]/20 rounded-xl flex flex-col items-center p-[13px] gap-1">
-                  <Bus size={18} className="text-[#785900] mb-1" />
-                  <span className="text-[10px] font-medium text-[#585E6C] tracking-wide uppercase">Giá vé từ</span>
-                  <span className="text-base font-bold text-[#785900]">300.000đ</span>
+                <div className="flex-1 bg-[#EFF4FF] rounded-md flex flex-col items-center justify-center p-2">
+                  <Bus size={13} className="text-[#585E6C] mb-1" />
+                  <span className="text-[9px] font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-0.5">Giá vé từ</span>
+                  <span className="text-sm font-bold text-[#785900]">{cheapestTripPrice != null ? `${new Intl.NumberFormat('vi-VN').format(cheapestTripPrice)}đ` : '—'}</span>
                 </div>
               </div>
-              <div className="bg-[#D4E4FC]/30 border border-[#D4C5AB] rounded-xl flex items-center justify-between p-[13px]">
-                <div className="flex items-center gap-2">
-                  <Bus size={14} className="text-[#0D1C2E]" />
-                  <span className="text-xs font-bold text-[#0D1C2E]">Xe đa dạng</span>
+              <div className="bg-[#E5EEFF] rounded-md flex items-center justify-between p-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Bus size={11} className="text-[#0D1C2E]" />
+                  <span className="text-xs font-normal text-[#0D1C2E]">Xe đa dạng</span>
                 </div>
-                <div className="w-px h-4 bg-[#D4C5AB]" />
-                <div className="flex items-center gap-2">
-                  <Shield size={14} className="text-[#0D1C2E]" />
-                  <span className="text-xs font-bold text-[#0D1C2E]">An toàn</span>
+                <div className="w-px h-3 bg-[#D4C5AB]" />
+                <div className="flex items-center gap-1.5">
+                  <Shield size={11} className="text-[#0D1C2E]" />
+                  <span className="text-xs font-normal text-[#0D1C2E]">An toàn</span>
                 </div>
-                <div className="w-px h-4 bg-[#D4C5AB]" />
-                <div className="flex items-center gap-2">
-                  <Headphones size={14} className="text-[#0D1C2E]" />
-                  <span className="text-xs font-bold text-[#0D1C2E]">Hỗ trợ 24/7</span>
+                <div className="w-px h-3 bg-[#D4C5AB]" />
+                <div className="flex items-center gap-1.5">
+                  <Headphones size={11} className="text-[#0D1C2E]" />
+                  <span className="text-xs font-normal text-[#0D1C2E]">Hỗ trợ 24/7</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        )}
+
+        {/* Empty state — fully covers the map (including the surrounding countries
+            visible at low zoom) while no trip is selected yet. */}
+        {!selectedTripId && (
+          <div className="absolute inset-0 z-[400] bg-[#F8F9FF] flex items-center justify-center">
+            <SearchEmptyIllustration
+              title="Chọn một chuyến xe để xem chi tiết hành trình"
+              subtitle="Bấm vào một chuyến trong danh sách bên trái — bản đồ và thông tin tuyến sẽ hiện ở đây."
+            />
+          </div>
+        )}
       </div>
+
+      {/* Trip Detail Modal — same rich layout the old (unused, hardcoded) TripDetailModal used,
+          but every value below is real: route map, bus agent, driver/phụ xe, facilities, policies
+          from the trip-schedule detail API. No fabricated photos/reviews — honest empty states instead. */}
+      <AnimatePresence>
+        {detailTripId && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60"
+            onClick={() => setDetailTripId(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.25 }}
+              className="relative w-[90vw] max-w-[900px] h-[85vh] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              {detailLoading ? (
+                <div className="flex-1 flex items-center justify-center text-[#585E6C] text-sm">Đang tải thông tin chuyến xe...</div>
+              ) : !detailData ? (
+                <div className="flex-1 flex items-center justify-center text-[#585E6C] text-sm">Không tải được thông tin chuyến xe. Vui lòng thử lại.</div>
+              ) : (
+                <>
+                  {/* Map hero */}
+                  <div className="relative h-[42%] min-h-[220px] w-full bg-slate-900 shrink-0">
+                    <RouteMap originCoords={originCoords} destCoords={destCoords} originName={effectiveOrigin} destName={effectiveDest} />
+                    <button onClick={() => setDetailTripId(null)} className="absolute top-4 right-4 z-10 bg-white/90 border border-[#D4C5AB] text-[#585E6C] w-10 h-10 rounded-full flex items-center justify-center hover:bg-white shadow-md transition-colors">
+                      <X size={18} />
+                    </button>
+                    <div className="absolute bottom-5 left-5 right-5 flex flex-wrap justify-between items-end gap-3 pointer-events-none">
+                      <div className="bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-[#D4C5AB] pointer-events-auto flex items-center gap-6">
+                        <div>
+                          <div className="text-[10px] font-bold text-[#9AA1AC] uppercase tracking-widest mb-1">{detailData.bus?.type || detailData.trip?.busClass}</div>
+                          <h2 className="text-xl font-bold text-[#0D1C2E] leading-none m-0">{detailData.trip?.busAgent?.name || 'An Chuyến'}</h2>
+                        </div>
+                        <div className="w-px h-10 bg-[#D4C5AB]" />
+                        <div>
+                          <div className="flex items-center gap-2 text-sm text-[#0D1C2E] font-semibold mb-1">
+                            <span>{effectiveOrigin}</span><ArrowRight size={13} className="text-[#9AA1AC]" /><span>{effectiveDest}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-[#585E6C]">
+                            <Clock size={12} /> {routeDuration}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-xl border border-[#D4C5AB] pointer-events-auto flex items-center gap-3">
+                        <div className="pl-3">
+                          <div className="text-[10px] text-[#9AA1AC] font-bold uppercase tracking-widest mb-0.5">Giá vé từ</div>
+                          <div className="text-xl font-bold text-[#BA1A1A] leading-none">{new Intl.NumberFormat('vi-VN').format(detailData.prices?.length ? Math.min(...detailData.prices.map((p: any) => p.price)) : 0)}đ</div>
+                        </div>
+                        <button
+                          onClick={() => { setDetailTripId(null); navigate(`/seat-selection/${detailTripId}`); }}
+                          className="bg-[#785900] text-white px-6 py-3.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#5E4700] transition-colors"
+                        >
+                          Chọn ghế ngay
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex px-6 gap-6 border-b border-[#D4C5AB] shrink-0">
+                    {['Tổng quan', 'Hình ảnh', 'Chính sách'].map((tab, i) => (
+                      <button key={tab} onClick={() => setDetailTab(i)}
+                        className={cn("py-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2",
+                          detailTab === i ? "text-[#785900] border-[#785900]" : "text-[#9AA1AC] border-transparent hover:text-[#0D1C2E]")}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto bg-[#F8F9FF] p-6">
+                    {detailTab === 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-5">
+                        <div className="bg-white p-5 rounded-xl border border-[#D4C5AB] shadow-sm">
+                          <h3 className="text-xs font-bold text-[#585E6C] uppercase tracking-widest mb-5">Lịch trình</h3>
+                          <div className="relative pl-6">
+                            <div className="absolute top-2 bottom-6 left-[7px] w-px border-l border-dashed border-[#D4C5AB]" />
+                            {[
+                              { time: detailData.departureTime ? new Date(detailData.departureTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—', city: effectiveOrigin, active: true },
+                              { time: detailData.arrivalTime ? new Date(detailData.arrivalTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—', city: effectiveDest, active: false },
+                            ].map((stop, i) => (
+                              <div key={i} className={cn("relative mb-6 last:mb-0", !stop.active && "opacity-70")}>
+                                <div className={cn("absolute -left-6 top-1.5 w-3 h-3 rounded-full border-2 bg-white", stop.active ? "border-[#785900]" : "border-[#9AA1AC]")} />
+                                <div className="text-lg font-bold text-[#0D1C2E] mb-0.5">{stop.time}</div>
+                                <div className="text-sm font-semibold text-[#0D1C2E] mb-0.5">{stop.city}</div>
+                                <div className="text-xs text-[#585E6C] flex items-center gap-1"><MapPin size={11} /> {getStationName(stop.city)}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="border-t border-[#D4C5AB] mt-6 pt-5">
+                            <h3 className="text-xs font-bold text-[#585E6C] uppercase tracking-widest mb-3">Tài xế &amp; phụ xe</h3>
+                            {detailData.staffAssignments?.length > 0 ? (
+                              <div className="flex flex-col gap-2">
+                                {detailData.staffAssignments.map((sa: any) => (
+                                  <div key={sa.id} className="flex items-center justify-between bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg px-4 py-2.5">
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-semibold text-[#0D1C2E]">{sa.employee?.name}</span>
+                                      <span className="text-xs text-[#585E6C]">{sa.role === 'DRIVER' ? 'Tài xế' : 'Phụ xe'}</span>
+                                    </div>
+                                    {sa.employee?.phone && <span className="text-xs font-medium text-[#0D1C2E]">{sa.employee.phone}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-[#9AA1AC] italic">Chưa cập nhật thông tin tài xế/phụ xe cho chuyến này.</div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-5">
+                          <div className="bg-white p-5 rounded-xl border border-[#D4C5AB] shadow-sm">
+                            <h3 className="text-xs font-bold text-[#585E6C] uppercase tracking-widest mb-4">Tiện ích trên xe</h3>
+                            {detailData.trip?.facilities?.length > 0 ? (
+                              <div className="flex flex-col gap-3">
+                                {detailData.trip.facilities.map((f: any) => {
+                                  const Icon = FACILITY_ICON[f.facility?.name] || Bus;
+                                  return (
+                                    <div key={f.id} className="flex items-center gap-3 text-sm text-[#0D1C2E] font-medium">
+                                      <div className="w-8 h-8 rounded-full bg-[#FFF3CD] flex items-center justify-center text-[#785900] shrink-0"><Icon size={14} /></div>
+                                      {f.facility?.name}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-[#9AA1AC] italic">Chưa cập nhật tiện ích cho xe này.</div>
+                            )}
+                          </div>
+
+                          <div className="bg-white p-5 rounded-xl border border-[#D4C5AB] shadow-sm">
+                            <div className="flex items-center gap-2 text-base font-bold text-[#785900]">
+                              <Star size={15} className="fill-[#785900] text-[#785900]" /> {detailData.trip?.busAgent?.rating?.toFixed(1) || '—'} / 5
+                            </div>
+                            <div className="text-xs text-[#585E6C] mt-1">Đánh giá tổng thể của nhà xe {detailData.trip?.busAgent?.name}.</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {detailTab === 1 && (
+                      detailData.trip?.busAgent?.images?.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          {detailData.trip.busAgent.images.map((img: any) => (
+                            <div key={img.id} className="rounded-xl overflow-hidden shadow-sm h-[220px] border border-[#D4C5AB]">
+                              <img src={img.url} alt={detailData.trip.busAgent.name} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="h-64 bg-white border border-dashed border-[#D4C5AB] rounded-xl flex flex-col items-center justify-center text-[#9AA1AC] gap-2">
+                          <Bus size={28} />
+                          <span className="text-sm">Nhà xe chưa cập nhật hình ảnh</span>
+                        </div>
+                      )
+                    )}
+
+                    {detailTab === 2 && (
+                      detailData.trip?.busAgent?.policies?.length > 0 ? (
+                        <div className="bg-white p-5 rounded-xl border border-[#D4C5AB] shadow-sm max-w-md">
+                          <h3 className="text-xs font-bold text-[#585E6C] uppercase tracking-widest mb-4">Chính sách hoàn hủy</h3>
+                          {detailData.trip.busAgent.policies
+                            .sort((a: any, b: any) => b.hoursBefore - a.hoursBefore)
+                            .map((p: any) => (
+                              <div key={p.id} className="flex justify-between py-3 border-b border-[#D4C5AB] last:border-0 text-sm">
+                                <span className="text-[#585E6C]">Hủy trước {p.hoursBefore}h</span>
+                                <span className="font-bold text-[#0D1C2E]">Hoàn {p.refundPct}%</span>
+                              </div>
+                            ))}
+                        </div>
+                      ) : (
+                        <div className="h-64 bg-white border border-dashed border-[#D4C5AB] rounded-xl flex flex-col items-center justify-center text-[#9AA1AC] gap-2">
+                          <Shield size={28} />
+                          <span className="text-sm">Nhà xe chưa công bố chính sách hoàn hủy cho chuyến này</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

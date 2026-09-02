@@ -126,3 +126,38 @@ export async function verifyAccessToken(
     });
   }
 }
+
+// Giống verifyAccessToken nhưng không bắt buộc đăng nhập — dùng cho các route
+// công khai (vd. xem sơ đồ ghế) mà vẫn muốn biết req.user nếu khách đã đăng nhập,
+// để cá nhân hoá kết quả (ví dụ: hiện ghế do chính họ đang giữ). Token sai/thiếu
+// chỉ bỏ qua, không trả lỗi.
+export async function optionalAuth(
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const authorization = req.headers.authorization;
+  if (!authorization?.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authorization.slice(7);
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return next();
+  }
+
+  try {
+    const payload = jwt.verify(token, secret);
+    if (typeof payload === 'object' && typeof payload.sub === 'string' && typeof payload.role === 'string') {
+      req.user = {
+        id: payload.sub,
+        role: payload.role,
+        email: typeof payload.email === 'string' ? payload.email : undefined,
+      };
+    }
+  } catch {
+    // token không hợp lệ — bỏ qua, coi như khách chưa đăng nhập
+  }
+  next();
+}

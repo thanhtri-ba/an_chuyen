@@ -318,7 +318,7 @@ export default function Page() {
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      formatter={(value: number) => `${value.toLocaleString("vi-VN")} đ`}
+                      formatter={(value) => `${Number(value ?? 0).toLocaleString("vi-VN")} đ`}
                       contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: 12 }}
                     />
                   </PieChart>

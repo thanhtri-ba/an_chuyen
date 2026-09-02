@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { Ticket, Calendar, Clock, Download, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle, Ban, Map } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Ticket, Clock, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle, Ban, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import type { Booking } from '../../../types';
@@ -30,7 +30,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /* ─── TICKET CARD ─── */
-function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMobile }: { booking: Booking; index: number; isActiveTracking: boolean; onTrack: () => void; onCancel: (id: string) => void; isMobile: boolean }) {
+function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMobile }: { booking: Booking; index: number; isActiveTracking: boolean; onTrack: () => void; onCancel: (id: string, status: string) => void; isMobile: boolean }) {
   const depTime = booking.tripSchedule?.departureTime;
   const departureDate = depTime ? new Date(depTime) : new Date(booking.createdAt);
   const depCity = booking.tripSchedule?.trip?.route?.departureCity?.name || 'Điểm đi';
@@ -39,14 +39,32 @@ function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMob
   const isPaid = booking.paymentStatus === 'PAID';
   const canCancel = booking.status === 'CONFIRMED' || booking.status === 'PENDING' || booking.status === 'PENDING_PAYMENT';
   const [isCancelling, setIsCancelling] = useState(false);
+  const navigate = useNavigate();
+
+  const handleViewDetail = () => {
+    // BookingConfirmationPage reads its data from sessionStorage('last_booking') —
+    // reuse that same e-ticket view here instead of building a second detail page.
+    sessionStorage.setItem('last_booking', JSON.stringify({
+      bookingId: booking.id,
+      passengerName: '',
+      routeLabel: `${depCity} → ${arrCity}`,
+      busAgentName: agentName,
+      seats: booking.seatNumbers || [],
+      totalAmount: booking.totalAmount,
+      createdAt: booking.createdAt,
+      departureTime: booking.tripSchedule?.departureTime,
+    }));
+    navigate('/booking-confirmation');
+  };
 
   const handleCancel = async () => {
     if (!confirm('Bạn có chắc muốn hủy vé này không?')) return;
     setIsCancelling(true);
     try {
-      await api.post(`/bookings/${booking.id}/cancel`);
-      toast.success('Hủy vé thành công');
-      onCancel(booking.id);
+      const { data } = await api.post(`/bookings/${booking.id}/cancel`);
+      const newStatus = data?.data?.status || 'CANCELLED';
+      toast.success(newStatus === 'REFUNDED' ? 'Hủy vé thành công. Tiền đã được hoàn vào ví.' : 'Hủy vé thành công');
+      onCancel(booking.id, newStatus);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Không thể hủy vé. Vui lòng thử lại.');
     } finally {
@@ -107,8 +125,8 @@ function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMob
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 10, color: 'rgba(0,0,0,0.35)', fontFamily: 'system-ui' }}>
-              {booking.seatNumbers?.length > 0 && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Ticket size={10} /> Ghế: {booking.seatNumbers.join(', ')}</span>
+              {(booking.seatNumbers?.length ?? 0) > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Ticket size={10} /> Ghế: {booking.seatNumbers!.join(', ')}</span>
               )}
               {depTime && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={10} /> {new Date(depTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
@@ -141,7 +159,7 @@ function TicketCard({ booking, index, isActiveTracking, onTrack, onCancel, isMob
           }}>
             <MapPin size={10} /> {isActiveTracking ? 'Đang theo dõi' : 'Theo dõi'}
           </button>
-          <button style={{
+          <button onClick={handleViewDetail} style={{
             display: 'flex', alignItems: 'center', gap: 6, background: '#163328', border: 'none', color: '#fcfcfc', padding: '6px 16px', cursor: 'pointer',
             fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'system-ui', borderRadius: 6
           }}>
@@ -215,8 +233,8 @@ export function MyBookingsPage() {
     }
   }, [loading, activeTab, bookings]);
 
-  const handleCancelBooking = (bookingId: string) => {
-    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'CANCELLED' } : b));
+  const handleCancelBooking = (bookingId: string, status: string) => {
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b));
   };
 
   if (isLoading) return <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>Đang tải...</div>;

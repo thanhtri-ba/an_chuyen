@@ -89,13 +89,13 @@ function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: stri
         {/* Footer */}
         <div className="flex items-center justify-between mt-2 pt-4 border-t border-gray-50">
           <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-            <Clock size={12} /> Exp: {new Date(promo.validUntil).toLocaleDateString('vi-VN')}
+            <Clock size={12} /> HSD: {new Date(promo.validUntil).toLocaleDateString('vi-VN')}
           </div>
           <button
             onClick={handleCopy}
             className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer text-[11px] font-bold tracking-widest uppercase text-primary hover:text-primary-hover transition-colors"
           >
-            Use Now <ArrowRight size={12} />
+            Dùng ngay <ArrowRight size={12} />
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ export function OffersPage() {
 
   const allPromos = promotions.map(p => ({
     ...p, img: p.logoPath || null, badge: null as string | null,
-    accent: '#d4af37', tag: 'OFFER',
+    accent: '#d4af37', tag: 'ƯU ĐÃI',
   }));
 
   return (
@@ -197,7 +197,7 @@ export function OffersPage() {
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-[2px] bg-primary" />
               <span className="text-[10px] font-bold tracking-widest uppercase text-primary">
-                Invite Friends
+                Mời bạn bè
               </span>
             </div>
 
@@ -244,8 +244,8 @@ export function OffersPage() {
                 <Ticket size={24} className="text-orange-400" />
               </div>
               <div className="text-center">
-                <div className="text-sm font-bold text-[#1a1a1a] tracking-wide">ROAMORA</div>
-                <div className="text-[10px] text-gray-400 font-bold tracking-widest mt-1">MEMBER PASS</div>
+                <div className="text-sm font-bold text-[#1a1a1a] tracking-wide">AN CHUYẾN</div>
+                <div className="text-[10px] text-gray-400 font-bold tracking-widest mt-1">THẺ THÀNH VIÊN</div>
               </div>
             </div>
 

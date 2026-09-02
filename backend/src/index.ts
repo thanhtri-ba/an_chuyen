@@ -22,6 +22,7 @@ const port = process.env.PORT || 3000;
 import { requestContextMiddleware } from './middleware/request-context.middleware';
 import { loggingMiddleware } from './middleware/logging.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
+import { verifyAccessToken, type AuthenticatedRequest } from './middleware/auth.middleware';
 import { logger } from './core/logger';
 
 // Allow-list of origins that may call this API. Set CORS_ORIGINS (comma-separated)
@@ -80,9 +81,14 @@ import { tourRoutes } from './modules/tour/tour.routes';
 import { eventRoutes } from './modules/event/event.routes';
 import { destinationRoutes } from './modules/destination/destination.routes';
 import { bannerRoutes } from './modules/banner/banner.routes';
+import { heroRoutes } from './modules/hero/hero.routes';
+import { hotelRoutes } from './modules/hotel/hotel.routes';
+import { contactRoutes } from './modules/contact/contact.routes';
 import { deliveryRoutes } from './modules/delivery/delivery.routes';
 import seatRoutes from './modules/seat/seat.routes';
 import paymentRoutes from './modules/payment/payment.routes';
+import { vnpayRoutes } from './modules/payment/vnpay.routes';
+import { bankTransferRoutes } from './modules/payment/bank-transfer.routes';
 
 app.use('/api/auth', authLimiter, authRoutes);
 
@@ -97,9 +103,14 @@ app.use('/api/tours', tourRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/destinations', destinationRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/hero-slides', heroRoutes);
+app.use('/api/hotels', hotelRoutes);
+app.use('/api/contacts', contactRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/trip-schedules', seatRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/vnpay', vnpayRoutes);
+app.use('/api/bank-transfer', bankTransferRoutes);
 
 app.get('/', (req, res) => {
   res.send('An Chuyến Backend API is running!');
@@ -243,6 +254,38 @@ app.get('/api/promotions', async (req, res, next) => {
       });
     }, 300);
     res.json(promotions);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Lets the payment page preview the discount (and whether THIS account already used
+// the code) before submitting — the actual booking creation (booking.service.ts)
+// re-validates and recomputes this itself server-side; this endpoint is purely for
+// UI preview and never trusted for the real charge. Requires auth since "already
+// used" is per-account.
+app.get('/api/promotions/validate/:code', verifyAccessToken as any, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const code = req.params.code.trim().toUpperCase();
+    const promo = await prisma.promotion.findUnique({ where: { code } });
+    if (!promo || !promo.isActive || promo.validUntil < new Date()) {
+      return res.status(404).json({ message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' });
+    }
+    const userId = req.user?.id;
+    if (userId) {
+      const existingVoucher = await prisma.voucher.findUnique({
+        where: { userId_promotionId: { userId, promotionId: promo.id } },
+      });
+      if (existingVoucher?.isUsed) {
+        return res.status(409).json({ message: 'Bạn đã sử dụng mã giảm giá này rồi. Mỗi tài khoản chỉ dùng được một lần.' });
+      }
+    }
+    res.json({
+      code: promo.code,
+      title: promo.title,
+      discountPct: promo.discountPct,
+      maxDiscount: promo.maxDiscount,
+    });
   } catch (error) {
     next(error);
   }
