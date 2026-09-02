@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { cn } from '../../../shared/utils/cn';
 import { RouteMap } from '../../../shared/components/RouteMap';
+import { SearchEmptyIllustration } from '../../../shared/components/SearchEmptyIllustration';
 
 const FACILITY_ICON: Record<string, any> = { 'Wifi': Wifi, 'Nước suối': Droplets, 'USB': Usb, 'Điều hòa': Snowflake };
 
@@ -99,6 +100,10 @@ export function TripSearchPage() {
   const searchDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
   const searchPassengers = searchParams.get('passengers') || '1';
   const searchReturnDate = searchParams.get('returnDate') || '';
+  // True only once the user has actually submitted a search (URL carries real
+  // origin/destination) — landing on /search with no params should prompt for a
+  // search, not silently show a fake TP.HCM→Nha Trang result set.
+  const hasSearched = Boolean(searchOrigin.trim() && searchDestination.trim());
 
   const [trips, setTrips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -229,6 +234,12 @@ export function TripSearchPage() {
 
   useEffect(() => {
     setPage(1);
+    if (!hasSearched) {
+      setTrips([]);
+      setHasMore(false);
+      setIsLoading(false);
+      return;
+    }
     const fetchTrips = async () => {
       setIsLoading(true);
       try {
@@ -255,7 +266,7 @@ export function TripSearchPage() {
       }
     };
     fetchTrips();
-  }, [searchOrigin, searchDestination, searchDate, searchPassengers]);
+  }, [hasSearched, searchOrigin, searchDestination, searchDate, searchPassengers]);
 
   const mapTripFromApi = (item: any) => {
     const busAgent = item.trip?.busAgent;
@@ -521,7 +532,9 @@ export function TripSearchPage() {
 
             <div className="flex flex-col gap-4">
               {isLoading ? (
-                [1, 2, 3].map(i => <div key={i} className="h-32 bg-[#EFF4FF] rounded-xl animate-pulse" />)
+                <div className="py-12">
+                  <SearchEmptyIllustration title="Đang tìm chuyến xe phù hợp..." compact />
+                </div>
               ) : sortedTrips.length > 0 ? (
                 sortedTrips.map((trip, idx) => {
                   // "Featured" (idx 0) used to get the exact same gold-border treatment as an
@@ -612,6 +625,14 @@ export function TripSearchPage() {
                     </div>
                   );
                 })
+              ) : !hasSearched ? (
+                <div className="py-12">
+                  <SearchEmptyIllustration
+                    title="Nhập điểm đi, điểm đến để tìm chuyến xe"
+                    subtitle="Điền thông tin ở form bên trên rồi bấm Tìm chuyến xe."
+                    compact
+                  />
+                </div>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-[#585E6C] bg-[#EFF4FF] rounded-xl border border-dashed border-[#D4C5AB]">
                   <Search size={32} className="mb-3 text-[#D4C5AB]" />
@@ -695,38 +716,41 @@ export function TripSearchPage() {
           </div>
         )}
 
-        {/* Bottom Summary Card Overlay */}
-        <div className="absolute bottom-6 left-6 right-6 z-[400] bg-white border border-[#D4C5AB] rounded-xl p-[21px] shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
-          <div className="pb-4">
-            <h3 className="text-2xl font-bold text-[#0D1C2E]">Tóm tắt hành trình</h3>
+        {/* Bottom Summary Card Overlay — only once a trip is actually selected; before
+            that there's no single schedule to summarize, so it stays off instead of
+            showing a "searching" placeholder over the map. */}
+        {selectedTripId && (
+        <div className="absolute bottom-4 left-4 right-4 z-[400] bg-white border border-[#D4C5AB] rounded-lg p-3.5 shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+          <div className="pb-2.5">
+            <h3 className="text-base font-bold text-[#0D1C2E]">Tóm tắt hành trình</h3>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2.5">
             {/* Route Timeline — full width row so long station names have room before truncating */}
-            <div className="border-b border-[#D4C5AB] pb-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="flex items-start gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-full bg-[#FFC107] flex items-center justify-center shrink-0">
-                      <MapPin size={12} className="text-[#261A00]" />
+            <div className="border-b border-[#D4C5AB] pb-2.5 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-start gap-1.5 min-w-0">
+                    <div className="w-4 h-4 rounded-full bg-[#FFC107] flex items-center justify-center shrink-0">
+                      <MapPin size={9} className="text-[#261A00]" />
                     </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-bold text-[#0D1C2E] truncate">{getStationName(effectiveOrigin)}</span>
-                      <span className="text-xs text-[#585E6C] truncate">{effectiveOrigin}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-[#0D1C2E] truncate">{getStationName(effectiveOrigin)}</span>
+                      <span className="text-[10px] text-[#585E6C] truncate">{effectiveOrigin}</span>
                     </div>
                   </div>
-                  <ArrowRight size={14} className="text-[#585E6C] shrink-0" />
-                  <div className="flex items-start gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-full bg-[#FFDAD6] flex items-center justify-center shrink-0">
-                      <MapPin size={12} className="text-[#BA1A1A]" />
+                  <ArrowRight size={11} className="text-[#585E6C] shrink-0" />
+                  <div className="flex items-start gap-1.5 min-w-0">
+                    <div className="w-4 h-4 rounded-full bg-[#FFDAD6] flex items-center justify-center shrink-0">
+                      <MapPin size={9} className="text-[#BA1A1A]" />
                     </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-bold text-[#0D1C2E] truncate">{getStationName(effectiveDest)}</span>
-                      <span className="text-xs text-[#585E6C] truncate">{effectiveDest}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-[#0D1C2E] truncate">{getStationName(effectiveDest)}</span>
+                      <span className="text-[10px] text-[#585E6C] truncate">{effectiveDest}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => {
                       const best = sortedTrips[0];
@@ -736,7 +760,7 @@ export function TripSearchPage() {
                       }
                       setDetailTripId(String(best.id));
                     }}
-                    className="rounded-full px-[25px] py-[9px] text-base font-medium text-[#0D1C2E] border border-[#D4C5AB] hover:bg-[#F8F9FF] transition-colors"
+                    className="rounded-full px-5 py-2 text-sm font-medium text-[#0D1C2E] border border-[#D4C5AB] hover:bg-[#F8F9FF] transition-colors"
                   >
                     Chi tiết
                   </button>
@@ -750,7 +774,7 @@ export function TripSearchPage() {
                       }
                       navigate(`/seat-selection/${best.id}`);
                     }}
-                    className="rounded-full px-[25px] py-[9px] text-base font-bold border border-[#785900] text-[#785900] hover:bg-[#785900]/10 transition-colors whitespace-nowrap"
+                    className="rounded-full px-5 py-2 text-sm font-bold border border-[#785900] text-[#785900] hover:bg-[#785900]/10 transition-colors whitespace-nowrap"
                   >
                     Chọn ghế
                   </button>
@@ -759,43 +783,55 @@ export function TripSearchPage() {
             </div>
 
             {/* Stats & Highlights */}
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-2 pb-6 border-b border-[#D4C5AB]">
-                <div className="flex-1 bg-[#EFF4FF] rounded-lg flex flex-col items-center justify-center p-[21px]">
-                  <MapPin size={18} className="text-[#585E6C] mb-2" />
-                  <span className="text-xs font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-1">Khoảng cách</span>
-                  <span className="text-xl font-semibold text-[#0D1C2E]">{routeDistance}</span>
+            <div className="flex flex-col gap-2.5">
+              <div className="flex gap-1.5 pb-2.5 border-b border-[#D4C5AB]">
+                <div className="flex-1 bg-[#EFF4FF] rounded-md flex flex-col items-center justify-center p-2">
+                  <MapPin size={13} className="text-[#585E6C] mb-1" />
+                  <span className="text-[9px] font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-0.5">Khoảng cách</span>
+                  <span className="text-sm font-semibold text-[#0D1C2E]">{routeDistance}</span>
                 </div>
-                <div className="flex-1 bg-[#EFF4FF] rounded-lg flex flex-col items-center justify-center p-[21px]">
-                  <Calendar size={18} className="text-[#585E6C] mb-2" />
-                  <span className="text-xs font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-1">Thời gian</span>
-                  <span className="text-xl font-semibold text-[#0D1C2E]">{routeDuration}</span>
+                <div className="flex-1 bg-[#EFF4FF] rounded-md flex flex-col items-center justify-center p-2">
+                  <Calendar size={13} className="text-[#585E6C] mb-1" />
+                  <span className="text-[9px] font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-0.5">Thời gian</span>
+                  <span className="text-sm font-semibold text-[#0D1C2E]">{routeDuration}</span>
                 </div>
-                <div className="flex-1 bg-[#EFF4FF] rounded-lg flex flex-col items-center justify-center p-[21px]">
-                  <Bus size={18} className="text-[#585E6C] mb-2" />
-                  <span className="text-xs font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-1">Giá vé từ</span>
-                  <span className="text-xl font-bold text-[#785900]">{cheapestTripPrice != null ? `${new Intl.NumberFormat('vi-VN').format(cheapestTripPrice)}đ` : '—'}</span>
+                <div className="flex-1 bg-[#EFF4FF] rounded-md flex flex-col items-center justify-center p-2">
+                  <Bus size={13} className="text-[#585E6C] mb-1" />
+                  <span className="text-[9px] font-semibold text-[#585E6C] tracking-[0.24px] uppercase mb-0.5">Giá vé từ</span>
+                  <span className="text-sm font-bold text-[#785900]">{cheapestTripPrice != null ? `${new Intl.NumberFormat('vi-VN').format(cheapestTripPrice)}đ` : '—'}</span>
                 </div>
               </div>
-              <div className="bg-[#E5EEFF] rounded-lg flex items-center justify-between p-2">
-                <div className="flex items-center gap-2">
-                  <Bus size={14} className="text-[#0D1C2E]" />
-                  <span className="text-sm font-normal text-[#0D1C2E]">Xe đa dạng</span>
+              <div className="bg-[#E5EEFF] rounded-md flex items-center justify-between p-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Bus size={11} className="text-[#0D1C2E]" />
+                  <span className="text-xs font-normal text-[#0D1C2E]">Xe đa dạng</span>
                 </div>
-                <div className="w-px h-4 bg-[#D4C5AB]" />
-                <div className="flex items-center gap-2">
-                  <Shield size={14} className="text-[#0D1C2E]" />
-                  <span className="text-sm font-normal text-[#0D1C2E]">An toàn</span>
+                <div className="w-px h-3 bg-[#D4C5AB]" />
+                <div className="flex items-center gap-1.5">
+                  <Shield size={11} className="text-[#0D1C2E]" />
+                  <span className="text-xs font-normal text-[#0D1C2E]">An toàn</span>
                 </div>
-                <div className="w-px h-4 bg-[#D4C5AB]" />
-                <div className="flex items-center gap-2">
-                  <Headphones size={14} className="text-[#0D1C2E]" />
-                  <span className="text-sm font-normal text-[#0D1C2E]">Hỗ trợ 24/7</span>
+                <div className="w-px h-3 bg-[#D4C5AB]" />
+                <div className="flex items-center gap-1.5">
+                  <Headphones size={11} className="text-[#0D1C2E]" />
+                  <span className="text-xs font-normal text-[#0D1C2E]">Hỗ trợ 24/7</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        )}
+
+        {/* Empty state — fully covers the map (including the surrounding countries
+            visible at low zoom) while no trip is selected yet. */}
+        {!selectedTripId && (
+          <div className="absolute inset-0 z-[400] bg-[#F8F9FF] flex items-center justify-center">
+            <SearchEmptyIllustration
+              title="Chọn một chuyến xe để xem chi tiết hành trình"
+              subtitle="Bấm vào một chuyến trong danh sách bên trái — bản đồ và thông tin tuyến sẽ hiện ở đây."
+            />
+          </div>
+        )}
       </div>
 
       {/* Trip Detail Modal — same rich layout the old (unused, hardcoded) TripDetailModal used,

@@ -32,10 +32,12 @@ const BookingsPage = lazy(() => import("@/app/(main)/dashboard/bookings/page"));
 const VouchersPage = lazy(() => import("@/app/(main)/dashboard/vouchers/page"));
 const BannersPage = lazy(() => import("@/app/(main)/dashboard/banners/page"));
 const DestinationsPage = lazy(() => import("@/app/(main)/dashboard/destinations/page"));
+const HeroSlidesPage = lazy(() => import("@/app/(main)/dashboard/hero/page"));
 const EventsPage = lazy(() => import("@/app/(main)/dashboard/events/page"));
 const ReviewsPage = lazy(() => import("@/app/(main)/dashboard/reviews/page"));
 const WebsiteConfigPage = lazy(() => import("@/app/(main)/dashboard/website-config/page"));
 const ToursPage = lazy(() => import("@/app/(main)/dashboard/tours/page"));
+const HotelsAdminPage = lazy(() => import("@/app/(main)/dashboard/hotels/page"));
 const RentalsPage = lazy(() => import("@/app/(main)/dashboard/rentals/page"));
 const DeliveriesPage = lazy(() => import("@/app/(main)/dashboard/deliveries/page"));
 const PaymentsPage = lazy(() => import("@/app/(main)/dashboard/payments/page"));
@@ -267,6 +269,16 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="hero"
+                  element={
+                    <DashboardLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <HeroSlidesPage />
+                      </Suspense>
+                    </DashboardLayout>
+                  }
+                />
+                <Route
                   path="events"
                   element={
                     <DashboardLayout>
@@ -302,6 +314,16 @@ export default function App() {
                     <DashboardLayout>
                       <Suspense fallback={<div>Loading...</div>}>
                         <ToursPage />
+                      </Suspense>
+                    </DashboardLayout>
+                  }
+                />
+                <Route
+                  path="hotels"
+                  element={
+                    <DashboardLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <HotelsAdminPage />
                       </Suspense>
                     </DashboardLayout>
                   }

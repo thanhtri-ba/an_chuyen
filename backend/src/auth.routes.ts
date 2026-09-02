@@ -73,7 +73,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-      res.status(400).json({ message: 'Email and password are required' });
+      res.status(400).json({ message: 'Vui lòng nhập email và mật khẩu' });
       return;
     }
 
@@ -93,13 +93,13 @@ router.post('/login', async (req, res) => {
     });
 
     if (!user || !user.password) {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
       return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
       return;
     }
 
@@ -161,13 +161,19 @@ router.post('/forgot-password', async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const resetLink = `${frontendUrl}/reset-password?token=${rawToken}`;
 
-    // CHƯA có email provider (SMTP/Resend/SendGrid) được cấu hình trong .env —
-    // log link ra server console để test thủ công. Cần cấu hình email provider
-    // thật trước khi lên production, nếu không người dùng sẽ không nhận được gì.
-    console.log(`[forgot-password] Reset link for ${email}: ${resetLink}`);
+    // CHƯA có email provider (SMTP/Resend/SendGrid) được cấu hình trong .env.
+    // Cần cấu hình email provider thật trước khi lên production, nếu không
+    // người dùng sẽ không nhận được gì. Token KHÔNG được log hay trả về API
+    // response — cả hai đều lộ nguyên token dùng để chiếm tài khoản. Chỉ khi
+    // dev bật rõ ràng cờ riêng ALLOW_DEV_RESET_LINK (không dùng chung NODE_ENV,
+    // để tránh lộ token trên môi trường staging/preview quên set NODE_ENV) thì
+    // mới trả link ra để test thủ công cục bộ.
+    const allowDevResetLink =
+      process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_RESET_LINK === 'true';
 
-    const responseBody: Record<string, string> =
-      process.env.NODE_ENV === 'development' ? { ...genericResponse, devResetLink: resetLink } : genericResponse;
+    const responseBody: Record<string, string> = allowDevResetLink
+      ? { ...genericResponse, devResetLink: resetLink }
+      : genericResponse;
 
     res.json(responseBody);
   } catch (error) {

@@ -33,6 +33,7 @@ model User {
   bookings             Booking[]
   contacts             Contact[]
   reviews              Review[]
+  vouchers             Voucher[]
   loyalty              Loyalty?
   loyaltyHistories     LoyaltyHistory[]
   profile              Profile?
@@ -222,7 +223,11 @@ model Voucher {
   isUsed      Boolean   @default(false)
   usedAt      DateTime?
   promotion   Promotion @relation(fields: [promotionId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id])
 
+  // One redemption per user per promotion — this is what makes a code single-use
+  // per account instead of infinitely reusable by the same person.
+  @@unique([userId, promotionId])
   @@map("vouchers")
 }
 
@@ -475,6 +480,8 @@ model Booking {
   tripScheduleId  String
   status          BookingStatus @default(PENDING_PAYMENT)
   totalAmount     Float
+  promoCode       String?
+  discountAmount  Float         @default(0)
   isRoundTrip     Boolean       @default(false)
   returnBookingId String?
   pickupPointId   String?
@@ -613,6 +620,44 @@ model Banner {
   updatedAt DateTime @updatedAt
 
   @@map("banners")
+}
+
+// Homepage hero: each row is one rotating background video. `eyebrow`/`title` are set
+// per-row for admin simplicity, but the web app only reads them off the first active
+// row (ordered) — every clip shares the same headline copy, only the video rotates.
+model HeroSlide {
+  id        String   @id @default(uuid())
+  eyebrow   String   @default("Khám phá")
+  title     String
+  videoUrl  String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("hero_slides")
+}
+
+model Hotel {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  location    String
+  country     String
+  desc        String
+  about       String[]
+  imageUrl    String
+  gallery     String[]
+  rating      String   @default("5.0")
+  reviewCount String   @default("0")
+  priceFrom   Int      @default(0)
+  discount    String   @default("0%")
+  amenities   String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hotels")
 }
 
 model Destination {
@@ -760,6 +805,9 @@ model Tour {
   duration    String // e.g. 3N2Đ
   price       Float
   imageUrl    String?
+  gallery     String[]
+  itinerary   Json          @default("[]")
+  category    String        @default("beach") // 'beach' | 'mountain' | 'cultural' | 'adventure'
   isActive    Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

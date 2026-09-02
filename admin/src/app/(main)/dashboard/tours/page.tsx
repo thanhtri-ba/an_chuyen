@@ -23,12 +23,21 @@ export default function Page() {
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [category, setCategory] = useState("beach");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDuration, setEditDuration] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editCategory, setEditCategory] = useState("beach");
+
+  const CATEGORY_LABEL: Record<string, string> = {
+    beach: "Biển đảo",
+    mountain: "Núi rừng",
+    cultural: "Văn hoá",
+    adventure: "Mạo hiểm",
+  };
 
   const load = useCallback(async () => {
     try {
@@ -54,10 +63,12 @@ export default function Page() {
         duration: duration.trim(),
         price: Number(price),
         imageUrl: imageUrl.trim() || undefined,
+        category,
       });
       setTitle("");
       setDuration("");
       setPrice("");
+      setCategory("beach");
       setImageUrl("");
       setIsAddOpen(false);
       await load();
@@ -83,6 +94,7 @@ export default function Page() {
     setEditDuration(item.duration || "");
     setEditPrice(item.price != null ? String(item.price) : "");
     setEditImageUrl(item.imageUrl || "");
+    setEditCategory(item.category || "beach");
   }
 
   async function handleSaveEdit() {
@@ -94,6 +106,7 @@ export default function Page() {
         duration: editDuration.trim(),
         price: Number(editPrice),
         imageUrl: editImageUrl.trim() || undefined,
+        category: editCategory,
       });
       setEditingId(null);
       await load();
@@ -184,6 +197,21 @@ export default function Page() {
                   onChange={(e) => setImageUrl(e.target.value)}
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="tour-category" className="font-medium text-sm">
+                  Danh mục
+                </label>
+                <select
+                  id="tour-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                >
+                  {Object.entries(CATEGORY_LABEL).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -222,6 +250,18 @@ export default function Page() {
             <div className="flex flex-col gap-2">
               <label className="font-medium text-sm">Link ảnh (tuỳ chọn)</label>
               <Input value={editImageUrl} onChange={(e) => setEditImageUrl(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-sm">Danh mục</label>
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                {Object.entries(CATEGORY_LABEL).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
             </div>
           </div>
           <DialogFooter>
@@ -276,6 +316,7 @@ export default function Page() {
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[300px]">Tour</TableHead>
+                <TableHead>Danh mục</TableHead>
                 <TableHead>Thời lượng</TableHead>
                 <TableHead>Giá</TableHead>
                 <TableHead>Trạng thái</TableHead>
@@ -285,7 +326,7 @@ export default function Page() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                     Chưa có tour nào
                   </TableCell>
                 </TableRow>
@@ -300,6 +341,7 @@ export default function Page() {
                         <span className="font-semibold text-foreground">{t.title}</span>
                       </div>
                     </TableCell>
+                    <TableCell className="text-sm">{CATEGORY_LABEL[t.category] || t.category}</TableCell>
                     <TableCell className="text-sm">{t.duration}</TableCell>
                     <TableCell className="text-sm">{Number(t.price).toLocaleString("vi-VN")}đ</TableCell>
                     <TableCell>

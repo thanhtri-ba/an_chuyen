@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy, memo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Header } from './shared/components/Header';
 import { Footer } from './shared/components/Footer';
 import { ErrorBoundary } from './shared/components/ErrorBoundary';
+import { PageTransition } from './shared/components/PageTransition';
+import { BusLoadingScreen } from './shared/components/BusLoadingScreen';
 import { Toaster } from './design-system/components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './shared/components/ProtectedRoute';
@@ -30,6 +32,9 @@ const LoyaltyPage = lazy(() => import('./features/loyalty/pages/LoyaltyPage').th
 const DeliveryPage = lazy(() => import('./features/services/pages/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const RentalPage = lazy(() => import('./features/services/pages/RentalPage').then(m => ({ default: m.RentalPage })));
 const TourPage = lazy(() => import('./features/services/pages/TourPage').then(m => ({ default: m.TourPage })));
+const HotelsPage = lazy(() => import('./features/services/pages/HotelsPage').then(m => ({ default: m.HotelsPage })));
+const HotelDetailPage = lazy(() => import('./features/services/pages/HotelDetailPage').then(m => ({ default: m.HotelDetailPage })));
+const TourDetailPage = lazy(() => import('./features/services/pages/TourDetailPage').then(m => ({ default: m.TourDetailPage })));
 const EventsPage = lazy(() => import('./features/services/pages/EventsPage').then(m => ({ default: m.EventsPage })));
 const DestinationDetailPage = lazy(() => import('./features/destinations/pages/DestinationDetailPage').then(m => ({ default: m.DestinationDetailPage })));
 
@@ -37,12 +42,10 @@ const DestinationDetailPage = lazy(() => import('./features/destinations/pages/D
 const FloatingChatLazy = lazy(() => import('./shared/components/FloatingChat').then(m => ({ default: m.FloatingChat })));
 const CookieConsentLazy = lazy(() => import('./shared/components/CookieConsent').then(m => ({ default: m.CookieConsent })));
 
-// Suspense fallback component
-const PageLoadingFallback = memo(() => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="animate-pulse text-primary font-bold tracking-widest uppercase text-sm">Đang tải...</div>
-  </div>
-));
+// Suspense fallback — shown full-screen while a lazy page chunk loads (App.tsx wraps
+// every <Routes> in this Suspense boundary, so every navigation to a not-yet-loaded
+// route hits it).
+const PageLoadingFallback = memo(() => <BusLoadingScreen />);
 
 const AppRoutes = memo(() => {
   const location = useLocation();
@@ -63,30 +66,33 @@ const AppRoutes = memo(() => {
           <Suspense fallback={<PageLoadingFallback />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><HomePage /></motion.div>} />
-                <Route path="/search" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><TripSearchPage /></motion.div>} />
-                <Route path="/seat-selection/:tripScheduleId" element={<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><SeatSelectionPage /></motion.div>} />
-                <Route path="/payment" element={<ProtectedRoute><motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><PaymentPage /></motion.div></ProtectedRoute>} />
-                <Route path="/booking-confirmation" element={<ProtectedRoute><motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}><BookingConfirmationPage /></motion.div></ProtectedRoute>} />
-                <Route path="/auth" element={<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}><AuthPage /></motion.div>} />
-                <Route path="/forgot-password" element={<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}><ForgotPasswordPage /></motion.div>} />
-                <Route path="/reset-password" element={<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}><ResetPasswordPage /></motion.div>} />
-                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                <Route path="/my-bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
-                <Route path="/offers" element={<OffersPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/blog" element={<BlogPage />} />
-                <Route path="/blog/:slug" element={<BlogDetailPage />} />
-                <Route path="/schedule" element={<SchedulePage />} />
-                <Route path="/loyalty" element={<LoyaltyPage />} />
-                <Route path="/delivery" element={<DeliveryPage />} />
-                <Route path="/rental" element={<RentalPage />} />
-                <Route path="/tour" element={<TourPage />} />
-                <Route path="/tours" element={<TourPage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/destinations/:slug" element={<DestinationDetailPage />} />
+                <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+                <Route path="/search" element={<PageTransition><TripSearchPage /></PageTransition>} />
+                <Route path="/seat-selection/:tripScheduleId" element={<PageTransition><SeatSelectionPage /></PageTransition>} />
+                <Route path="/payment" element={<ProtectedRoute><PageTransition><PaymentPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/booking-confirmation" element={<ProtectedRoute><PageTransition><BookingConfirmationPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
+                <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />
+                <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
+                <Route path="/profile" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
+                <Route path="/my-bookings" element={<ProtectedRoute><PageTransition><MyBookingsPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/offers" element={<PageTransition><OffersPage /></PageTransition>} />
+                <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
+                <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
+                <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
+                <Route path="/blog" element={<PageTransition><BlogPage /></PageTransition>} />
+                <Route path="/blog/:slug" element={<PageTransition><BlogDetailPage /></PageTransition>} />
+                <Route path="/schedule" element={<PageTransition><SchedulePage /></PageTransition>} />
+                <Route path="/loyalty" element={<PageTransition><LoyaltyPage /></PageTransition>} />
+                <Route path="/delivery" element={<PageTransition><DeliveryPage /></PageTransition>} />
+                <Route path="/rental" element={<PageTransition><RentalPage /></PageTransition>} />
+                <Route path="/tour" element={<PageTransition><TourPage /></PageTransition>} />
+                <Route path="/tours" element={<PageTransition><TourPage /></PageTransition>} />
+                <Route path="/tour/:id" element={<PageTransition><TourDetailPage /></PageTransition>} />
+                <Route path="/hotels" element={<PageTransition><HotelsPage /></PageTransition>} />
+                <Route path="/hotels/:slug" element={<PageTransition><HotelDetailPage /></PageTransition>} />
+                <Route path="/events" element={<PageTransition><EventsPage /></PageTransition>} />
+                <Route path="/destinations/:slug" element={<PageTransition><DestinationDetailPage /></PageTransition>} />
               </Routes>
             </AnimatePresence>
           </Suspense>

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, Wifi, Usb, Droplets, Phone, Wind, ShieldCheck, Search, Ticket, Tag, HelpCircle, Bus, X, Armchair, Info, PenLine, Snowflake, Users, Layers, Star, Calendar, ChevronDown, Trash2, Plus, Minus, Lock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Wifi, Usb, Droplets, Phone, Wind, ShieldCheck, Search, Ticket, Tag, HelpCircle, Bus, X, Armchair, Info, PenLine, Snowflake, Users, Layers, Star, ChevronDown, Trash2, Plus, Minus, Lock, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
+import { DatePicker } from '../../../shared/components/DatePicker';
 
 // --- Types & Mocks ---
 interface SeatData { id: string; floor: number; status: 'available' | 'booked' | 'blocked' | 'held-by-me'; price: number; }
@@ -173,11 +174,7 @@ function DateField({ label, value, onChange, disabled }: { label:string; value:s
   return (
     <div>
       <InfoLabel>{label}</InfoLabel>
-      <div className="relative">
-        <Calendar size={16} className="absolute left-[13px] top-1/2 -translate-y-1/2 text-[#6B7280] pointer-events-none" />
-        <input type="date" value={value} disabled={disabled} max={today} min={minDob} onChange={e=>onChange(e.target.value)}
-          className={`${infoInputBase} ${infoInputFocus} pl-[41px]`} />
-      </div>
+      <DatePicker value={value} onChange={onChange} disabled={disabled} max={today} min={minDob} />
     </div>
   );
 }

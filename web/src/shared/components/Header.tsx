@@ -261,7 +261,6 @@ export function Header() {
           <nav className="hidden lg:flex items-center gap-10 text-sm font-medium tracking-wide">
             {[
               { to: '/search', label: t('roamora.nav.destinations') },
-              { to: '/tour', label: t('roamora.nav.experiences') },
               { to: '/hotels', label: t('roamora.nav.hotels') },
               { to: '/tour', label: t('roamora.nav.tours') },
               { to: '/offers', label: t('roamora.nav.deals') },

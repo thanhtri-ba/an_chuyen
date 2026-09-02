@@ -17,11 +17,12 @@ interface CreateBookingParams {
   totalAmount?: number | null;
   pickupPointId?: string | null;
   dropoffPointId?: string | null;
+  promoCode?: string | null;
 }
 
 export class BookingService {
   static async createBooking(data: CreateBookingParams) {
-    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId } = data;
+    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId, promoCode } = data;
 
     // Lớp 3: Idempotency (Chống Spam). 
     // Trong thực tế, có thể lưu idempotencyKey vào một bảng riêng hoặc cột trong Booking để check.
@@ -89,6 +90,34 @@ export class BookingService {
       // Thêm phí dịch vụ (Service Fee = 10000)
       totalAmount += 10000;
 
+      // Mã giảm giá: backend tự tra Promotion theo code, tự tính % giảm — không tin
+      // bất kỳ số tiền/phần trăm nào client gửi lên. Sai code / hết hạn / chưa active
+      // đều là lỗi rõ ràng (không âm thầm bỏ qua), để khách biết mã không dùng được.
+      let discountAmount = 0;
+      let appliedPromoCode: string | null = null;
+      let promoIdToRedeem: string | null = null;
+      if (promoCode) {
+        const promo = await tx.promotion.findUnique({ where: { code: promoCode.trim().toUpperCase() } });
+        if (!promo || !promo.isActive || promo.validUntil < new Date()) {
+          throw new Error('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
+        }
+        // One use per account: a Voucher row is created the first time this user
+        // redeems this promotion, marked isUsed — the unique(userId, promotionId)
+        // constraint means a second attempt hits this same row already isUsed=true.
+        const existingVoucher = await tx.voucher.findUnique({
+          where: { userId_promotionId: { userId, promotionId: promo.id } },
+        });
+        if (existingVoucher?.isUsed) {
+          throw new Error('Bạn đã sử dụng mã giảm giá này rồi. Mỗi tài khoản chỉ dùng được một lần.');
+        }
+        const rawDiscount = totalAmount * (promo.discountPct / 100);
+        discountAmount = promo.maxDiscount != null ? Math.min(rawDiscount, promo.maxDiscount) : rawDiscount;
+        discountAmount = Math.round(discountAmount);
+        totalAmount = Math.max(0, totalAmount - discountAmount);
+        appliedPromoCode = promo.code;
+        promoIdToRedeem = promo.id;
+      }
+
       // Thanh toán bằng Ví An Chuyến: trừ tiền ngay trong transaction này —
       // nếu số dư không đủ, toàn bộ booking bị huỷ (rollback), ghế không bị khoá.
       const isWalletPayment = paymentMethod ? WALLET_METHOD_VALUES.has(paymentMethod) : false;
@@ -132,6 +161,8 @@ export class BookingService {
           userId,
           tripScheduleId,
           totalAmount, // Giá TỰ TÍNH của Backend, tuyệt đối an toàn
+          promoCode: appliedPromoCode,
+          discountAmount,
           status: isWalletPayment ? 'CONFIRMED' : 'PENDING_PAYMENT',
           pickupPointId: pickupPointId || null,
           dropoffPointId: dropoffPointId || null,
@@ -150,6 +181,16 @@ export class BookingService {
         },
         include: { passengers: true }
       });
+
+      // Đánh dấu voucher đã dùng — cùng transaction với booking, nên nếu booking
+      // rollback (hết ghế, ví không đủ tiền...) thì mã cũng KHÔNG bị tính là đã dùng.
+      if (promoIdToRedeem) {
+        await tx.voucher.upsert({
+          where: { userId_promotionId: { userId, promotionId: promoIdToRedeem } },
+          update: { isUsed: true, usedAt: new Date() },
+          create: { userId, promotionId: promoIdToRedeem, isUsed: true, usedAt: new Date() },
+        });
+      }
 
       // 5. Tạo vé (Ticket) cho từng hành khách
       // Cast booking to any to bypass TS error if Prisma types are outdated

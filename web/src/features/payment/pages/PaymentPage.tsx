@@ -47,6 +47,11 @@ export function PaymentPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const [promoInput, setPromoInput] = useState('');
+  const [promoChecking, setPromoChecking] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; title: string; discountPct: number; maxDiscount: number | null } | null>(null);
+
   useEffect(() => {
     const raw = sessionStorage.getItem('pending_booking');
     if (raw) {
@@ -81,7 +86,37 @@ export function PaymentPage() {
 
   const seatsTotal = pendingBooking?.seatsTotal || 0;
   const amenitiesTotal = pendingBooking?.amenitiesTotal || 0;
-  const finalTotal = seatsTotal + amenitiesTotal;
+  const subtotal = seatsTotal + amenitiesTotal;
+
+  // Preview only — the actual charge is recomputed and re-validated server-side in
+  // booking.service.ts, so this local math is never trusted for the real payment.
+  const discountAmount = appliedPromo
+    ? Math.round(Math.min(subtotal * (appliedPromo.discountPct / 100), appliedPromo.maxDiscount ?? Infinity))
+    : 0;
+  const finalTotal = Math.max(0, subtotal - discountAmount);
+
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+    setPromoChecking(true);
+    setPromoError('');
+    try {
+      const res = await api.get(`/promotions/validate/${encodeURIComponent(code)}`);
+      setAppliedPromo(res.data);
+      toast.success(`Đã áp dụng mã ${res.data.code}`);
+    } catch (error: any) {
+      setAppliedPromo(null);
+      setPromoError(error?.response?.data?.message || 'Mã giảm giá không hợp lệ.');
+    } finally {
+      setPromoChecking(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoError('');
+  };
 
   const handlePayment = async () => {
     if (!pendingBooking) { toast.error('Không tìm thấy thông tin đặt vé. Vui lòng chọn ghế lại.'); return; }
@@ -97,6 +132,7 @@ export function PaymentPage() {
         pickupPointId: pendingBooking.pickupPoint,
         dropoffPointId: pendingBooking.dropoffPoint,
         notes: pendingBooking.notes || '',
+        promoCode: appliedPromo?.code,
       });
 
       const booking = res.data?.data;
@@ -309,6 +345,46 @@ export function PaymentPage() {
                       <span className="text-[#4B5563]">Phí dịch vụ</span>
                       <span className="font-medium text-[#1F2937]">0đ</span>
                     </div>
+                    {appliedPromo && (
+                      <div className="flex items-start justify-between text-sm">
+                        <span className="text-[#16A34A]">Giảm giá ({appliedPromo.code})</span>
+                        <span className="font-medium text-[#16A34A]">-{fmt(discountAmount)}đ</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Promo code */}
+                  <div className="border-t border-dashed border-[#E5E7EB] pt-4">
+                    {appliedPromo ? (
+                      <div className="flex items-center justify-between gap-2 bg-[#F0FDF4] border border-[#DCFCE7] rounded-lg px-3 py-2.5">
+                        <div>
+                          <div className="text-sm font-bold text-[#15803D]">{appliedPromo.code}</div>
+                          <div className="text-xs text-[#16A34A]">{appliedPromo.title}</div>
+                        </div>
+                        <button onClick={handleRemovePromo} className="text-xs font-medium text-[#6B7280] hover:text-[#1F2937] transition-colors shrink-0">Bỏ mã</button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={promoInput}
+                            onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
+                            onKeyDown={e => { if (e.key === 'Enter') handleApplyPromo(); }}
+                            placeholder="Nhập mã giảm giá"
+                            className="flex-1 min-w-0 border border-[#D1D5DB] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20"
+                          />
+                          <button
+                            onClick={handleApplyPromo}
+                            disabled={!promoInput.trim() || promoChecking}
+                            className="shrink-0 px-4 py-2 rounded-lg text-sm font-bold bg-[#1F2937] text-white hover:bg-[#111827] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {promoChecking ? 'Đang kiểm tra...' : 'Áp dụng'}
+                          </button>
+                        </div>
+                        {promoError && <span className="text-xs text-[#EF4444]">{promoError}</span>}
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-t border-[#E5E7EB] pt-4 flex items-end justify-between">

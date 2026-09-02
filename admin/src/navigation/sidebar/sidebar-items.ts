@@ -1,10 +1,12 @@
 import {
+  Building2,
   Bus,
   Calendar,
   Car,
   ChartColumn,
   Compass,
   CreditCard,
+  Film,
   Forklift,
   Gift,
   IdCard,
@@ -106,6 +108,7 @@ export const sidebarItems: NavGroup[] = [
       { id: "vouchers", title: "Voucher", url: "/dashboard/vouchers", icon: Ticket },
       { id: "destinations", title: "Điểm Đến", url: "/dashboard/destinations", icon: Compass },
       { id: "banners", title: "Banner", url: "/dashboard/banners", icon: Image },
+      { id: "hero", title: "Video Trang Chủ", url: "/dashboard/hero", icon: Film },
       { id: "events", title: "Sự Kiện", url: "/dashboard/events", icon: Gift },
       { id: "reviews", title: "Đánh Giá", url: "/dashboard/reviews", icon: Star },
     ],
@@ -115,6 +118,7 @@ export const sidebarItems: NavGroup[] = [
     label: "Dịch Vụ Khác",
     items: [
       { id: "tours", title: "Tour", url: "/dashboard/tours", icon: MapPinned },
+      { id: "hotels", title: "Khách Sạn", url: "/dashboard/hotels", icon: Building2 },
       { id: "rentals", title: "Xe Tự Lái", url: "/dashboard/rentals", icon: Car },
       { id: "deliveries", title: "Giao Hàng", url: "/dashboard/deliveries", icon: Package },
       { id: "payments", title: "Thanh Toán", url: "/dashboard/payments", icon: CreditCard },

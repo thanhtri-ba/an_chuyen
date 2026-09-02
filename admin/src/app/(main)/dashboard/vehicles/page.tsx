@@ -161,7 +161,7 @@ export default function Page() {
     const m = /^T(\d+)-(\d+)([A-Z])$/.exec(s.seatNumber);
     return m ? { ...s, floor: Number(m[1]), row: Number(m[2]), col: m[3] } : { ...s, floor: 1, row: 0, col: "?" };
   });
-  const floorNums = Array.from(new Set(parsedSeats.map((s: any) => s.floor))).sort((a: number, b: number) => a - b);
+  const floorNums = Array.from(new Set<number>(parsedSeats.map((s: any) => s.floor))).sort((a, b) => a - b);
   const seatStatusStyle: Record<string, string> = {
     AVAILABLE: "bg-white border-border text-foreground",
     LOCKED: "bg-amber-100 border-amber-300 text-amber-800",
@@ -465,10 +465,10 @@ export default function Page() {
                 ) : (
                   <div className="space-y-6">
                     {floorNums.map((floor) => {
-                      const colsForFloor = Array.from(new Set(parsedSeats.filter((s: any) => s.floor === floor).map((s: any) => s.col))).sort();
+                      const colsForFloor = Array.from(new Set<string>(parsedSeats.filter((s: any) => s.floor === floor).map((s: any) => s.col))).sort();
                       const rowsForFloor = Array.from(
-                        new Set(parsedSeats.filter((s: any) => s.floor === floor).map((s: any) => s.row)),
-                      ).sort((a: number, b: number) => a - b);
+                        new Set<number>(parsedSeats.filter((s: any) => s.floor === floor).map((s: any) => s.row)),
+                      ).sort((a, b) => a - b);
                       const midCol = Math.ceil(colsForFloor.length / 2);
                       return (
                         <div key={floor}>
