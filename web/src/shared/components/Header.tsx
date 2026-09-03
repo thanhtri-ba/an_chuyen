@@ -5,6 +5,7 @@ import { cn } from '../utils/cn';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BrandMark } from './BrandMark';
 
 const RightDrawer = ({ open, onClose, user, notifications, t, i18n, onLogout, onMarkAllRead }: any) => (
   <AnimatePresence>
@@ -55,7 +56,8 @@ const MobileMenuDrawer = ({ open, onClose, user, avatarLetter, t, i18n, onLogout
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="lg:hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={onClose} />
         <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="lg:hidden fixed inset-y-0 right-0 z-[70] w-[85%] max-w-sm bg-white shadow-2xl flex flex-col text-[#1a1a1a] rounded-l-[2rem] overflow-hidden">
           <div className="p-6 flex items-center justify-between border-b border-gray-100">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              <BrandMark className="w-6 h-6 text-primary" />
               <span className="text-2xl font-medium font-display text-primary">An Chuyến</span>
             </div>
             <button className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500" onClick={onClose}><X className="w-6 h-6" /></button>
@@ -252,7 +254,7 @@ export function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <span className="text-3xl font-display font-medium tracking-tight flex items-center gap-2">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={!scrolled && isHome ? 'text-white' : 'text-primary'}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.3 2.6c-.2.4-.1.9.3 1.1l7.3 3.8-2 2-3.4-.6c-.5-.1-.9.2-1.1.5l-1.1 2.3c-.2.4 0 .9.4 1.1L8 21l8.5-4.7c.4.2.9.4 1.3.4z"/></svg>
+              <BrandMark className={cn('w-6 h-6 shrink-0', !scrolled && isHome ? 'text-white' : 'text-primary')} />
               An Chuyến
             </span>
           </Link>

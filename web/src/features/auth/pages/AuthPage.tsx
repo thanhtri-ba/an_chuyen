@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../../../contexts/AuthContext';
+import { BrandMark } from '../../../shared/components/BrandMark';
 import api from '../../../lib/api';
 
 const GOOGLE_LOGIN_ENABLED = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
@@ -126,7 +127,8 @@ export function AuthPage() {
 
           {/* TOP nav overlay */}
           <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-8 z-10">
-            <Link to="/" className="font-display text-3xl font-bold text-white tracking-wide">
+            <Link to="/" className="font-display text-3xl font-bold text-white tracking-wide flex items-center gap-2">
+              <BrandMark className="w-7 h-7 text-white" />
               An Chuyến
             </Link>
           </div>
@@ -172,7 +174,8 @@ export function AuthPage() {
 
         {/* top bar */}
         <div className="flex items-center justify-between p-8 lg:px-16 relative z-10">
-          <Link to="/" className="lg:hidden font-display text-2xl font-bold text-[#1a1a1a]">
+          <Link to="/" className="lg:hidden font-display text-2xl font-bold text-[#1a1a1a] flex items-center gap-2">
+            <BrandMark className="w-6 h-6 text-[#1a1a1a]" />
             An Chuyến
           </Link>
           <span className="hidden lg:block" />
