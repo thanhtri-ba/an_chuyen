@@ -2,9 +2,10 @@ import { PrismaClient, SeatStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// The web UI currently only offers wallet ('busz-wallet') and cash-on-delivery
-// ('cod') as working payment methods — VNPay/Momo/Card are not wired to a real
-// gateway yet, so any other value is treated as COD (pay later, admin confirms).
+// Ví ('busz-wallet') là phương thức duy nhất trừ tiền NGAY trong transaction
+// tạo booking (xem isWalletPayment bên dưới) — VNPay/MoMo/chuyển khoản đều
+// tạo booking ở PENDING_PAYMENT rồi chờ gateway/webhook xác nhận riêng
+// (vnpay.routes.ts, momo.routes.ts, bank-transfer.routes.ts).
 const WALLET_METHOD_VALUES = new Set(['busz-wallet', 'WALLET', 'wallet']);
 
 interface CreateBookingParams {

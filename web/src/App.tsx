@@ -17,6 +17,9 @@ const SeatSelectionPage = lazy(() => import('./features/seat-selection/pages/Sea
 const PaymentPage = lazy(() => import('./features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const BookingConfirmationPage = lazy(() => import('./features/booking-confirmation/pages/BookingConfirmationPage').then(m => ({ default: m.BookingConfirmationPage })));
 const VnpayResultPage = lazy(() => import('./features/payment/pages/VnpayResultPage').then(m => ({ default: m.VnpayResultPage })));
+const MomoResultPage = lazy(() => import('./features/payment/pages/MomoResultPage').then(m => ({ default: m.MomoResultPage })));
+const MockGatewayPage = lazy(() => import('./features/payment/pages/MockGatewayPage').then(m => ({ default: m.MockGatewayPage })));
+const MockResultPage = lazy(() => import('./features/payment/pages/MockResultPage').then(m => ({ default: m.MockResultPage })));
 const BankTransferQRPage = lazy(() => import('./features/payment/pages/BankTransferQRPage').then(m => ({ default: m.BankTransferQRPage })));
 const AuthPage = lazy(() => import('./features/auth/pages/AuthPage').then(m => ({ default: m.AuthPage })));
 const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
@@ -59,6 +62,9 @@ const AppRoutes = memo(() => {
                            location.pathname.startsWith('/seat-selection') ||
                            location.pathname === '/payment' ||
                            location.pathname === '/payment/vnpay-result' ||
+                           location.pathname === '/payment/momo-result' ||
+                           location.pathname === '/payment/mock-gateway' ||
+                           location.pathname === '/payment/mock-result' ||
                            location.pathname === '/payment/bank-transfer' ||
                            location.pathname === '/booking-confirmation';
   // Search page is a fixed-height split view (map + results) with no scroll to reach a footer
@@ -78,6 +84,9 @@ const AppRoutes = memo(() => {
                 <Route path="/payment" element={<ProtectedRoute><PageTransition><PaymentPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/booking-confirmation" element={<ProtectedRoute><PageTransition><BookingConfirmationPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/payment/vnpay-result" element={<ProtectedRoute><PageTransition><VnpayResultPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/payment/momo-result" element={<ProtectedRoute><PageTransition><MomoResultPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/payment/mock-gateway" element={<ProtectedRoute><PageTransition><MockGatewayPage /></PageTransition></ProtectedRoute>} />
+                <Route path="/payment/mock-result" element={<ProtectedRoute><PageTransition><MockResultPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/payment/bank-transfer" element={<ProtectedRoute><PageTransition><BankTransferQRPage /></PageTransition></ProtectedRoute>} />
                 <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
                 <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />

@@ -110,6 +110,30 @@ export const confirmCODPayment = async (req: Request, res: Response, next: NextF
   }
 };
 
+export const rejectPayment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { paymentId } = req.body;
+    const adminEmail = (req as any).user?.email;
+
+    if (!paymentId) {
+      return res.status(400).json({ error: 'Missing required field: paymentId' });
+    }
+    if (!adminEmail) {
+      return res.status(400).json({ error: 'Authenticated admin has no email on record' });
+    }
+
+    const payment = await paymentService.rejectPayment(paymentId, adminEmail);
+
+    res.json({
+      success: true,
+      message: 'Payment rejected',
+      data: payment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const listPendingPayments = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const payments = await paymentService.listPendingPayments();

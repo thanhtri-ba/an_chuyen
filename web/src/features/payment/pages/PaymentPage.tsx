@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck, Ticket, Tag, HelpCircle, Search, PenLine, Users, CreditCard, Info,
-  Phone, ChevronRight, Star, Loader2, Check, Lock, RotateCcw, Headphones, Zap, Landmark, Store, QrCode,
+  Phone, ChevronRight, Star, Loader2, Check, Lock, RotateCcw, Headphones, Zap, QrCode, FlaskConical,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
@@ -18,18 +18,25 @@ interface TripScheduleDetail {
 
 const AMENITY_PRICES = { water: 10000, towel: 5000, pillow: 30000 };
 
+// Chỉ liệt kê các phương thức có gateway thật đứng sau — MoMo/VNPay redirect
+// sang cổng thật (momo.routes.ts/vnpay.routes.ts), bank_transfer hiện mã QR
+// VietQR thật. Không hiện ZaloPay/ShopeePay/Thẻ/ATM/cửa hàng tiện lợi vì chưa
+// có gateway nào xử lý — hiện nút cho các phương thức đó sẽ đánh lừa khách là
+// đã thanh toán trong khi tiền chưa từng được thu.
 const WALLETS = [
   { key: 'momo', label: 'MoMo', logo: '/payment/momo.jpg' },
-  { key: 'zalopay', label: 'ZaloPay', logo: '/payment/zalopay.jpg' },
   { key: 'vnpay', label: 'VNPay', logo: '/payment/vnpay.jpg' },
-  { key: 'shopeepay', label: 'ShopeePay', logo: '/payment/shopeepay.jpg' },
 ];
 
 const OTHER_METHODS = [
   { key: 'bank_transfer', label: 'Chuyển khoản ngân hàng (Quét mã QR)', icon: QrCode, logos: [] as string[] },
-  { key: 'card', label: 'Visa / Mastercard / JCB', icon: CreditCard, logos: ['/payment/visa.jpg', '/payment/mastercard.svg'] },
-  { key: 'atm', label: 'Thẻ ATM nội địa / Internet Banking', icon: Landmark, logos: [] as string[] },
-  { key: 'store', label: 'Thanh toán tại cửa hàng tiện lợi', icon: Store, logos: ['/payment/circlek.jpg', '/payment/ministop.png'] },
+  // Chỉ hiện khi VITE_MOCK_PAYMENTS_ENABLED=true — cổng giả lập dùng cho demo/
+  // bảo vệ đồ án khi chưa có tài khoản merchant VNPay/MoMo thật (xem
+  // mock-gateway.routes.ts). Backend cũng tự chặn nếu MOCK_PAYMENTS_ENABLED
+  // không bật, nên ẩn nút này ở FE chỉ là UX, không phải lớp bảo vệ chính.
+  ...(import.meta.env.VITE_MOCK_PAYMENTS_ENABLED === 'true'
+    ? [{ key: 'mock', label: 'Thanh toán giả lập (Demo)', icon: FlaskConical, logos: [] as string[] }]
+    : []),
 ];
 
 const COMMITMENTS = [
@@ -154,16 +161,18 @@ export function PaymentPage() {
         departureTime: tripDetail?.departureTime,
       }));
 
-      if (selectedMethod === 'vnpay') {
+      if (selectedMethod === 'vnpay' || selectedMethod === 'momo' || selectedMethod === 'mock') {
         // Booking vừa tạo ở trạng thái chờ thanh toán (ghế đang giữ, chưa
-        // BOOKED hẳn) — chuyển sang cổng VNPay thật, KHÔNG xoá pending_booking
-        // và KHÔNG coi là đã đặt xong cho tới khi VNPay xác nhận (return URL).
-        const vnpayRes = await api.post('/vnpay/create-url', { bookingId: booking.id });
-        if (vnpayRes.data?.paymentUrl) {
-          window.location.href = vnpayRes.data.paymentUrl;
+        // BOOKED hẳn) — chuyển sang cổng thật tương ứng, KHÔNG xoá
+        // pending_booking và KHÔNG coi là đã đặt xong cho tới khi cổng xác
+        // nhận (return URL).
+        const createUrlPath = selectedMethod === 'mock' ? '/mock-payment/create-url' : `/${selectedMethod}/create-url`;
+        const gatewayRes = await api.post(createUrlPath, { bookingId: booking.id });
+        if (gatewayRes.data?.paymentUrl) {
+          window.location.href = gatewayRes.data.paymentUrl;
           return;
         }
-        throw new Error('Không thể tạo giao dịch VNPay');
+        throw new Error(`Không thể tạo giao dịch ${selectedMethod === 'vnpay' ? 'VNPay' : selectedMethod === 'momo' ? 'MoMo' : 'giả lập'}`);
       }
 
       if (selectedMethod === 'bank_transfer') {

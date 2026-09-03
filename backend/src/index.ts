@@ -88,6 +88,8 @@ import { deliveryRoutes } from './modules/delivery/delivery.routes';
 import seatRoutes from './modules/seat/seat.routes';
 import paymentRoutes from './modules/payment/payment.routes';
 import { vnpayRoutes } from './modules/payment/vnpay.routes';
+import { momoRoutes } from './modules/payment/momo.routes';
+import { mockGatewayRoutes } from './modules/payment/mock-gateway.routes';
 import { bankTransferRoutes } from './modules/payment/bank-transfer.routes';
 
 app.use('/api/auth', authLimiter, authRoutes);
@@ -110,6 +112,8 @@ app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/trip-schedules', seatRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/vnpay', vnpayRoutes);
+app.use('/api/momo', momoRoutes);
+app.use('/api/mock-payment', mockGatewayRoutes);
 app.use('/api/bank-transfer', bankTransferRoutes);
 
 app.get('/', (req, res) => {
