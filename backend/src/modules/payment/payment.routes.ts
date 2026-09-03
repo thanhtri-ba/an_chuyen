@@ -5,6 +5,7 @@ import {
   getPaymentByBooking,
   updatePaymentStatus,
   confirmCODPayment,
+  rejectPayment,
   listPendingPayments,
 } from './payment.controller';
 import { verifyAccessToken } from '../../middleware/auth.middleware';
@@ -24,6 +25,7 @@ router.get('/booking/:bookingId', verifyAccessToken as any, getPaymentByBooking)
 // again without also adding real gateway signature verification.
 router.patch('/:paymentId/status', verifyAccessToken as any, requireAdmin as any, updatePaymentStatus);
 router.post('/cod/confirm', verifyAccessToken as any, requireAdmin as any, confirmCODPayment);
+router.post('/admin/reject', verifyAccessToken as any, requireAdmin as any, rejectPayment);
 router.get('/admin/pending', verifyAccessToken as any, requireAdmin as any, listPendingPayments);
 
 export default router;

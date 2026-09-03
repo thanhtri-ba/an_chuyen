@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Mail, Lock, Eye, EyeOff, ChevronLeft, ChevronRight, Globe, ArrowRight } from 'lucide-react';
@@ -26,10 +26,22 @@ export function AuthPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slide, setSlide] = useState(0);
+  const googleWrapRef = useRef<HTMLDivElement>(null);
+  const [googleWidth, setGoogleWidth] = useState(360);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';
   const { login } = useAuth();
+
+  useEffect(() => {
+    const el = googleWrapRef.current;
+    if (!el) return;
+    const update = () => setGoogleWidth(Math.round(el.clientWidth));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const prevSlide = () => setSlide(s => (s - 1 + SLIDES.length) % SLIDES.length);
   const nextSlide = () => setSlide(s => (s + 1) % SLIDES.length);
@@ -259,11 +271,14 @@ export function AuthPage() {
                 {/* Google Sign-In — hiển thị nút thật nếu VITE_GOOGLE_CLIENT_ID đã cấu hình,
                     ngược lại báo trạng thái rõ ràng thay vì một nút bấm không phản hồi gì. */}
                 {GOOGLE_LOGIN_ENABLED ? (
-                  <div className="w-full flex justify-center [&>div]:w-full">
+                  <div ref={googleWrapRef} className="w-full flex justify-center overflow-hidden rounded-xl">
                     <GoogleLogin
+                      key={googleWidth}
                       onSuccess={handleGoogleSuccess}
                       onError={() => { setError('Không thể đăng nhập bằng Google. Vui lòng thử lại.'); }}
-                      width="100%"
+                      width={googleWidth}
+                      shape="pill"
+                      size="large"
                       text={isLogin ? 'signin_with' : 'signup_with'}
                       locale="vi"
                     />

@@ -36,6 +36,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   wallet: "Ví An Chuyến",
   cod: "Thanh toán khi lên xe (COD)",
   bank_transfer: "Chuyển khoản ngân hàng (QR)",
+  mock: "Thanh toán giả lập",
 };
 
 export default function Page() {
@@ -254,17 +255,24 @@ export default function Page() {
                     <TableCell className="font-medium text-foreground">{r.totalAmount.toLocaleString("vi-VN")} đ</TableCell>
                     <TableCell className="text-sm">
                       {r.paymentMethod ? (
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "font-medium shadow-none",
-                            r.paymentMethod === "store" || r.paymentMethod === "cod"
-                              ? "border-orange-200 bg-orange-50 text-orange-700"
-                              : "border-border bg-muted/40 text-muted-foreground",
+                        <div className="flex items-center gap-1.5">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "font-medium shadow-none",
+                              r.paymentMethod === "store" || r.paymentMethod === "cod"
+                                ? "border-orange-200 bg-orange-50 text-orange-700"
+                                : "border-border bg-muted/40 text-muted-foreground",
+                            )}
+                          >
+                            {PAYMENT_METHOD_LABEL[r.paymentMethod] || r.paymentMethod}
+                          </Badge>
+                          {r.paymentMethod === "mock" && (
+                            <Badge variant="outline" className="border-purple-200 bg-purple-50 font-semibold text-[10px] text-purple-700 shadow-none">
+                              DEMO
+                            </Badge>
                           )}
-                        >
-                          {PAYMENT_METHOD_LABEL[r.paymentMethod] || r.paymentMethod}
-                        </Badge>
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}

@@ -8,7 +8,9 @@ const prisma = new PrismaClient();
 // Thông tin tài khoản ngân hàng để sinh mã QR VietQR (img.vietqr.io — dịch vụ
 // công khai, không cần đăng ký/API key). Mặc định admin xác nhận thủ công
 // giống luồng COD (POST /api/payments/cod/confirm); nếu cấu hình SEPAY_API_KEY
-// bên dưới thì webhook /webhook/sepay sẽ tự xác nhận khi tiền về.
+// hoặc CASSO_WEBHOOK_TOKEN bên dưới thì webhook tương ứng sẽ tự xác nhận khi
+// tiền về — cả 2 dịch vụ đều có gói Free (1 tài khoản ngân hàng/1 webhook),
+// chỉ cần dùng MỘT trong hai, không cần cả hai.
 bankTransferRoutes.get('/info', (req, res) => {
   const accountName = process.env.BANK_ACCOUNT_NAME;
   const accountNumber = process.env.BANK_ACCOUNT_NUMBER;
@@ -64,5 +66,52 @@ bankTransferRoutes.post('/webhook/sepay', async (req, res) => {
   } catch (error) {
     console.error('[sepay webhook] error:', error);
     res.status(500).json({ success: false });
+  }
+});
+
+// Webhook Casso (casso.vn) — cùng mục đích với SePay ở trên (có gói Free
+// 1 tài khoản ngân hàng, đủ cho đồ án/demo), chỉ khác định dạng payload:
+// Casso gửi một MẢNG giao dịch trong `data[]` mỗi lần gọi (có thể gộp nhiều
+// giao dịch trong 1 lần gọi), nên phải lặp qua từng giao dịch thay vì đọc
+// thẳng req.body như SePay. Header xác thực cấu hình trên dashboard Casso
+// (Cấu hình Webhook > Secure Token) phải đặt trùng CASSO_WEBHOOK_TOKEN.
+bankTransferRoutes.post('/webhook/casso', async (req, res) => {
+  try {
+    const configuredToken = process.env.CASSO_WEBHOOK_TOKEN;
+    if (!configuredToken) return res.status(500).json({ error: 1, message: 'Casso webhook chưa được cấu hình' });
+
+    const authHeader = req.headers['authorization'] || '';
+    const providedToken = String(authHeader).replace(/^Apikey\s+/i, '').trim();
+    if (providedToken !== configuredToken) {
+      return res.status(401).json({ error: 1, message: 'Invalid token' });
+    }
+
+    const transactions: any[] = Array.isArray(req.body?.data) ? req.body.data : [];
+
+    for (const tx of transactions) {
+      const amount = Number(tx.amount);
+      if (!(amount > 0)) continue; // amount âm = tiền RA khỏi tài khoản, không liên quan booking
+
+      const rawContent = String(tx.description || '');
+      const match = rawContent.toUpperCase().match(/AC\s*([A-F0-9]{8})/);
+      if (!match) continue; // không phải giao dịch đặt vé, bỏ qua
+
+      const bookingPrefix = match[1];
+      const booking = await prisma.booking.findFirst({
+        where: { id: { startsWith: bookingPrefix, mode: 'insensitive' }, status: 'PENDING_PAYMENT' },
+        include: { payment: true },
+      });
+      if (!booking || !booking.payment) continue;
+
+      const expectedAmount = Math.round(booking.totalAmount);
+      if (amount !== expectedAmount) continue; // số tiền không khớp — để admin kiểm tra thủ công
+
+      await confirmPaymentSuccess(booking.id, 'Casso', String(tx.tid || tx.id || ''));
+    }
+
+    res.json({ error: 0, message: 'success' });
+  } catch (error) {
+    console.error('[casso webhook] error:', error);
+    res.status(500).json({ error: 1, message: 'Internal error' });
   }
 });

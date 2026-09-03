@@ -111,6 +111,27 @@ export class PaymentService {
     return payment;
   }
 
+  // Admin từ chối một giao dịch đang PENDING (vd: chuyển khoản sai nội dung/
+  // số tiền, hoặc giao dịch demo không hợp lệ) — chỉ đổi Payment sang FAILED,
+  // KHÔNG nhả ghế/huỷ booking ngay (giữ nguyên hành vi của markPaymentFailed
+  // dùng chung cho callback VNPay/MoMo thất bại) để khách còn cơ hội thử lại
+  // phương thức khác trên cùng booking trước khi hết hạn giữ chỗ tự nhiên.
+  async rejectPayment(paymentId: string, adminEmail: string) {
+    const existing = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!existing) throw new Error('Payment không tồn tại');
+    if (existing.status !== 'PENDING') throw new Error('Payment không ở trạng thái chờ duyệt');
+
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: 'FAILED' as any,
+        confirmedBy: adminEmail,
+        confirmedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   async listPendingPayments() {
     return this.prisma.payment.findMany({
       where: { status: 'PENDING' as any },
