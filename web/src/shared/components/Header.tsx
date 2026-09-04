@@ -5,6 +5,7 @@ import { cn } from '../utils/cn';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNotifications } from '../hooks/useNotifications';
 
 const RightDrawer = ({ open, onClose, user, notifications, t, i18n, onLogout, onMarkAllRead }: any) => (
   <AnimatePresence>
@@ -48,7 +49,7 @@ const RightDrawer = ({ open, onClose, user, notifications, t, i18n, onLogout, on
   </AnimatePresence>
 );
 
-const MobileMenuDrawer = ({ open, onClose, user, avatarLetter, t, i18n, onLogout }: any) => (
+const MobileMenuDrawer = ({ open, onClose, user, avatarLetter, unreadCount, t, i18n, onLogout }: any) => (
   <AnimatePresence>
     {open && (
       <>
@@ -83,7 +84,13 @@ const MobileMenuDrawer = ({ open, onClose, user, avatarLetter, t, i18n, onLogout
                   <Link to="/my-bookings" onClick={onClose} className="hover:bg-gray-50 hover:text-primary p-3 rounded-xl transition-colors flex items-center gap-3"><Ticket className="w-4 h-4 text-orange-500" /> Vé của tôi</Link>
                   <Link to="/profile" onClick={onClose} className="hover:bg-gray-50 hover:text-primary p-3 rounded-xl transition-colors flex items-center gap-3"><User className="w-4 h-4 text-gray-400" /> Hồ sơ cá nhân</Link>
                   <Link to="/loyalty" onClick={onClose} className="hover:bg-gray-50 hover:text-primary p-3 rounded-xl transition-colors flex items-center gap-3"><Crown className="w-4 h-4 text-yellow-500" /> {t('headerDrawer.memberGold')}</Link>
-                  <Link to="/notifications" onClick={onClose} className="hover:bg-gray-50 hover:text-primary p-3 rounded-xl transition-colors flex items-center gap-3"><Bell className="w-4 h-4 text-primary" /> {t('header.notifications')}</Link>
+                  <Link to="/notifications" onClick={onClose} className="hover:bg-gray-50 hover:text-primary p-3 rounded-xl transition-colors flex items-center gap-3">
+                    <span className="relative">
+                      <Bell className="w-4 h-4 text-primary" />
+                      {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />}
+                    </span>
+                    {t('header.notifications')}
+                  </Link>
                 </>
               )}
             </nav>
@@ -201,11 +208,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
   const { t, i18n } = useTranslation();
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Chuyến đi sắp tới', message: 'Hành trình SG - ĐL của bạn sẽ bắt đầu sau 2 tiếng.', time: '1 giờ trước', read: false, type: 'info' },
-    { id: 2, title: 'Khuyến mãi T8', message: 'Giảm ngay 50k khi đặt vé bằng VNPay.', time: 'Vừa xong', read: false, type: 'promo' }
-  ]);
-  const markAllAsRead = useCallback(() => setNotifications(prev => prev.map(n => ({ ...n, read: true }))), []);
+  const { notifications, markAllAsRead } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -282,15 +286,16 @@ export function Header() {
             </Link>
             <button
               onClick={() => { setRightDrawerOpen(true); setMobileMenuOpen(true); }}
-              className={`w-11 h-11 rounded-full border flex items-center justify-center transition-colors ${borderColor} ${hoverBgColor}`}
+              className={`relative w-11 h-11 rounded-full border flex items-center justify-center transition-colors ${borderColor} ${hoverBgColor}`}
             >
               <Menu className="w-5 h-5" />
+              {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white" />}
             </button>
           </div>
         </div>
       </header>
       <RightDrawer open={rightDrawerOpen} onClose={() => setRightDrawerOpen(false)} user={user} notifications={notifications} t={t} i18n={i18n} onLogout={handleLogout} onMarkAllRead={markAllAsRead} />
-      <MobileMenuDrawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} user={user} avatarLetter={avatarLetter} t={t} i18n={i18n} onLogout={() => { handleLogout(); setMobileMenuOpen(false); }} />
+      <MobileMenuDrawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} user={user} avatarLetter={avatarLetter} unreadCount={unreadCount} t={t} i18n={i18n} onLogout={() => { handleLogout(); setMobileMenuOpen(false); }} />
     </>
   );
 }

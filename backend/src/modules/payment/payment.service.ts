@@ -1,8 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { CreatePaymentDTO, PaymentStatus, PaymentMethod, ConfirmPaymentDTO } from './payment.dto';
+import { NotificationService } from '../notification/notification.service';
 
 export class PaymentService {
-  constructor(private prisma: PrismaClient) {}
+  private notificationService: NotificationService;
+
+  constructor(private prisma: PrismaClient) {
+    this.notificationService = new NotificationService(prisma);
+  }
 
   async createPayment(dto: CreatePaymentDTO) {
     // Verify booking exists
@@ -23,12 +28,14 @@ export class PaymentService {
       throw new Error(`Payment for booking ${dto.bookingId} already exists`);
     }
 
-    // Create payment record
+    // Create payment record — amount always comes from the server-computed
+    // booking.totalAmount, never from client input, so a caller can't tamper
+    // with the price by hitting this endpoint directly with a different amount.
     const payment = await this.prisma.payment.create({
       data: {
         bookingId: dto.bookingId,
         method: dto.method,
-        amount: dto.amount,
+        amount: booking.totalAmount,
         status: 'PENDING' as any,
       },
     });
@@ -80,6 +87,10 @@ export class PaymentService {
   }
 
   async confirmCODPayment(dto: ConfirmPaymentDTO) {
+    const existing = await this.prisma.payment.findUnique({ where: { id: dto.paymentId } });
+    if (!existing) throw new Error('Payment không tồn tại');
+    if (existing.status !== 'PENDING') throw new Error('Payment không ở trạng thái chờ duyệt');
+
     const payment = await this.prisma.payment.update({
       where: { id: dto.paymentId },
       data: {
@@ -91,7 +102,7 @@ export class PaymentService {
     });
 
     // Update booking status
-    await this.prisma.booking.update({
+    const booking = await this.prisma.booking.update({
       where: { id: payment.bookingId },
       data: { status: 'CONFIRMED' as any },
     });
@@ -108,6 +119,14 @@ export class PaymentService {
       });
     }
 
+    // Admin đã duyệt thanh toán demo/COD — báo cho khách hàng biết vé đã được nhận.
+    await this.notificationService.create({
+      userId: booking.userId,
+      title: 'Thanh toán đã được xác nhận',
+      message: `Thanh toán cho đơn đặt vé #${booking.id.slice(0, 8).toUpperCase()} đã được admin duyệt. Vé của bạn đã được xác nhận.`,
+      type: 'booking',
+    });
+
     return payment;
   }
 
@@ -117,11 +136,14 @@ export class PaymentService {
   // dùng chung cho callback VNPay/MoMo thất bại) để khách còn cơ hội thử lại
   // phương thức khác trên cùng booking trước khi hết hạn giữ chỗ tự nhiên.
   async rejectPayment(paymentId: string, adminEmail: string) {
-    const existing = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+    const existing = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { booking: true },
+    });
     if (!existing) throw new Error('Payment không tồn tại');
     if (existing.status !== 'PENDING') throw new Error('Payment không ở trạng thái chờ duyệt');
 
-    return this.prisma.payment.update({
+    const payment = await this.prisma.payment.update({
       where: { id: paymentId },
       data: {
         status: 'FAILED' as any,
@@ -130,6 +152,15 @@ export class PaymentService {
         updatedAt: new Date(),
       },
     });
+
+    await this.notificationService.create({
+      userId: existing.booking.userId,
+      title: 'Thanh toán bị từ chối',
+      message: `Thanh toán cho đơn đặt vé #${existing.booking.id.slice(0, 8).toUpperCase()} đã bị admin từ chối. Vui lòng kiểm tra lại thông tin thanh toán hoặc liên hệ hỗ trợ.`,
+      type: 'booking',
+    });
+
+    return payment;
   }
 
   async listPendingPayments() {

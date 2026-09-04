@@ -18,7 +18,6 @@ export enum PaymentStatus {
 export interface CreatePaymentDTO {
   bookingId: string;
   method: PaymentMethod;
-  amount: number;
   currency?: string;
   description?: string;
 }

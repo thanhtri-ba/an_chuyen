@@ -178,6 +178,10 @@ const en: Translations = {
     filterSystem: 'System',
     empty: 'No notifications',
     emptyDesc: 'You have seen all notifications in this section.',
+    justNow: 'Just now',
+    minutesAgo: '{{count}} minutes ago',
+    hoursAgo: '{{count}} hours ago',
+    daysAgo: '{{count}} days ago',
   },
   blog: {
     heroTitle: 'Where do you want to go today?',

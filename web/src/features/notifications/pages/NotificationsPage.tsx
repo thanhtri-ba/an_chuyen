@@ -2,56 +2,11 @@ import { useState } from 'react';
 import { Bell, Ticket, Gift, Check, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-
-type NotificationType = 'system' | 'promo' | 'booking';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  unread: boolean;
-  type: NotificationType;
-}
-
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  { 
-    id: '1', 
-    title: 'Chuyến đi sắp khởi hành', 
-    message: 'Chuyến xe Sài Gòn - Đà Lạt của bạn sẽ khởi hành lúc 08:30 ngày 20/11. Vui lòng có mặt tại bến trước 30 phút để hoàn tất thủ tục lên xe.', 
-    time: '2 giờ trước', 
-    unread: true, 
-    type: 'booking' 
-  },
-  { 
-    id: '2', 
-    title: 'Khuyến mãi đặc biệt dành cho bạn', 
-    message: 'Nhập mã ANCHUYEN15 để được giảm 15% (tối đa 50k) cho chuyến đi tiếp theo. Ưu đãi có hạn, áp dụng ngay!', 
-    time: '1 ngày trước', 
-    unread: true, 
-    type: 'promo' 
-  },
-  { 
-    id: '3', 
-    title: 'Thanh toán thành công', 
-    message: 'Giao dịch 350.000đ cho mã vé BZ-982314 đã được xác nhận thành công. Xem chi tiết vé trong mục Chuyến đi của tôi.', 
-    time: '2 ngày trước', 
-    unread: false, 
-    type: 'system' 
-  },
-  { 
-    id: '4', 
-    title: 'Cập nhật điều khoản dịch vụ',
-    message: 'An Chuyến vừa cập nhật chính sách hoàn hủy vé dịp lễ tết. Vui lòng kiểm tra để biết thêm chi tiết.',
-    time: '5 ngày trước', 
-    unread: false, 
-    type: 'system' 
-  }
-];
+import { useNotifications, type NotificationType } from '../../../shared/hooks/useNotifications';
 
 export function NotificationsPage() {
   const { t } = useTranslation();
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const { notifications, markAsRead, markAllAsRead } = useNotifications();
   const [activeFilter, setActiveFilter] = useState('all');
 
   const FILTERS = [
@@ -61,16 +16,8 @@ export function NotificationsPage() {
     { id: 'system', label: t('notifications.filterSystem') },
   ];
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
-  };
-
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n => n.id === id ? { ...n, unread: false } : n));
-  };
-
   const filteredNotifications = notifications.filter(n => {
-    if (activeFilter === 'unread') return n.unread;
+    if (activeFilter === 'unread') return !n.read;
     if (activeFilter === 'promo') return n.type === 'promo';
     if (activeFilter === 'system') return n.type === 'system' || n.type === 'booking';
     return true; // 'all'
@@ -144,14 +91,14 @@ export function NotificationsPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                   transition={{ delay: idx * 0.05, duration: 0.3 }}
-                  onClick={() => notif.unread && markAsRead(notif.id)}
+                  onClick={() => !notif.read && markAsRead(notif.id)}
                   className="relative group overflow-hidden rounded-[2rem] border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-                  style={notif.unread
+                  style={!notif.read
                     ? { background: '#ffffff', borderColor: '#e5e7eb' }
                     : { background: '#fcfcfc', borderColor: '#f3f4f6' }}
                 >
                   {/* Left accent border for unread */}
-                  {notif.unread && (
+                  {!notif.read && (
                     <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ background: '#163328' }}></div>
                   )}
 
@@ -159,7 +106,7 @@ export function NotificationsPage() {
                     {/* Icon */}
                     <div
                       className="shrink-0 w-14 h-14 rounded-full flex items-center justify-center shadow-sm"
-                      style={notif.unread
+                      style={!notif.read
                         ? (notif.type === 'promo' ? { background: 'rgba(251,146,60,0.1)', color: '#fb923c' } : { background: 'rgba(22,51,40,0.08)', color: '#163328' })
                         : { background: '#f3f4f6', color: '#9ca3af' }}
                     >
@@ -169,7 +116,7 @@ export function NotificationsPage() {
                     {/* Content */}
                     <div className="flex-1 pt-1">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
-                        <h3 className="text-lg sm:text-xl font-bold pr-6 font-display" style={{ color: notif.unread ? '#1a1a1a' : '#6b7280' }}>
+                        <h3 className="text-lg sm:text-xl font-bold pr-6 font-display" style={{ color: !notif.read ? '#1a1a1a' : '#6b7280' }}>
                           {notif.title}
                         </h3>
                         <span className="shrink-0 text-[10px] uppercase tracking-widest font-bold sm:mt-1.5" style={{ color: '#9ca3af' }}>
@@ -177,13 +124,13 @@ export function NotificationsPage() {
                         </span>
                       </div>
 
-                      <p className="text-sm sm:text-base leading-relaxed max-w-3xl" style={{ color: notif.unread ? '#4b5563' : '#9ca3af' }}>
+                      <p className="text-sm sm:text-base leading-relaxed max-w-3xl" style={{ color: !notif.read ? '#4b5563' : '#9ca3af' }}>
                         {notif.message}
                       </p>
                     </div>
 
                     {/* Unread indicator */}
-                    {notif.unread && (
+                    {!notif.read && (
                       <div className="shrink-0 w-3 h-3 rounded-full mt-2 absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto" style={{ background: '#163328' }}></div>
                     )}
                   </div>

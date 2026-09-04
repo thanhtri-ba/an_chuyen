@@ -8,16 +8,15 @@ const paymentService = new PaymentService(prisma);
 
 export const createPayment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { bookingId, method, amount } = req.body;
+    const { bookingId, method } = req.body;
 
-    if (!bookingId || !method || !amount) {
-      return res.status(400).json({ error: 'Missing required fields: bookingId, method, amount' });
+    if (!bookingId || !method) {
+      return res.status(400).json({ error: 'Missing required fields: bookingId, method' });
     }
 
     const payment = await paymentService.createPayment({
       bookingId,
       method,
-      amount,
     } as CreatePaymentDTO);
 
     res.status(201).json({

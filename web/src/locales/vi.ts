@@ -176,6 +176,10 @@ const vi = {
     filterSystem: 'Hệ thống',
     empty: 'Không có thông báo nào',
     emptyDesc: 'Bạn đã xem hết tất cả thông báo trong mục này.',
+    justNow: 'Vừa xong',
+    minutesAgo: '{{count}} phút trước',
+    hoursAgo: '{{count}} giờ trước',
+    daysAgo: '{{count}} ngày trước',
   },
   blog: {
     heroTitle: 'Bạn muốn đi đâu hôm nay?',

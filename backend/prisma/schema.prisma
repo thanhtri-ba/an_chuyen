@@ -49,6 +49,7 @@ model User {
   tourBookings         TourBooking[]
   deliveryOrders       DeliveryOrder[]
   passwordResetTokens  PasswordResetToken[]
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -158,6 +159,21 @@ model Payment {
 
   @@index([transactionId])
   @@map("payments")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("system") // system, promo, booking
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
 }
 
 model UserPaymentMethod {
