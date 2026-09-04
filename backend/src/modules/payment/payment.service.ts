@@ -23,12 +23,13 @@ export class PaymentService {
       throw new Error(`Payment for booking ${dto.bookingId} already exists`);
     }
 
-    // Create payment record
+    // Anti-tampering: amount is always the booking's own totalAmount, computed
+    // server-side at booking creation — never a value supplied by the client.
     const payment = await this.prisma.payment.create({
       data: {
         bookingId: dto.bookingId,
         method: dto.method,
-        amount: dto.amount,
+        amount: booking.totalAmount,
         status: 'PENDING' as any,
       },
     });

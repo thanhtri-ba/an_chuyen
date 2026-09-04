@@ -18,7 +18,8 @@ export enum PaymentStatus {
 export interface CreatePaymentDTO {
   bookingId: string;
   method: PaymentMethod;
-  amount: number;
+  // amount is intentionally absent: it is always derived server-side from
+  // the booking's own totalAmount, never accepted from the client.
   currency?: string;
   description?: string;
 }
