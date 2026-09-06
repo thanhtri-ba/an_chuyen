@@ -25,6 +25,17 @@ export function AuthPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Đăng ký giờ bắt buộc xác minh email bằng OTP trước khi tạo tài khoản
+  // (xem auth.routes.ts POST /register) — otpStep=true nghĩa là đã gửi mã,
+  // đang chờ khách nhập để hoàn tất. Đăng nhập dùng LẠI đúng state này khi
+  // backend trả về requiresOtp:true (thiết bị lạ / lâu chưa đăng nhập).
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpChallengeId, setOtpChallengeId] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  // true khi otpStep đang phục vụ ĐĂNG NHẬP (thiết bị lạ) thay vì đăng ký —
+  // 2 luồng dùng chung UI nhập mã nhưng gọi API khác nhau lúc xác nhận.
+  const [otpForLogin, setOtpForLogin] = useState(false);
   const [slide, setSlide] = useState(0);
   const googleWrapRef = useRef<HTMLDivElement>(null);
   const [googleWidth, setGoogleWidth] = useState(360);
@@ -74,16 +85,94 @@ export function AuthPage() {
     }
   };
 
+  // Bước 1 của đăng ký: gửi OTP tới email vừa nhập, chưa tạo tài khoản.
+  const handleRequestOtp = async () => {
+    setError('');
+    setIsSendingOtp(true);
+    try {
+      const res = await api.post('/identity/otp/request-registration', { email });
+      setOtpChallengeId(res.data.challengeId);
+      setOtpStep(true);
+      toast.success('Đã gửi mã xác minh tới email của bạn.');
+    } catch (err: unknown) {
+      let msg = 'Không thể gửi mã xác minh. Vui lòng thử lại.';
+      if (axios.isAxiosError(err) && (err.response?.data as { message?: string })?.message)
+        msg = (err.response!.data as { message: string }).message;
+      setError(msg);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  // "Gửi lại mã" khi đang ở bước OTP của ĐĂNG NHẬP (thiết bị lạ) — phải gọi
+  // lại /auth/login (kèm mật khẩu) để backend phát challengeId mới, khác hẳn
+  // luồng đăng ký (chỉ cần email, chưa cần mật khẩu).
+  const handleResendLoginOtp = async () => {
+    setError('');
+    setIsSendingOtp(true);
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      if (res.data?.requiresOtp) {
+        setOtpChallengeId(res.data.challengeId);
+        toast.success('Đã gửi lại mã xác minh.');
+      }
+    } catch (err: unknown) {
+      let msg = 'Không thể gửi lại mã xác minh. Vui lòng thử lại.';
+      if (axios.isAxiosError(err) && (err.response?.data as { message?: string })?.message)
+        msg = (err.response!.data as { message: string }).message;
+      setError(msg);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Đăng ký: lần bấm đầu chỉ xin mã OTP, chưa gửi form thật — lần bấm thứ 2
+    // (sau khi đã có otpChallengeId và khách nhập mã) mới thật sự tạo tài khoản.
+    if (!isLogin && !otpStep) {
+      if (!email) { setError('Vui lòng nhập email để nhận mã xác minh.'); return; }
+      setOtpForLogin(false);
+      await handleRequestOtp();
+      return;
+    }
+
+    // Đăng nhập ở bước xác minh OTP (thiết bị lạ/lâu chưa đăng nhập) — xác
+    // nhận mã ở endpoint riêng, KHÔNG gọi lại /auth/login (đã qua bước mật
+    // khẩu ở lần bấm trước rồi).
+    if (isLogin && otpStep && otpForLogin) {
+      setIsSubmitting(true);
+      try {
+        const res = await api.post('/auth/login/verify-otp', { challengeId: otpChallengeId, code: otpCode });
+        if (res.data?.token) { login(res.data.token, res.data.user); navigate(returnUrl, { replace: true }); }
+      } catch (err: unknown) {
+        let msg = 'Mã xác minh không đúng hoặc đã hết hạn.';
+        if (axios.isAxiosError(err) && (err.response?.data as { message?: string })?.message)
+          msg = (err.response!.data as { message: string }).message;
+        setError(msg);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (isLogin) {
         const res = await api.post('/auth/login', { email, password });
-        if (res.data?.token) { login(res.data.token, res.data.user); navigate(returnUrl, { replace: true }); }
+        if (res.data?.requiresOtp) {
+          setOtpChallengeId(res.data.challengeId);
+          setOtpForLogin(true);
+          setOtpStep(true);
+          toast.success('Thiết bị mới — đã gửi mã xác minh tới email của bạn.');
+        } else if (res.data?.token) {
+          login(res.data.token, res.data.user);
+          navigate(returnUrl, { replace: true });
+        }
       } else {
-        const res = await api.post('/auth/register', { fullName, phone, email, password });
+        const res = await api.post('/auth/register', { fullName, phone, email, password, otpChallengeId, otpCode });
         if (res.data?.token) {
           login(res.data.token, res.data.user);
           // Tài khoản vừa tạo — luôn dẫn qua trang hoàn thiện hồ sơ (giới tính,
@@ -232,10 +321,32 @@ export function AuthPage() {
                     <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2 block ml-1">Email</label>
                     <div className="relative">
                       <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input type="text" value={email} onChange={e => setEmail(e.target.value)} required={isLogin} placeholder="ten@example.com"
-                        className="w-full bg-gray-50 border border-gray-100 pl-12 pr-5 py-4 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner" />
+                      <input type="text" value={email} onChange={e => setEmail(e.target.value)} required disabled={otpStep} placeholder="ten@example.com"
+                        className="w-full bg-gray-50 border border-gray-100 pl-12 pr-5 py-4 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner disabled:opacity-60" />
                     </div>
                   </div>
+
+                  {otpStep && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-2 overflow-hidden">
+                      <div className="flex justify-between items-center mx-1">
+                        <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">Mã xác minh (gửi tới {email})</label>
+                        {!otpForLogin && (
+                          <button type="button" onClick={() => { setOtpStep(false); setOtpChallengeId(''); setOtpCode(''); }}
+                            className="text-[11px] text-primary hover:underline">Đổi email</button>
+                        )}
+                      </div>
+                      {otpForLogin && (
+                        <p className="text-[11px] text-muted-foreground -mt-1">Thiết bị này chưa quen thuộc hoặc đã lâu bạn chưa đăng nhập — vui lòng xác minh để tiếp tục.</p>
+                      )}
+                      <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        required placeholder="Nhập mã 6 số"
+                        className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-xl text-sm tracking-[0.4em] text-center focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner" />
+                      <button type="button" onClick={otpForLogin ? handleResendLoginOtp : handleRequestOtp} disabled={isSendingOtp}
+                        className="self-start text-[11px] text-muted-foreground hover:text-primary hover:underline mt-1">
+                        {isSendingOtp ? 'Đang gửi lại...' : 'Gửi lại mã'}
+                      </button>
+                    </motion.div>
+                  )}
 
                   <div>
                     <div className="flex justify-between items-center mb-2 mx-1">
@@ -254,10 +365,14 @@ export function AuthPage() {
                   </div>
 
                   {/* submit */}
-                  <button type="submit" disabled={isSubmitting}
+                  <button type="submit" disabled={isSubmitting || isSendingOtp}
                     className="w-full bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:hover:translate-y-0">
-                    {isSubmitting ? 'Đang xử lý...' : (isLogin ? 'Đăng nhập' : 'Tạo tài khoản')}
-                    {!isSubmitting && <ArrowRight size={16} className="text-primary group-hover:translate-x-1 transition-transform" />}
+                    {isSubmitting || isSendingOtp
+                      ? 'Đang xử lý...'
+                      : isLogin
+                        ? (otpStep && otpForLogin ? 'Xác nhận đăng nhập' : 'Đăng nhập')
+                        : otpStep ? 'Xác nhận & Tạo tài khoản' : 'Gửi mã xác minh'}
+                    {!isSubmitting && !isSendingOtp && <ArrowRight size={16} className="text-primary group-hover:translate-x-1 transition-transform" />}
                   </button>
                 </form>
 
@@ -293,7 +408,7 @@ export function AuthPage() {
 
                 <p className="text-center mt-8 text-sm text-muted-foreground">
                   {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-                  <button type="button" onClick={() => { setIsLogin(!isLogin); setError(''); }}
+                  <button type="button" onClick={() => { setIsLogin(!isLogin); setError(''); setOtpStep(false); setOtpChallengeId(''); setOtpCode(''); setOtpForLogin(false); }}
                     className="text-primary font-bold hover:underline transition-all">
                     {isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}
                   </button>

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { requestOtp, requestAdminOtp, verifyOtp, lookupOrder, getSession, logout } from './identity.controller';
+import { requestOtp, requestRegistrationOtp, requestAdminOtp, verifyOtp, lookupOrder, getSession, logout } from './identity.controller';
 
 export const identityRoutes = Router();
 
@@ -17,6 +17,10 @@ const otpLimiter = rateLimit({
 });
 
 identityRoutes.post('/otp/request', otpLimiter, requestOtp);
+// Xác minh email trước khi tạo tài khoản mật khẩu mới — dùng bởi
+// AuthPage.tsx (bước Đăng ký), verify thật sự xảy ra trong auth.routes.ts
+// POST /register (không có endpoint verify riêng ở đây).
+identityRoutes.post('/otp/request-registration', otpLimiter, requestRegistrationOtp);
 identityRoutes.post('/otp/request-admin', otpLimiter, requestAdminOtp);
 identityRoutes.post('/otp/verify', otpLimiter, verifyOtp);
 // Tra cứu vé cũ bằng email + mã đơn hàng — thay OTP cho khách vãng lai (xem
