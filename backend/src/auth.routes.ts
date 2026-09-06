@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
+import { IdentityService } from './modules/identity/identity.service';
+import { DEVICE_SESSION_COOKIE } from './modules/identity/identity.controller';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -17,7 +19,7 @@ function issueToken(user: { id: string; role: string; email: string | null }) {
 
 router.post('/register', async (req, res) => {
   try {
-    const { fullName, phone, email, password } = req.body;
+    const { fullName, phone, email, password, otpChallengeId, otpCode } = req.body;
 
     if (!fullName || !phone || !password) {
       res.status(400).json({ message: 'Họ tên, số điện thoại và mật khẩu là bắt buộc' });
@@ -25,6 +27,26 @@ router.post('/register', async (req, res) => {
     }
     if (password.length < 6) {
       res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+      return;
+    }
+
+    // Bắt buộc xác minh email bằng OTP trước khi tạo tài khoản mật khẩu mới
+    // (POST /identity/otp/request-registration lấy otpChallengeId). Email vì
+    // vậy giờ là bắt buộc cho đăng ký, khác trước đây (tuỳ chọn).
+    if (!email || !otpChallengeId || !otpCode) {
+      res.status(400).json({ message: 'Vui lòng xác minh email bằng mã OTP trước khi tạo tài khoản.' });
+      return;
+    }
+
+    let verifiedEmail: string;
+    try {
+      verifiedEmail = await IdentityService.verifyRegistrationOtp(otpChallengeId, otpCode);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Xác minh email thất bại.' });
+      return;
+    }
+    if (verifiedEmail !== String(email).trim().toLowerCase()) {
+      res.status(400).json({ message: 'Email không khớp với email đã xác minh.' });
       return;
     }
 
@@ -46,8 +68,9 @@ router.post('/register', async (req, res) => {
       data: {
         fullName,
         phone,
-        email: email || null,
+        email: verifiedEmail,
         password: hashedPassword,
+        isEmailVerified: true,
       },
       select: {
         id: true,
@@ -111,29 +134,83 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      res.status(500).json({ message: 'JWT configuration is missing' });
-      return;
+    // Thiết bị lạ (chưa từng đăng nhập trên trình duyệt này) hoặc phiên đã
+    // hết hạn (DeviceSession hết hạn sau 60 ngày — nghĩa là "lâu rồi mới đăng
+    // nhập lại") → bắt xác minh OTP qua email trước khi cấp JWT. Trình duyệt
+    // đã có cookie phiên hợp lệ CỦA ĐÚNG tài khoản này thì bỏ qua, vào thẳng.
+    const cookieToken = req.cookies?.[DEVICE_SESSION_COOKIE];
+    const sessionUser = cookieToken ? await IdentityService.getSessionUser(cookieToken) : null;
+    const isTrustedDevice = sessionUser?.id === user.id;
+
+    if (!isTrustedDevice) {
+      if (!user.email) {
+        // Tài khoản không có email trên hồ sơ (hiếm — tạo trước khi email trở
+        // thành bắt buộc) — không có nơi để gửi mã, đành cho qua như cũ thay
+        // vì khoá luôn không cho đăng nhập.
+      } else {
+        const result = await IdentityService.requestOtp(user.email);
+        res.json({
+          requiresOtp: true,
+          challengeId: result.challengeId,
+          message: 'Thiết bị mới hoặc đã lâu chưa đăng nhập — vui lòng nhập mã xác minh vừa gửi tới email.',
+          ...(('devCode' in result) ? { devCode: (result as any).devCode } : {}),
+        });
+        return;
+      }
     }
 
-    const token = jwt.sign(
-      {
-        role: user.role,
-        email: user.email,
-      },
-      secret,
-      {
-        subject: user.id,
-        expiresIn: '7d',
-      },
-    );
+    const token = issueToken(user);
 
     // Don't send password back in response
     const { password: _, ...userWithoutPassword } = user;
     res.json({ token, user: userWithoutPassword });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Bước 2 khi login.ts trả về requiresOtp:true — xác minh mã, cấp JWT + đánh
+// dấu thiết bị này "đã tin cậy" (cookie DeviceSession, tái dùng đúng cơ chế
+// của khách vãng lai) để lần đăng nhập sau trên CÙNG trình duyệt không bị
+// hỏi OTP lại, cho tới khi cookie hết hạn (60 ngày không dùng).
+router.post('/login/verify-otp', async (req, res) => {
+  try {
+    const { challengeId, code } = req.body;
+    if (!challengeId || !code) {
+      res.status(400).json({ message: 'Thiếu mã xác minh' });
+      return;
+    }
+
+    const deviceInfo = req.headers['user-agent'];
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress;
+
+    const { refreshToken, expiresAt } = await IdentityService.verifyOtp(challengeId, code, deviceInfo, ipAddress);
+
+    const session = await prisma.deviceSession.findUnique({ where: { refreshToken } });
+    const user = session
+      ? await prisma.user.findUnique({
+          where: { id: session.userId },
+          select: { id: true, email: true, phone: true, fullName: true, role: true },
+        })
+      : null;
+    if (!user) {
+      res.status(400).json({ message: 'Xác minh thất bại.' });
+      return;
+    }
+
+    res.cookie(DEVICE_SESSION_COOKIE, refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: expiresAt,
+      path: '/',
+    });
+
+    const token = issueToken(user);
+    res.json({ token, user });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message || 'Xác minh thất bại.' });
   }
 });
 

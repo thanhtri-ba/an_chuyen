@@ -44,6 +44,22 @@ export const requestOtp = async (req: Request, res: Response) => {
   }
 };
 
+// Xác minh email trước khi tạo tài khoản mật khẩu mới — auth.routes.ts
+// POST /register gọi thẳng IdentityService.verifyRegistrationOtp, không qua
+// controller này (không cần round-trip riêng, khách chỉ nhập OTP 1 lần lúc
+// bấm "Tạo tài khoản").
+export const requestRegistrationOtp = async (req: Request, res: Response) => {
+  try {
+    const { email } = requestOtpSchema.parse(req.body);
+    const result = await IdentityService.requestRegistrationOtp(email);
+    res.json(result);
+  } catch (error: any) {
+    if (error?.issues) return res.status(400).json({ message: 'Email không hợp lệ.' });
+    logger.error('identity.requestRegistrationOtp failed', { error: error?.message });
+    res.status(500).json({ message: 'Không thể xử lý yêu cầu. Vui lòng thử lại sau.' });
+  }
+};
+
 // Nhánh riêng cho đăng nhập admin — không auto-create tài khoản, xem
 // IdentityService.requestOtp({ requireExistingAdminRole: true }).
 export const requestAdminOtp = async (req: Request, res: Response) => {

@@ -169,6 +169,89 @@ export class IdentityService {
     return { refreshToken, expiresAt };
   }
 
+  // Xác minh email TRƯỚC KHI tạo tài khoản mật khẩu mới (auth.routes.ts
+  // POST /register) — khác hẳn requestOtp/identifyGuestByEmail ở trên: CHỦ Ý
+  // KHÔNG tự tạo User ở bước này vì tài khoản chưa nên tồn tại cho tới khi cả
+  // OTP đúng LẪN mật khẩu hợp lệ đều đã có (userId để null trên dòng EmailOtp).
+  static async requestRegistrationOtp(email: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const lastOtp = await prisma.emailOtp.findFirst({
+      where: { email: normalizedEmail, userId: null },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (lastOtp && Date.now() - lastOtp.createdAt.getTime() < OTP_RESEND_COOLDOWN_SECONDS * 1000) {
+      return { ...GENERIC_OTP_RESPONSE, challengeId: lastOtp.challengeId };
+    }
+
+    const code = generateOtpCode();
+    const challengeId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+
+    await prisma.emailOtp.create({
+      data: { userId: null, email: normalizedEmail, codeHash: hashCode(code), challengeId, expiresAt },
+    });
+
+    auditLog({
+      event: 'OtpRequested',
+      actorId: 'anonymous',
+      actorRole: 'user',
+      resourceType: 'email_otp',
+      resourceId: challengeId,
+      outcome: 'success',
+    });
+
+    const { subject, html } = otpEmailTemplate(code, OTP_TTL_MINUTES);
+    sendMail({ to: normalizedEmail, subject, html }).catch(() => {});
+
+    const allowDevOtpEcho =
+      process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_OTP_ECHO === 'true';
+
+    return {
+      ...GENERIC_OTP_RESPONSE,
+      challengeId,
+      ...(allowDevOtpEcho ? { devCode: code } : {}),
+    };
+  }
+
+  // Đối chiếu mã OTP đăng ký — trả về email (normalized) đã thật sự được xác
+  // minh, để auth.routes.ts so khớp với email trong form đăng ký (chống dùng
+  // 1 challengeId xác minh email A rồi đăng ký tài khoản với email B).
+  static async verifyRegistrationOtp(challengeId: string, code: string): Promise<string> {
+    const otp = await prisma.emailOtp.findUnique({ where: { challengeId } });
+
+    if (!otp || otp.usedAt || otp.expiresAt < new Date()) {
+      throw new Error('Mã xác minh không hợp lệ hoặc đã hết hạn.');
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      throw new Error('Mã xác minh đã bị khoá do nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.');
+    }
+    if (hashCode(code) !== otp.codeHash) {
+      await prisma.emailOtp.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+      auditLog({
+        event: 'OtpFailed',
+        actorId: 'anonymous',
+        actorRole: 'user',
+        resourceType: 'email_otp',
+        resourceId: challengeId,
+        outcome: 'failure',
+      });
+      throw new Error('Mã xác minh không đúng.');
+    }
+
+    await prisma.emailOtp.update({ where: { id: otp.id }, data: { usedAt: new Date() } });
+    auditLog({
+      event: 'OtpVerified',
+      actorId: 'anonymous',
+      actorRole: 'user',
+      resourceType: 'email_otp',
+      resourceId: challengeId,
+      outcome: 'success',
+    });
+
+    return otp.email;
+  }
+
   // Danh tính khách vãng lai KHÔNG qua OTP — dùng lúc tạo booking (xem
   // guestBookingIdentity.middleware.ts). Chỉ find-or-create theo email +
   // cấp luôn 1 DeviceSession, không xác minh email có thật thuộc về khách
