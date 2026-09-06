@@ -2,11 +2,13 @@ import { PrismaClient, SeatStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Ví ('busz-wallet') là phương thức duy nhất trừ tiền NGAY trong transaction
-// tạo booking (xem isWalletPayment bên dưới) — VNPay/MoMo/chuyển khoản đều
-// tạo booking ở PENDING_PAYMENT rồi chờ gateway/webhook xác nhận riêng
-// (vnpay.routes.ts, momo.routes.ts, bank-transfer.routes.ts).
-const WALLET_METHOD_VALUES = new Set(['busz-wallet', 'WALLET', 'wallet']);
+// Ví đã bị loại khỏi luồng đặt vé (xem docs/architecture/REDESIGN-PLAN.md,
+// Phase 3) — mọi phương thức (VNPay, MoMo, chuyển khoản, COD) giờ đi chung
+// đúng 1 kiểu: khách trả tiền thật, booking tạo ở PENDING_PAYMENT, chờ xác
+// nhận riêng (vnpay.routes.ts, momo.routes.ts, bank-transfer.routes.ts, hoặc
+// admin duyệt tay). Model Wallet/WalletTransaction và module wallet/ vẫn giữ
+// nguyên trong DB (không xoá) để không mất dữ liệu lịch sử, chỉ không còn
+// module nào gọi tới chúng nữa.
 
 interface CreateBookingParams {
   userId: string;
@@ -122,17 +124,6 @@ export class BookingService {
         promoIdToRedeem = promo.id;
       }
 
-      // Thanh toán bằng Ví An Chuyến: trừ tiền ngay trong transaction này —
-      // nếu số dư không đủ, toàn bộ booking bị huỷ (rollback), ghế không bị khoá.
-      const isWalletPayment = paymentMethod ? WALLET_METHOD_VALUES.has(paymentMethod) : false;
-      let wallet: { id: string; balance: number } | null = null;
-      if (isWalletPayment) {
-        wallet = await tx.wallet.findUnique({ where: { userId } });
-        if (!wallet || wallet.balance < totalAmount) {
-          throw new Error('Số dư ví không đủ để thanh toán. Vui lòng nạp thêm hoặc chọn phương thức khác.');
-        }
-      }
-
       // 3. Khoá ghế TRƯỚC khi tạo booking, bằng update có điều kiện status: AVAILABLE.
       // Đây là bước chống trùng ghế thật sự: nếu 2 request đồng thời cùng qua bước
       // check ở trên, chỉ MỘT request update trúng đủ số ghế (count === seats.length) —
@@ -147,9 +138,10 @@ export class BookingService {
           ]
         },
         data: {
-          status: isWalletPayment ? SeatStatus.BOOKED : SeatStatus.LOCKED,
+          status: SeatStatus.LOCKED,
           // Xoá thông tin "hold" tạm — ghế giờ khoá bởi Booking thật (seatBookings.lockedAt),
-          // không còn phụ thuộc lockExpiresAt của cơ chế hold nữa.
+          // không còn phụ thuộc lockExpiresAt của cơ chế hold nữa. Chuyển hẳn
+          // sang BOOKED khi có xác nhận thanh toán thật (confirm.util.ts).
           lockedBy: null,
           lockExpiresAt: null
         }
@@ -167,7 +159,7 @@ export class BookingService {
           totalAmount, // Giá TỰ TÍNH của Backend, tuyệt đối an toàn
           promoCode: appliedPromoCode,
           discountAmount,
-          status: isWalletPayment ? 'CONFIRMED' : 'PENDING_PAYMENT',
+          status: 'PENDING_PAYMENT',
           pickupPointId: pickupPointId || null,
           dropoffPointId: dropoffPointId || null,
           passengers: {
@@ -209,36 +201,20 @@ export class BookingService {
         });
       }
 
-      // 6. Lưu thông tin phương thức thanh toán (nếu có)
+      // 6. Lưu thông tin phương thức thanh toán (nếu có) — luôn PENDING, chờ
+      // gateway/webhook/admin xác nhận riêng (confirm.util.ts).
       if (paymentMethod) {
         await tx.payment.create({
           data: {
             bookingId: booking.id,
             method: paymentMethod,
             amount: totalAmount,
-            status: isWalletPayment ? 'PAID' : 'PENDING',
+            status: 'PENDING',
           }
         });
       }
 
-      // 7. Thanh toán ví: trừ tiền + ghi lịch sử giao dịch
-      if (isWalletPayment && wallet) {
-        await tx.wallet.update({
-          where: { id: wallet.id },
-          data: { balance: { decrement: totalAmount } },
-        });
-        await tx.walletTransaction.create({
-          data: {
-            userId,
-            amount: -totalAmount,
-            type: 'PAYMENT',
-            description: `Thanh toán vé chuyến ${tripScheduleId}`,
-            referenceId: booking.id,
-          },
-        });
-      }
-
-      // 8. Lưu lại thông tin liên hệ chính để gợi ý điền nhanh ở lần đặt vé sau —
+      // 7. Lưu lại thông tin liên hệ chính để gợi ý điền nhanh ở lần đặt vé sau —
       // chỉ lưu khi khách thực sự cung cấp SĐT (không suy đoán/mượn dữ liệu từ
       // nơi khác), upsert theo (userId, phone) nên đặt lại vé cùng SĐT chỉ cập
       // nhật tên/email mới nhất thay vì tạo bản ghi trùng.
@@ -258,19 +234,22 @@ export class BookingService {
   }
 
   // Cho khách tự huỷ booking của mình khi còn ở trạng thái PENDING_PAYMENT
-  // (chưa thanh toán) hoặc CONFIRMED (đã thanh toán qua ví, xe chưa khởi hành).
-  // Giải phóng ghế về AVAILABLE để tránh rò rỉ tồn kho ghế. Nếu đã thanh toán
-  // qua ví, hoàn tiền vào ví theo % của CancellationPolicy nhà xe (dựa trên số
-  // giờ còn lại tới giờ khởi hành) — trước đây booking đã CONFIRMED không thể
-  // huỷ được và tiền trong ví bị mất trắng dù trạng thái Payment.REFUNDED đã
-  // tồn tại sẵn trong schema nhưng chưa từng được set ở đâu.
+  // (chưa thanh toán) hoặc CONFIRMED (đã thanh toán, xe chưa khởi hành).
+  // Giải phóng ghế về AVAILABLE để tránh rò rỉ tồn kho ghế.
+  //
+  // Từ khi bỏ Ví (xem docs/architecture/REDESIGN-PLAN.md, Phase 3): huỷ một
+  // booking đã CONFIRMED (đã trả tiền thật qua VNPay/MoMo/chuyển khoản/COD)
+  // KHÔNG tự hoàn tiền — không có phương thức nào còn lại tự động rút/hoàn
+  // được, tiền đã đi qua cổng ngoài thật. Payment giữ nguyên PAID, Booking
+  // chuyển CANCELLED; hoàn tiền cho khách là việc admin xử lý thủ công qua
+  // quy trình đối soát riêng (POST /api/admin/payments/:id/refund).
   static async cancelBooking(userId: string, bookingId: string) {
     return await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: {
           seatBookings: true,
-          tripSchedule: { include: { trip: { include: { busAgent: { include: { policies: true } } } } } },
+          tripSchedule: true,
         },
       });
 
@@ -293,42 +272,10 @@ export class BookingService {
         data: { status: SeatStatus.AVAILABLE },
       });
 
+      // Chỉ đổi Payment còn PENDING sang FAILED (booking chưa từng được trả).
+      // Payment đã PAID giữ nguyên — chờ admin xử lý hoàn tiền thủ công.
       const payment = await tx.payment.findUnique({ where: { bookingId } });
-      const wasPaidByWallet = booking.status === 'CONFIRMED' && payment?.status === 'PAID' && payment.method &&
-        WALLET_METHOD_VALUES.has(payment.method);
-
-      let refundAmount = 0;
-      if (wasPaidByWallet) {
-        const hoursUntilDeparture =
-          (booking.tripSchedule.departureTime.getTime() - Date.now()) / (1000 * 60 * 60);
-        const policies = booking.tripSchedule.trip.busAgent.policies
-          .slice()
-          .sort((a, b) => b.hoursBefore - a.hoursBefore);
-        const matchedPolicy = policies.find((p) => hoursUntilDeparture >= p.hoursBefore);
-        const refundPct = matchedPolicy ? matchedPolicy.refundPct : 0;
-        refundAmount = Math.round(booking.totalAmount * (refundPct / 100));
-
-        if (refundAmount > 0) {
-          await tx.wallet.update({
-            where: { userId },
-            data: { balance: { increment: refundAmount } },
-          });
-          await tx.walletTransaction.create({
-            data: {
-              userId,
-              amount: refundAmount,
-              type: 'REFUND',
-              description: `Hoàn tiền huỷ vé chuyến ${booking.tripScheduleId} (${refundPct}%)`,
-              referenceId: booking.id,
-            },
-          });
-        }
-
-        await tx.payment.update({
-          where: { id: payment!.id },
-          data: { status: 'REFUNDED' },
-        });
-      } else if (payment && payment.status === 'PENDING') {
+      if (payment && payment.status === 'PENDING') {
         await tx.payment.update({
           where: { id: payment.id },
           data: { status: 'FAILED' },
@@ -337,14 +284,16 @@ export class BookingService {
 
       const updated = await tx.booking.update({
         where: { id: bookingId },
-        data: { status: wasPaidByWallet ? 'REFUNDED' : 'CANCELLED' },
+        data: { status: 'CANCELLED' },
       });
 
       await tx.bookingTimeline.create({
         data: {
           bookingId,
-          status: wasPaidByWallet ? 'REFUNDED' : 'CANCELLED',
-          note: wasPaidByWallet ? `Huỷ vé, hoàn ${refundAmount.toLocaleString('vi-VN')}đ vào ví` : 'Huỷ vé',
+          status: 'CANCELLED',
+          note: payment?.status === 'PAID'
+            ? 'Huỷ vé — đã thanh toán trước đó, chờ admin xử lý hoàn tiền thủ công'
+            : 'Huỷ vé',
         },
       });
 

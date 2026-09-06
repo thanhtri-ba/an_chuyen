@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { useCustomerIdentity } from '../../../contexts/CustomerIdentityContext';
 import { cn } from '../../../shared/utils/cn';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
 import type { BookingData } from '../../../types';
@@ -49,6 +50,7 @@ const COMMITMENTS = [
 
 export function PaymentPage() {
   const navigate = useNavigate();
+  const { refresh: refreshIdentity } = useCustomerIdentity();
   const [pendingBooking, setPendingBooking] = useState<BookingData | null>(null);
   const [tripDetail, setTripDetail] = useState<TripScheduleDetail | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('');
@@ -147,6 +149,11 @@ export function PaymentPage() {
       });
 
       const booking = res.data?.data;
+      // Nếu đây là khách vãng lai lần đầu, guestBookingIdentity.middleware.ts
+      // vừa set cookie DeviceSession trong response ở trên — context vẫn
+      // đang giữ identityUser=null từ lúc app mount nên phải nạp lại thủ công,
+      // không thì các trang sau (Lịch sử đặt vé...) tưởng khách chưa có danh tính.
+      refreshIdentity();
       sessionStorage.setItem('last_booking', JSON.stringify({
         bookingId: booking?.id,
         passengerName: pendingBooking.passengerInfo.name,

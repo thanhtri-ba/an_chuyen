@@ -4,6 +4,7 @@ import { verifyAccessToken, type AuthenticatedRequest } from './middleware/auth.
 import { requireAdmin } from './middleware/admin.middleware';
 import { supabaseAdmin } from './core/supabase';
 import { invalidateCache } from './core/cache';
+import { maskIdCard } from './core/mask';
 
 const router = Router();
 router.use(verifyAccessToken);
@@ -32,6 +33,15 @@ const createCrudRouter = (
   // deeply nested (e.g. a booking's included `user` relation) — stripped
   // recursively, not just from the top-level row like `readOmit` below.
   const ALWAYS_STRIP = new Set(['password']);
+  // CCCD/CMND (dữ liệu cá nhân nhạy cảm, Nghị định 13/2023) — che bớt thay vì
+  // xoá hẳn, để admin vẫn nhận ra đúng khách qua vài số đầu/cuối mà không cần
+  // xem trọn vẹn (xem docs/architecture/REDESIGN-PLAN.md, Phase 5 rủi ro #4).
+  // Áp dụng ở đây (tầng chung của mọi resource CRUD admin) thay vì riêng lẻ
+  // từng route, để tự động bảo vệ cả những resource sau này lỡ include field
+  // này mà không ai nhớ tự che tay.
+  const MASK_FIELDS: Record<string, (v: string) => string | null> = {
+    idCard: (v) => maskIdCard(v),
+  };
 
   const deepStrip = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(deepStrip);
@@ -45,6 +55,10 @@ const createCrudRouter = (
       const clone: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
         if (ALWAYS_STRIP.has(key)) continue;
+        if (MASK_FIELDS[key] && typeof val === 'string') {
+          clone[key] = MASK_FIELDS[key](val);
+          continue;
+        }
         clone[key] = deepStrip(val);
       }
       return clone;

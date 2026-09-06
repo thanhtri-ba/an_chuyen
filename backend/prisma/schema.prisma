@@ -24,6 +24,10 @@ model User {
   isPhoneVerified Boolean   @default(false)
   isEmailVerified Boolean   @default(false)
   isBanned        Boolean   @default(false)
+  // Tồn tại sẵn trên DB cloud (từ nhánh feature/payment-notifications, chưa
+  // merge vào master) — thêm lại vào schema để không mất dữ liệu khi
+  // db push, KHÔNG có code nào trong nhánh này đọc/ghi field này.
+  isGuest         Boolean   @default(false)
   socialId        String? // Dành cho Google/Apple Login
   lastLoginAt     DateTime?
   createdAt       DateTime  @default(now())
@@ -49,6 +53,8 @@ model User {
   tourBookings         TourBooking[]
   deliveryOrders       DeliveryOrder[]
   passwordResetTokens  PasswordResetToken[]
+  emailOtps            EmailOtp[]
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -69,15 +75,66 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+// Danh tính thụ động Email+OTP (xem docs/architecture/REDESIGN-PLAN.md) — mẫu
+// giống hệt PasswordResetToken ở trên: chỉ lưu hash của mã, không lưu mã gốc.
+// userId nullable vì lúc yêu cầu OTP có thể chưa xác định được user (email
+// mới hoàn toàn, hoặc email chưa từng có tài khoản admin khi
+// requireExistingAdminRole=true) — service tự quyết định tạo/không tạo user
+// trước khi lưu dòng OTP.
+model EmailOtp {
+  id          String    @id @default(uuid())
+  userId      String?
+  email       String
+  codeHash    String
+  // Định danh riêng cho từng lần yêu cầu OTP — verify PHẢI tra theo đúng
+  // challengeId này (không tra theo email/code đơn thuần), để mã không thể
+  // bị dùng chéo sang một phiên/yêu cầu khác đã lộ ra ngoài.
+  challengeId String    @unique
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, createdAt])
+  @@map("email_otps")
+}
+
+// Tồn tại sẵn trên DB cloud (từ nhánh feature/payment-notifications, chưa
+// merge vào master) — thêm lại vào schema để không mất dữ liệu khi db push,
+// KHÔNG có code nào trong nhánh này tạo/đọc thông báo qua bảng này.
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("system")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
 model DeviceSession {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   userId       String
   deviceToken  String? // FCM Push Notification Token
-  refreshToken String   @unique
+  refreshToken String    @unique
   deviceInfo   String? // Thông tin OS, Model
   ipAddress    String?
   expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  // Cập nhật mỗi lần thiết bị này được nhận diện lại (đăng nhập thụ động qua
+  // Email+OTP) — dùng để hiển thị "lần cuối đăng nhập" và phát hiện phiên bỏ
+  // hoang. Không ảnh hưởng tới expiresAt (thời hạn tuyệt đối của phiên).
+  lastSeenAt   DateTime  @default(now())
+  // Khách chủ động "đăng xuất khỏi thiết bị này" — set thay vì xoá dòng, để
+  // giữ lịch sử phiên. Một phiên bị revoke coi như hết hạn dù expiresAt còn xa.
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -92,6 +149,7 @@ model Profile {
   address        String?
   dob            String?
   idCard         String? // Số CCCD/CMND của chủ tài khoản (khác Passenger.idCard — đó là của từng hành khách theo vé)
+  idCardConsentAt DateTime? // Thời điểm khách tick đồng ý cung cấp CCCD (luồng Email+OTP) — null nghĩa là chưa từng xác nhận
   emergencyPhone String?
   nationality    String?
   occupation     String?

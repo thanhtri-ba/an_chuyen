@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy, memo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Header } from './shared/components/Header';
@@ -8,10 +8,10 @@ import { PageTransition } from './shared/components/PageTransition';
 import { BusLoadingScreen } from './shared/components/BusLoadingScreen';
 import { Toaster } from './design-system/components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { CustomerIdentityProvider } from './contexts/CustomerIdentityContext';
 import { ProtectedRoute } from './shared/components/ProtectedRoute';
 
 // Lazy load all page components (reduces initial bundle by ~60%)
-const HomePage = lazy(() => import('./features/home/pages/HomePage').then(m => ({ default: m.HomePage })));
 const TripSearchPage = lazy(() => import('./features/trip-search/pages/TripSearchPage').then(m => ({ default: m.TripSearchPage })));
 const SeatSelectionPage = lazy(() => import('./features/seat-selection/pages/SeatSelectionPage').then(m => ({ default: m.SeatSelectionPage })));
 const PaymentPage = lazy(() => import('./features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
@@ -37,11 +37,6 @@ const SchedulePage = lazy(() => import('./features/schedule/pages/SchedulePage')
 const LoyaltyPage = lazy(() => import('./features/loyalty/pages/LoyaltyPage').then(m => ({ default: m.LoyaltyPage })));
 const DeliveryPage = lazy(() => import('./features/services/pages/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const RentalPage = lazy(() => import('./features/services/pages/RentalPage').then(m => ({ default: m.RentalPage })));
-const TourPage = lazy(() => import('./features/services/pages/TourPage').then(m => ({ default: m.TourPage })));
-const HotelsPage = lazy(() => import('./features/services/pages/HotelsPage').then(m => ({ default: m.HotelsPage })));
-const HotelDetailPage = lazy(() => import('./features/services/pages/HotelDetailPage').then(m => ({ default: m.HotelDetailPage })));
-const TourDetailPage = lazy(() => import('./features/services/pages/TourDetailPage').then(m => ({ default: m.TourDetailPage })));
-const EventsPage = lazy(() => import('./features/services/pages/EventsPage').then(m => ({ default: m.EventsPage })));
 const DestinationDetailPage = lazy(() => import('./features/destinations/pages/DestinationDetailPage').then(m => ({ default: m.DestinationDetailPage })));
 
 // Lazy load optional components
@@ -78,22 +73,30 @@ const AppRoutes = memo(() => {
           <Suspense fallback={<PageLoadingFallback />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+                <Route path="/" element={<Navigate to="/search" replace />} />
                 <Route path="/search" element={<PageTransition><TripSearchPage /></PageTransition>} />
                 <Route path="/seat-selection/:tripScheduleId" element={<PageTransition><SeatSelectionPage /></PageTransition>} />
-                <Route path="/payment" element={<ProtectedRoute><PageTransition><PaymentPage /></PageTransition></ProtectedRoute>} />
-                <Route path="/booking-confirmation" element={<ProtectedRoute><PageTransition><BookingConfirmationPage /></PageTransition></ProtectedRoute>} />
-                <Route path="/payment/vnpay-result" element={<ProtectedRoute><PageTransition><VnpayResultPage /></PageTransition></ProtectedRoute>} />
-                <Route path="/payment/momo-result" element={<ProtectedRoute><PageTransition><MomoResultPage /></PageTransition></ProtectedRoute>} />
-                <Route path="/payment/mock-gateway" element={<ProtectedRoute><PageTransition><MockGatewayPage /></PageTransition></ProtectedRoute>} />
-                <Route path="/payment/mock-result" element={<ProtectedRoute><PageTransition><MockResultPage /></PageTransition></ProtectedRoute>} />
-                <Route path="/payment/bank-transfer" element={<ProtectedRoute><PageTransition><BankTransferQRPage /></PageTransition></ProtectedRoute>} />
+                {/* Không còn ProtectedRoute ở luồng đặt vé — danh tính khách vãng lai
+                    (identityUser) chỉ được TẠO lúc POST /bookings/create bên trong
+                    chính PaymentPage (guestBookingIdentity.middleware.ts), nên gate
+                    trước đó sẽ chặn nhầm khách lần đầu chưa có identityUser lẫn JWT.
+                    Xem docs/architecture/REDESIGN-PLAN.md. */}
+                <Route path="/payment" element={<PageTransition><PaymentPage /></PageTransition>} />
+                <Route path="/booking-confirmation" element={<PageTransition><BookingConfirmationPage /></PageTransition>} />
+                <Route path="/payment/vnpay-result" element={<PageTransition><VnpayResultPage /></PageTransition>} />
+                <Route path="/payment/momo-result" element={<PageTransition><MomoResultPage /></PageTransition>} />
+                <Route path="/payment/mock-gateway" element={<PageTransition><MockGatewayPage /></PageTransition>} />
+                <Route path="/payment/mock-result" element={<PageTransition><MockResultPage /></PageTransition>} />
+                <Route path="/payment/bank-transfer" element={<PageTransition><BankTransferQRPage /></PageTransition>} />
                 <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
                 <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />
                 <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
                 <Route path="/complete-profile" element={<PageTransition><CompleteProfilePage /></PageTransition>} />
                 <Route path="/profile" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
-                <Route path="/my-bookings" element={<ProtectedRoute><PageTransition><MyBookingsPage /></PageTransition></ProtectedRoute>} />
+                {/* Không ProtectedRoute — MyBookingsPage tự xử lý trường hợp chưa có
+                    danh tính bằng form tra cứu email+mã đơn hàng (OrderLookupForm),
+                    ProtectedRoute sẽ chặn trước khi khách kịp thấy form đó. */}
+                <Route path="/my-bookings" element={<PageTransition><MyBookingsPage /></PageTransition>} />
                 <Route path="/offers" element={<PageTransition><OffersPage /></PageTransition>} />
                 <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
                 <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
@@ -104,12 +107,6 @@ const AppRoutes = memo(() => {
                 <Route path="/loyalty" element={<PageTransition><LoyaltyPage /></PageTransition>} />
                 <Route path="/delivery" element={<PageTransition><DeliveryPage /></PageTransition>} />
                 <Route path="/rental" element={<PageTransition><RentalPage /></PageTransition>} />
-                <Route path="/tour" element={<PageTransition><TourPage /></PageTransition>} />
-                <Route path="/tours" element={<PageTransition><TourPage /></PageTransition>} />
-                <Route path="/tour/:id" element={<PageTransition><TourDetailPage /></PageTransition>} />
-                <Route path="/hotels" element={<PageTransition><HotelsPage /></PageTransition>} />
-                <Route path="/hotels/:slug" element={<PageTransition><HotelDetailPage /></PageTransition>} />
-                <Route path="/events" element={<PageTransition><EventsPage /></PageTransition>} />
                 <Route path="/destinations/:slug" element={<PageTransition><DestinationDetailPage /></PageTransition>} />
               </Routes>
             </AnimatePresence>
@@ -133,9 +130,11 @@ const AppRoutes = memo(() => {
 function App() {
  return (
  <AuthProvider>
+ <CustomerIdentityProvider>
  <BrowserRouter>
  <AppRoutes />
  </BrowserRouter>
+ </CustomerIdentityProvider>
  </AuthProvider>
  );
 }

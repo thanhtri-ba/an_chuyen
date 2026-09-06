@@ -7,6 +7,8 @@ import api from '../../../lib/api';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
 import { DatePicker } from '../../../shared/components/DatePicker';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useCustomerIdentity } from '../../../contexts/CustomerIdentityContext';
+import { CustomerIdentityFields } from '../../booking/components/CustomerIdentityFields';
 
 // --- Types & Mocks ---
 interface SeatData { id: string; floor: number; status: 'available' | 'booked' | 'blocked' | 'held-by-me'; price: number; }
@@ -221,6 +223,7 @@ export function SeatSelectionPage() {
   const [pickupPoint,setPickupPoint] = useState('');
   const [dropoffPoint,setDropoffPoint] = useState('');
   const { user } = useAuth();
+  const { identityUser } = useCustomerIdentity();
   const [savedContacts, setSavedContacts] = useState<SavedContact[]>([]);
 
   // Gợi ý điền nhanh từ những hành khách khách đã dùng ở lần đặt vé trước —
@@ -256,11 +259,17 @@ export function SeatSelectionPage() {
   // seat nào cần release khi bỏ chọn / rời trang / hết giờ.
   const heldRef = useRef<string[]>([]);
   const proceedingRef = useRef(false);
-  // Hold/release chỉ áp dụng khi khách đã đăng nhập — trang chọn ghế cho phép
-  // khách vãng lai duyệt & chọn ghế không cần tài khoản (chỉ /payment mới bắt
-  // đăng nhập), và interceptor của api.ts tự redirect sang /auth khi gặp 401,
-  // nên gọi hold khi chưa có token sẽ đá khách ra khỏi trang một cách vô lý.
-  const isLoggedIn = () => !!sessionStorage.getItem('busz_token');
+  // Hold/release chỉ gọi được khi khách có MỘT trong hai danh tính: JWT (tài
+  // khoản mật khẩu cũ) hoặc phiên Email+OTP đã xác minh từ trước (khách vãng
+  // lai quay lại, nhận diện qua cookie — xem CustomerIdentityContext). Khách
+  // vãng lai lần ĐẦU chưa có identityUser ở bước này (OTP chỉ xác minh ở bước
+  // sau, lúc điền thông tin hành khách) nên vẫn chọn ghế được trên UI nhưng
+  // chưa hold thật server-side cho tới khi xác minh xong — an toàn cuối cùng
+  // vẫn nằm ở khoá ghế atomic trong BookingService.createBooking, không phải
+  // ở bước hold này. interceptor của api.ts tự redirect sang /auth khi gặp
+  // 401 ở endpoint khác /identity/*, nên gọi hold khi chưa có danh tính nào
+  // sẽ đá khách ra khỏi trang một cách vô lý — phải tự chặn trước khi gọi.
+  const isLoggedIn = () => !!sessionStorage.getItem('busz_token') || !!identityUser;
 
   const releaseSeatsOnServer = (ids: string[]) => {
     if (!tripScheduleId || ids.length === 0 || !isLoggedIn()) return;
@@ -766,6 +775,8 @@ export function SeatSelectionPage() {
                 </div>
               );
             })}
+
+            <CustomerIdentityFields />
 
             {/* Add-ons */}
             <div className="flex flex-col gap-4">

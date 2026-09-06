@@ -26,6 +26,12 @@ class ApiClient {
       method: data ? "POST" : "GET",
       body: data ? JSON.stringify(data) : undefined,
       headers,
+      // Cần để cookie phiên thiết bị (Email+OTP, identity.controller.ts) đi
+      // kèm request cross-origin tới backend — chuẩn bị cho login admin bằng
+      // OTP; chưa đổi UI đăng nhập trong đợt này (xem
+      // docs/architecture/REDESIGN-PLAN.md, Phase 4). Backend đã bật
+      // cors({ credentials: true }) tương ứng.
+      credentials: "include",
       ...customConfig,
     };
 

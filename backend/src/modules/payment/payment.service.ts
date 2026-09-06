@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { CreatePaymentDTO, PaymentStatus, PaymentMethod, ConfirmPaymentDTO } from './payment.dto';
+import { sendETicketEmail } from '../booking/booking.email';
 
 export class PaymentService {
   constructor(private prisma: PrismaClient) {}
@@ -108,6 +109,10 @@ export class PaymentService {
       });
     }
 
+    // Mail 2/2 — vé điện tử thật, gửi ngay khi admin vừa duyệt (xem
+    // booking.email.ts). Không await — không chặn phản hồi API cho admin.
+    sendETicketEmail(payment.bookingId);
+
     return payment;
   }
 
@@ -125,6 +130,27 @@ export class PaymentService {
       where: { id: paymentId },
       data: {
         status: 'FAILED' as any,
+        confirmedBy: adminEmail,
+        confirmedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  // Hoàn tiền thủ công thống nhất cho MỌI phương thức (VNPay/MoMo/chuyển
+  // khoản/COD) — từ khi bỏ Ví, không phương thức nào còn tự động hoàn tiền
+  // (xem docs/architecture/REDESIGN-PLAN.md, Phase 3). Admin gọi route này
+  // sau khi đã tự chuyển khoản lại cho khách ngoài hệ thống; đây chỉ là ghi
+  // nhận đã xử lý, KHÔNG gọi API refund thật của bất kỳ cổng nào.
+  async refundPayment(paymentId: string, adminEmail: string) {
+    const existing = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!existing) throw new Error('Payment không tồn tại');
+    if (existing.status !== 'PAID') throw new Error('Chỉ hoàn tiền được cho payment đã PAID');
+
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: 'REFUNDED' as any,
         confirmedBy: adminEmail,
         confirmedAt: new Date(),
         updatedAt: new Date(),

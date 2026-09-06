@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { BookingService } from './booking.service';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { auditLog } from '../../core/audit';
+import { sendOrderConfirmationEmail } from './booking.email';
 
 const createBookingSchema = z.object({
   tripScheduleId: z.string().uuid(),
@@ -58,6 +59,10 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response, ne
         currency: 'VND'
       }
     });
+
+    // Mail 1/2 — xác nhận đơn hàng, CHƯA có vé (xem booking.email.ts). Không
+    // await — không được để khách chờ gửi mail xong mới thấy booking tạo xong.
+    sendOrderConfirmationEmail(booking.id);
 
     res.status(201).json({
       success: true,

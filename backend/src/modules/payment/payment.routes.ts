@@ -6,6 +6,7 @@ import {
   updatePaymentStatus,
   confirmCODPayment,
   rejectPayment,
+  refundPayment,
   listPendingPayments,
 } from './payment.controller';
 import { verifyAccessToken } from '../../middleware/auth.middleware';
@@ -26,6 +27,9 @@ router.get('/booking/:bookingId', verifyAccessToken as any, getPaymentByBooking)
 router.patch('/:paymentId/status', verifyAccessToken as any, requireAdmin as any, updatePaymentStatus);
 router.post('/cod/confirm', verifyAccessToken as any, requireAdmin as any, confirmCODPayment);
 router.post('/admin/reject', verifyAccessToken as any, requireAdmin as any, rejectPayment);
+// Hoàn tiền thủ công thống nhất — thay cho việc chỉ Ví mới tự hoàn tiền được
+// trước đây (xem docs/architecture/REDESIGN-PLAN.md, Phase 3).
+router.post('/admin/refund', verifyAccessToken as any, requireAdmin as any, refundPayment);
 router.get('/admin/pending', verifyAccessToken as any, requireAdmin as any, listPendingPayments);
 
 export default router;

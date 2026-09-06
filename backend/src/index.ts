@@ -3,6 +3,7 @@ import './instrument';
 import * as Sentry from '@sentry/node';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
@@ -39,12 +40,18 @@ if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGINS) {
 app.use(cors({
   origin: corsOrigins,
   exposedHeaders: ['Content-Range', 'X-Total-Count'],
+  // Bắt buộc để cookie phiên thiết bị (Email+OTP, identity.controller.ts) đi
+  // kèm request cross-origin giữa web/admin (:5173/:5174) và backend (:3000) —
+  // credentials:true ở đây PHẢI đi cùng withCredentials:true ở client và
+  // origin không được là '*'.
+  credentials: true,
 }));
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 app.use(compression());
 app.use(express.json());
+app.use(cookieParser());
 app.use(requestContextMiddleware);
 app.use(loggingMiddleware);
 
@@ -91,6 +98,7 @@ import { vnpayRoutes } from './modules/payment/vnpay.routes';
 import { momoRoutes } from './modules/payment/momo.routes';
 import { mockGatewayRoutes } from './modules/payment/mock-gateway.routes';
 import { bankTransferRoutes } from './modules/payment/bank-transfer.routes';
+import { identityRoutes } from './modules/identity/identity.routes';
 
 app.use('/api/auth', authLimiter, authRoutes);
 
@@ -115,6 +123,7 @@ app.use('/api/vnpay', vnpayRoutes);
 app.use('/api/momo', momoRoutes);
 app.use('/api/mock-payment', mockGatewayRoutes);
 app.use('/api/bank-transfer', bankTransferRoutes);
+app.use('/api/identity', identityRoutes);
 
 app.get('/', (req, res) => {
   res.send('An Chuyến Backend API is running!');

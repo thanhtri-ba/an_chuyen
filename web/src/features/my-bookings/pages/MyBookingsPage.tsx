@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useCustomerIdentity } from '../../../contexts/CustomerIdentityContext';
+import { useNavigate } from 'react-router-dom';
 import { Ticket, Clock, ArrowRight, MapPin, CreditCard, CheckCircle, XCircle, RotateCcw, AlertCircle, Ban, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
@@ -201,9 +202,27 @@ function EmptyState({ type }: { type: 'upcoming' | 'past' }) {
   );
 }
 
+/* ─── Khách chưa có phiên (chưa đặt vé trên thiết bị này) không tra cứu
+   trong app nữa — vé điện tử + xác nhận đơn hàng đã được gửi qua email
+   ngay khi đặt vé, đó là nơi khách xem lại đơn của mình. ─── */
+function NoIdentityNotice() {
+  return (
+    <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 380, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700 }}>Chưa có chuyến đi nào</h1>
+        <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.55)' }}>
+          Vé điện tử và xác nhận đơn hàng được gửi qua email ngay sau khi đặt vé thành công — vui lòng kiểm tra hộp thư của bạn.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ─── PAGE ─── */
 export function MyBookingsPage() {
   const { user, isLoading } = useAuth();
+  const { identityUser, isLoading: identityLoading } = useCustomerIdentity();
+  const hasIdentity = !!user || !!identityUser;
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -217,13 +236,15 @@ export function MyBookingsPage() {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (hasIdentity) {
       api.get('/bookings')
         .then(res => setBookings(res.data.data || []))
         .catch(() => toast.error('Không thể tải danh sách vé.'))
         .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [hasIdentity]);
 
   // Set default tracking id on load
   useEffect(() => {
@@ -237,8 +258,8 @@ export function MyBookingsPage() {
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b));
   };
 
-  if (isLoading) return <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>Đang tải...</div>;
-  if (!user) return <Navigate to="/auth" />;
+  if (isLoading || identityLoading) return <div style={{ background: '#fcfcfc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,0,0,0.3)', fontFamily: 'system-ui' }}>Đang tải...</div>;
+  if (!hasIdentity) return <NoIdentityNotice />;
 
   const upcoming = bookings.filter(b => ['CONFIRMED', 'PENDING', 'PENDING_PAYMENT'].includes(b.status));
   const past = bookings.filter(b => ['COMPLETED', 'CANCELLED', 'REFUNDED', 'REFUNDING'].includes(b.status));

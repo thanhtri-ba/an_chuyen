@@ -6,7 +6,16 @@ export type AuditEvent =
   | 'PaymentConfirmed'
   | 'TicketIssued'
   | 'AdminUserUpdated'
-  | 'WalletAdjusted';
+  | 'WalletAdjusted'
+  | 'OtpRequested'
+  | 'OtpVerified'
+  | 'OtpFailed'
+  | 'CustomerIdCardViewed'
+  | 'CustomerIdCardEdited'
+  | 'RefundProcessed'
+  | 'GuestSessionCreated'
+  | 'OrderLookupSucceeded'
+  | 'OrderLookupFailed';
 
 export interface AuditEntry {
   event: AuditEvent;

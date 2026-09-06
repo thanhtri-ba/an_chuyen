@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDTO, PaymentStatus, ConfirmPaymentDTO } from './payment.dto';
+import { auditLog } from '../../core/audit';
 
 const prisma = new PrismaClient();
 const paymentService = new PaymentService(prisma);
@@ -127,6 +128,40 @@ export const rejectPayment = async (req: Request, res: Response, next: NextFunct
     res.json({
       success: true,
       message: 'Payment rejected',
+      data: payment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refundPayment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { paymentId } = req.body;
+    const adminEmail = (req as any).user?.email;
+    const adminId = (req as any).user?.id;
+
+    if (!paymentId) {
+      return res.status(400).json({ error: 'Missing required field: paymentId' });
+    }
+    if (!adminEmail) {
+      return res.status(400).json({ error: 'Authenticated admin has no email on record' });
+    }
+
+    const payment = await paymentService.refundPayment(paymentId, adminEmail);
+
+    auditLog({
+      event: 'RefundProcessed',
+      actorId: adminId || adminEmail,
+      actorRole: 'admin',
+      resourceType: 'payment',
+      resourceId: paymentId,
+      outcome: 'success',
+    });
+
+    res.json({
+      success: true,
+      message: 'Payment refunded',
       data: payment,
     });
   } catch (error) {

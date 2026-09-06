@@ -4,7 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  User, Phone, Mail, Save, Wallet, Award, Ticket, TrendingUp, ChevronRight, Shield, Bell,
+  User, Phone, Mail, Save, Award, Ticket, TrendingUp, ChevronRight, Shield, Bell,
   Calendar, Globe, Briefcase, MapPin, Pencil, QrCode,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -82,7 +82,6 @@ export function ProfilePage() {
   tier.currentPoints = currentPoints;
   const progressPercent = Math.min((currentPoints / tier.pointsNeeded) * 100, 100);
 
-  const balance = user?.wallet?.balance || 0;
   const bookingsCount = user?._count?.bookings || 0;
 
   useEffect(() => {
@@ -199,20 +198,6 @@ export function ProfilePage() {
                   <QrCode size={13} /> Mã QR
                 </button>
               </div>
-            </motion.div>
-
-            {/* Wallet Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#E5EEFF] flex items-center justify-center shrink-0"><Wallet size={18} className="text-[#0D1C2E]" /></div>
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="text-xs font-semibold tracking-[0.24px] text-[#4F4632] truncate">{t('profile.walletTitle')}</div>
-                  <div className="text-xl font-semibold text-[#0D1C2E]">{balance.toLocaleString('vi-VN')} đ</div>
-                </div>
-              </div>
-              <button className="w-full bg-[#FFC107] rounded-lg py-3 text-xs font-bold tracking-[0.24px] text-[#6D5100] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:brightness-95 transition-all">
-                {t('profile.deposit')}
-              </button>
             </motion.div>
 
             {/* Quick Links */}

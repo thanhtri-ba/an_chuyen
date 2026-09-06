@@ -2,15 +2,17 @@
 // the atomic conditional seat lock added to fix the real race condition where
 // two concurrent requests could both pass the "is this seat free?" check before
 // either finished writing. Prisma is fully mocked; no real DB is touched.
+//
+// Wallet-payment tests were removed when the Ví payment method was retired
+// (docs/architecture/REDESIGN-PLAN.md, Phase 3) — every payment method now
+// goes through the same PENDING_PAYMENT → external confirmation path.
 
 const mockTx = {
   tripSchedule: { findUnique: jest.fn() },
   seat: { findMany: jest.fn(), updateMany: jest.fn() },
-  wallet: { findUnique: jest.fn(), update: jest.fn() },
   booking: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
   ticket: { createMany: jest.fn() },
   payment: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
-  walletTransaction: { create: jest.fn() },
   bookingTimeline: { create: jest.fn() },
 };
 
@@ -56,7 +58,9 @@ describe('BookingService.createBooking', () => {
         data: expect.objectContaining({ status: 'LOCKED', lockedBy: null, lockExpiresAt: null }),
       })
     );
-    expect(mockTx.booking.create).toHaveBeenCalled();
+    expect(mockTx.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING_PAYMENT' }) })
+    );
   });
 
   it('accepts a seat already held (LOCKED) by the SAME user — the normal post-hold checkout path', async () => {
@@ -95,28 +99,15 @@ describe('BookingService.createBooking', () => {
     await expect(BookingService.createBooking(baseParams)).rejects.toThrow(/Ghế không tồn tại/);
   });
 
-  it('rejects wallet payment when balance is insufficient, without locking any seat', async () => {
+  it('always creates the Payment as PENDING regardless of method — external confirmation decides PAID', async () => {
     mockTx.seat.findMany.mockResolvedValue([SEAT_A]);
-    mockTx.wallet.findUnique.mockResolvedValue({ id: 'wallet-1', balance: 1000 });
-
-    await expect(
-      BookingService.createBooking({ ...baseParams, paymentMethod: 'busz-wallet' })
-    ).rejects.toThrow(/Số dư ví không đủ/);
-    expect(mockTx.seat.updateMany).not.toHaveBeenCalled();
-  });
-
-  it('marks seats BOOKED (not LOCKED) and debits the wallet on a successful wallet payment', async () => {
-    mockTx.seat.findMany.mockResolvedValue([SEAT_A]);
-    mockTx.wallet.findUnique.mockResolvedValue({ id: 'wallet-1', balance: 10_000_000 });
     mockTx.seat.updateMany.mockResolvedValue({ count: 1 });
 
-    await BookingService.createBooking({ ...baseParams, paymentMethod: 'busz-wallet' });
+    await BookingService.createBooking({ ...baseParams, paymentMethod: 'VNPAY' });
 
-    expect(mockTx.seat.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: 'BOOKED' }) })
+    expect(mockTx.payment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ method: 'VNPAY', status: 'PENDING' }) })
     );
-    expect(mockTx.wallet.update).toHaveBeenCalled();
-    expect(mockTx.walletTransaction.create).toHaveBeenCalled();
   });
 });
 
@@ -126,11 +117,7 @@ describe('BookingService.cancelBooking', () => {
   const FUTURE_DEPARTURE = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h from now
   const PAST_DEPARTURE = new Date(Date.now() - 60 * 60 * 1000);
 
-  function tripScheduleWithPolicies(departureTime: Date, policies: { hoursBefore: number; refundPct: number }[]) {
-    return { departureTime, trip: { busAgent: { policies } } };
-  }
-
-  it('releases seats and cancels a PENDING_PAYMENT booking owned by the caller (no refund, nothing was charged)', async () => {
+  it('releases seats and cancels a PENDING_PAYMENT booking owned by the caller (nothing was charged)', async () => {
     mockTx.booking.findUnique.mockResolvedValue({
       id: 'booking-1',
       userId: 'user-1',
@@ -138,10 +125,10 @@ describe('BookingService.cancelBooking', () => {
       totalAmount: 200000,
       tripScheduleId: 'trip-1',
       seatBookings: [{ seatId: 'seat-a' }],
-      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, []),
+      tripSchedule: { departureTime: FUTURE_DEPARTURE },
     });
     mockTx.booking.update.mockResolvedValue({ id: 'booking-1', status: 'CANCELLED' });
-    mockTx.payment.findUnique.mockResolvedValue(null);
+    mockTx.payment.findUnique.mockResolvedValue({ id: 'payment-1', status: 'PENDING' });
 
     await BookingService.cancelBooking('user-1', 'booking-1');
 
@@ -149,14 +136,17 @@ describe('BookingService.cancelBooking', () => {
       where: { id: { in: ['seat-a'] } },
       data: { status: 'AVAILABLE' },
     });
+    expect(mockTx.payment.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: { status: 'FAILED' },
+    });
     expect(mockTx.booking.update).toHaveBeenCalledWith({
       where: { id: 'booking-1' },
       data: { status: 'CANCELLED' },
     });
-    expect(mockTx.wallet.update).not.toHaveBeenCalled();
   });
 
-  it('refunds the wallet according to the cancellation policy when cancelling a CONFIRMED, wallet-paid booking', async () => {
+  it('cancelling a CONFIRMED, already-PAID booking releases the seat but leaves Payment as PAID (manual refund by admin)', async () => {
     mockTx.booking.findUnique.mockResolvedValue({
       id: 'booking-1',
       userId: 'user-1',
@@ -164,31 +154,22 @@ describe('BookingService.cancelBooking', () => {
       totalAmount: 200000,
       tripScheduleId: 'trip-1',
       seatBookings: [{ seatId: 'seat-a' }],
-      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, [
-        { hoursBefore: 24, refundPct: 80 },
-        { hoursBefore: 2, refundPct: 30 },
-      ]),
+      tripSchedule: { departureTime: FUTURE_DEPARTURE },
     });
-    mockTx.payment.findUnique.mockResolvedValue({ id: 'payment-1', status: 'PAID', method: 'busz-wallet' });
-    mockTx.booking.update.mockResolvedValue({ id: 'booking-1', status: 'REFUNDED' });
+    mockTx.payment.findUnique.mockResolvedValue({ id: 'payment-1', status: 'PAID', method: 'VNPAY' });
+    mockTx.booking.update.mockResolvedValue({ id: 'booking-1', status: 'CANCELLED' });
 
     await BookingService.cancelBooking('user-1', 'booking-1');
 
-    // 48h before departure matches the 24h-before tier (80%) not the 2h-before tier
-    expect(mockTx.wallet.update).toHaveBeenCalledWith({
-      where: { userId: 'user-1' },
-      data: { balance: { increment: 160000 } },
+    expect(mockTx.seat.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['seat-a'] } },
+      data: { status: 'AVAILABLE' },
     });
-    expect(mockTx.walletTransaction.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ amount: 160000, type: 'REFUND' }) })
-    );
-    expect(mockTx.payment.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
-      data: { status: 'REFUNDED' },
-    });
+    // PAID Payment is untouched — no auto-refund for any method anymore.
+    expect(mockTx.payment.update).not.toHaveBeenCalled();
     expect(mockTx.booking.update).toHaveBeenCalledWith({
       where: { id: 'booking-1' },
-      data: { status: 'REFUNDED' },
+      data: { status: 'CANCELLED' },
     });
   });
 
@@ -198,7 +179,7 @@ describe('BookingService.cancelBooking', () => {
       userId: 'other-user',
       status: 'PENDING_PAYMENT',
       seatBookings: [],
-      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, []),
+      tripSchedule: { departureTime: FUTURE_DEPARTURE },
     });
 
     await expect(BookingService.cancelBooking('user-1', 'booking-1')).rejects.toThrow(
@@ -212,7 +193,7 @@ describe('BookingService.cancelBooking', () => {
       userId: 'user-1',
       status: 'COMPLETED',
       seatBookings: [],
-      tripSchedule: tripScheduleWithPolicies(FUTURE_DEPARTURE, []),
+      tripSchedule: { departureTime: FUTURE_DEPARTURE },
     });
 
     await expect(BookingService.cancelBooking('user-1', 'booking-1')).rejects.toThrow(
@@ -226,7 +207,7 @@ describe('BookingService.cancelBooking', () => {
       userId: 'user-1',
       status: 'CONFIRMED',
       seatBookings: [],
-      tripSchedule: tripScheduleWithPolicies(PAST_DEPARTURE, []),
+      tripSchedule: { departureTime: PAST_DEPARTURE },
     });
 
     await expect(BookingService.cancelBooking('user-1', 'booking-1')).rejects.toThrow(

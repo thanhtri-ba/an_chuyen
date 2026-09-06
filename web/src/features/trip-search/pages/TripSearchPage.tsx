@@ -251,15 +251,14 @@ export function TripSearchPage() {
           params: { origin: effectiveOrigin, destination: effectiveDest, date: searchDate, passengers: searchPassengers, page: 1, limit: 10 }
         });
 
-        if (res.data && res.data.data && res.data.data.length > 0) {
-          setTrips(res.data.data.map(mapTripFromApi));
-          setHasMore(res.data.data.length === 10);
-        } else {
-          setTrips(getMockTrips(effectiveOrigin, effectiveDest));
-          setHasMore(false);
-        }
+        setTrips(res.data?.data?.length ? res.data.data.map(mapTripFromApi) : []);
+        setHasMore(res.data?.data?.length === 10);
       } catch {
-        setTrips(getMockTrips(effectiveOrigin, effectiveDest));
+        // Không có chuyến giả nào để hiện thay thế — rơi đúng vào empty-state
+        // thật ("Không tìm thấy chuyến xe nào") giống trường hợp 0 kết quả,
+        // để khách không nhầm dữ liệu giả với chuyến thật (xem
+        // docs/architecture/06-booking-flow.md, mục Tìm chuyến).
+        setTrips([]);
         setHasMore(false);
       } finally {
         setIsLoading(false);
@@ -307,12 +306,6 @@ export function TripSearchPage() {
       setIsLoadingMore(false);
     }
   };
-
-  const getMockTrips = (origin: string, dest: string) => [
-    { id: 1, company: 'Phương Trang', type: 'Limousine 22 chỗ', depTime: '07:00', arrTime: '15:30', from: `Bến xe ${origin}`, to: `Bến xe ${dest}`, duration: routeDuration, price: 350000, rating: 4.8 },
-    { id: 2, company: 'Thành Bưởi', type: 'Giường nằm 40 chỗ', depTime: '08:30', arrTime: '17:30', from: `Bến xe ${origin}`, to: `Bến xe ${dest}`, duration: routeDuration, price: 300000, rating: 4.6 },
-    { id: 3, company: 'Futa Bus Lines', type: 'Limousine 34 chỗ', depTime: '10:00', arrTime: '18:15', from: `Bến xe ${origin}`, to: `Bến xe ${dest}`, duration: routeDuration, price: 400000, rating: 4.7 },
-  ];
 
   const handleSearch = () => {
     const params: Record<string, string> = { origin: formOrigin, destination: formDest, date: formDate, passengers: formPass };

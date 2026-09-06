@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sendETicketEmail } from '../booking/booking.email';
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,11 @@ export async function confirmPaymentSuccess(bookingId: string, gateway: string, 
       });
     }
   });
+
+  // Mail 2/2 — vé điện tử thật, gửi ngay khi Payment vừa chuyển PAID (xem
+  // booking.email.ts). Không await — không chặn phản hồi cho gateway/webhook.
+  sendETicketEmail(bookingId);
+
   return { ok: true as const, alreadyProcessed: false };
 }
 
