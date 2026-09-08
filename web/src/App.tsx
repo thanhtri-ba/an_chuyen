@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy, memo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Header } from './shared/components/Header';
@@ -12,6 +12,7 @@ import { CustomerIdentityProvider } from './contexts/CustomerIdentityContext';
 import { ProtectedRoute } from './shared/components/ProtectedRoute';
 
 // Lazy load all page components (reduces initial bundle by ~60%)
+const HomePage = lazy(() => import('./features/home/pages/HomePage').then(m => ({ default: m.HomePage })));
 const TripSearchPage = lazy(() => import('./features/trip-search/pages/TripSearchPage').then(m => ({ default: m.TripSearchPage })));
 const SeatSelectionPage = lazy(() => import('./features/seat-selection/pages/SeatSelectionPage').then(m => ({ default: m.SeatSelectionPage })));
 const PaymentPage = lazy(() => import('./features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
@@ -73,7 +74,7 @@ const AppRoutes = memo(() => {
           <Suspense fallback={<PageLoadingFallback />}>
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<Navigate to="/search" replace />} />
+                <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
                 <Route path="/search" element={<PageTransition><TripSearchPage /></PageTransition>} />
                 <Route path="/seat-selection/:tripScheduleId" element={<PageTransition><SeatSelectionPage /></PageTransition>} />
                 {/* Không còn ProtectedRoute ở luồng đặt vé — danh tính khách vãng lai

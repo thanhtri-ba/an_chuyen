@@ -25,6 +25,24 @@ Lấy từ `grep` trực tiếp trên `router.get/post/put/patch/delete(...)` tr
 | POST | `/reset-password` | công khai |
 | GET | `/profile` | `verifyAccessToken` |
 | PUT | `/profile` | `verifyAccessToken` |
+| POST | `/login/verify-otp` | công khai (cần `challengeId` hợp lệ) — **mới, commit `931302a`**, hoàn tất đăng nhập khi `/login` trả `requiresOtp: true` |
+
+> `POST /register` từ commit `931302a` **bắt buộc** `otpChallengeId` + `otpCode` (xin qua `/api/identity/otp/request-registration`) — xem [14-identity-otp-flow.md](14-identity-otp-flow.md).
+> `POST /login` có thể trả `{ requiresOtp: true, challengeId }` thay vì token nếu thiết bị chưa có `DeviceSession` hợp lệ — xem file 14.
+
+## `/api/identity` (`identity.routes.ts` — mới, commit `931302a`, qua `otpLimiter` 20 req/15p)
+
+| Method | Path | Auth |
+|---|---|---|
+| POST | `/otp/request` | công khai |
+| POST | `/otp/request-registration` | công khai |
+| POST | `/otp/request-admin` | công khai (chỉ gửi mã thật nếu email đã có role=admin) |
+| POST | `/otp/verify` | công khai |
+| POST | `/lookup-order` | công khai |
+| GET | `/session` | cookie `anchuyen_device_session` |
+| POST | `/logout` | cookie `anchuyen_device_session` |
+
+Chi tiết đầy đủ luồng, middleware `deviceSessionAuth`/`requireAnyIdentity`/`guestBookingIdentity` (gắn vào `POST /bookings/create` và `POST/:id/seats/hold|release`) — xem [14-identity-otp-flow.md](14-identity-otp-flow.md).
 
 ## `/api/bookings` (`booking.routes.ts` → `booking.controller.ts` → `BookingService`)
 
