@@ -111,7 +111,7 @@ function Heading() {
     <motion.h2
       initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.6 }}
-      className="font-display font-medium text-white text-5xl md:text-7xl text-center mb-16 px-6"
+      className="font-sans font-medium text-white text-5xl md:text-7xl text-center mb-16 px-6"
     >
       Điểm đến hàng đầu
     </motion.h2>
@@ -120,7 +120,7 @@ function Heading() {
 
 function Blurb() {
   return (
-    <p className="font-display text-white/85 text-3xl md:text-5xl text-center leading-[1.6] tracking-wide max-w-4xl mx-auto">
+    <p className="font-sans text-white/85 text-3xl md:text-5xl text-center leading-[1.6] tracking-wide max-w-4xl mx-auto">
       Từ cao nguyên sương mù đến bãi biển nắng vàng — mỗi tuyến đường An Chuyến đưa bạn đến đều được chọn lọc kỹ, xe tốt, tài xế quen thuộc cung đường, đúng giờ khởi hành như đã hẹn.
     </p>
   );
@@ -144,7 +144,7 @@ function Card({ d, i }: { d: DestinationDetail; i: number }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-          <h3 className="font-display text-2xl">{d.location}</h3>
+          <h3 className="font-sans text-2xl">{d.location}</h3>
         </div>
       </Link>
     </motion.div>
