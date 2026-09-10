@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "bookings" ADD COLUMN "notes" TEXT,
+ADD COLUMN "amenities" JSONB,
+ADD COLUMN "amenitiesTotal" DOUBLE PRECISION NOT NULL DEFAULT 0;

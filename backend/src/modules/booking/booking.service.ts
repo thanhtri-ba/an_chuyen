@@ -1,6 +1,11 @@
 import { PrismaClient, SeatStatus } from '@prisma/client';
+import { emitSeatStatus } from '../../core/socket';
 
 const prisma = new PrismaClient();
+
+// Phải khớp AMENITY_PRICES trong web/src/features/seat-selection/pages/SeatSelectionPage.tsx —
+// backend tự tính lại amenitiesTotal, không tin số tiền client gửi lên.
+const AMENITY_PRICES = { nuocSuoi: 10000, khanLanh: 5000, goiTuaCo: 30000 };
 
 // Ví đã bị loại khỏi luồng đặt vé (xem docs/architecture/REDESIGN-PLAN.md,
 // Phase 3) — mọi phương thức (VNPay, MoMo, chuyển khoản, COD) giờ đi chung
@@ -24,17 +29,19 @@ interface CreateBookingParams {
   contactName?: string | null;
   contactPhone?: string | null;
   contactEmail?: string | null;
+  notes?: string | null;
+  amenities?: { nuocSuoi: number; khanLanh: number; goiTuaCo: number; oCamUSB: boolean } | null;
 }
 
 export class BookingService {
   static async createBooking(data: CreateBookingParams) {
-    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId, promoCode, contactName, contactPhone, contactEmail } = data;
+    const { userId, tripScheduleId, seatNumbers, passengers, idempotencyKey, paymentMethod, pickupPointId, dropoffPointId, promoCode, contactName, contactPhone, contactEmail, notes, amenities } = data;
 
     // Lớp 3: Idempotency (Chống Spam). 
     // Trong thực tế, có thể lưu idempotencyKey vào một bảng riêng hoặc cột trong Booking để check.
     // Ở đây ta đơn giản hóa để tập trung vào Lớp 1 & Lớp 2.
 
-    return await prisma.$transaction(async (tx) => {
+    const booking = await prisma.$transaction(async (tx) => {
       // 1. Kiểm tra TripSchedule
       const tripSchedule = await tx.tripSchedule.findUnique({
         where: { id: tripScheduleId },
@@ -95,6 +102,14 @@ export class BookingService {
 
       // Thêm phí dịch vụ (Service Fee = 10000)
       totalAmount += 10000;
+
+      // Tiện ích chọn thêm (nước suối/khăn lạnh/gối) — USB cắm miễn phí, không tính tiền.
+      const amenitiesTotal = amenities
+        ? amenities.nuocSuoi * AMENITY_PRICES.nuocSuoi +
+          amenities.khanLanh * AMENITY_PRICES.khanLanh +
+          amenities.goiTuaCo * AMENITY_PRICES.goiTuaCo
+        : 0;
+      totalAmount += amenitiesTotal;
 
       // Mã giảm giá: backend tự tra Promotion theo code, tự tính % giảm — không tin
       // bất kỳ số tiền/phần trăm nào client gửi lên. Sai code / hết hạn / chưa active
@@ -162,6 +177,9 @@ export class BookingService {
           status: 'PENDING_PAYMENT',
           pickupPointId: pickupPointId || null,
           dropoffPointId: dropoffPointId || null,
+          notes: notes || null,
+          amenities: amenities ?? undefined,
+          amenitiesTotal,
           passengers: {
             create: passengers.map(p => ({
               name: p.name,
@@ -231,6 +249,9 @@ export class BookingService {
       maxWait: 15000, // 15s max wait to acquire transaction lock
       timeout: 30000  // 30s timeout for transaction execution
     });
+
+    emitSeatStatus(tripScheduleId, seatNumbers.map((seatNumber) => ({ seatNumber, status: 'booked' })));
+    return booking;
   }
 
   // Cho khách tự huỷ booking của mình khi còn ở trạng thái PENDING_PAYMENT
@@ -244,11 +265,11 @@ export class BookingService {
   // chuyển CANCELLED; hoàn tiền cho khách là việc admin xử lý thủ công qua
   // quy trình đối soát riêng (POST /api/admin/payments/:id/refund).
   static async cancelBooking(userId: string, bookingId: string) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: {
-          seatBookings: true,
+          seatBookings: { include: { seat: true } },
           tripSchedule: true,
         },
       });
@@ -297,8 +318,11 @@ export class BookingService {
         },
       });
 
-      return updated;
+      return { updated, tripScheduleId: booking.tripScheduleId, seatNumbers: booking.seatBookings.map((sb: any) => sb.seat?.seatNumber).filter(Boolean) as string[] };
     });
+
+    emitSeatStatus(result.tripScheduleId, result.seatNumbers.map((seatNumber) => ({ seatNumber, status: 'available' })));
+    return result.updated;
   }
 
   // Giải phóng ghế của các booking PENDING_PAYMENT đã quá hạn giữ chỗ —
@@ -307,12 +331,12 @@ export class BookingService {
     const cutoff = new Date(Date.now() - olderThanMinutes * 60 * 1000);
     const expired = await prisma.booking.findMany({
       where: { status: 'PENDING_PAYMENT', createdAt: { lt: cutoff } },
-      include: { seatBookings: true },
+      include: { seatBookings: { include: { seat: true } } },
     });
 
     for (const booking of expired) {
+      const seatIds = booking.seatBookings.map((sb) => sb.seatId);
       await prisma.$transaction(async (tx) => {
-        const seatIds = booking.seatBookings.map((sb) => sb.seatId);
         await tx.seat.updateMany({
           where: { id: { in: seatIds } },
           data: { status: SeatStatus.AVAILABLE },
@@ -326,6 +350,13 @@ export class BookingService {
           await tx.payment.update({ where: { id: payment.id }, data: { status: 'FAILED' } });
         }
       });
+      emitSeatStatus(
+        booking.tripScheduleId,
+        booking.seatBookings
+          .map((sb: any) => sb.seat?.seatNumber)
+          .filter(Boolean)
+          .map((seatNumber: string) => ({ seatNumber, status: 'available' as const }))
+      );
     }
 
     return expired.length;

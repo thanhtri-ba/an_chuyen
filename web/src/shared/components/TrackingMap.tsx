@@ -11,20 +11,28 @@ interface TrackingMapProps {
   statusText?: string;
 }
 
-export function TrackingMap({ 
+// Guard against NaN/undefined coords reaching Leaflet — it throws "Invalid LatLng
+// object: (NaN, NaN)" instead of failing gracefully, which crashes the map render
+// whenever a caller passes coordinates before real data is ready (e.g. trip hasn't
+// started yet, no GPS fix).
+const isValidCoords = (c: [number, number] | undefined | null): c is [number, number] =>
+  Array.isArray(c) && c.length === 2 && Number.isFinite(c[0]) && Number.isFinite(c[1]);
+
+export function TrackingMap({
   originCoords,
   destCoords,
   currentLocation,
-  originName = 'Điểm đi', 
+  originName = 'Điểm đi',
   destName = 'Điểm đến',
   statusText = 'Đang di chuyển'
 }: TrackingMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const coordsValid = isValidCoords(originCoords) && isValidCoords(destCoords) && isValidCoords(currentLocation);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !coordsValid) return;
     if (!mapInstance.current) {
       mapInstance.current = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView(currentLocation, 12);
       L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { className: 'grayscale-map-tiles' }).addTo(mapInstance.current);
@@ -80,22 +88,30 @@ export function TrackingMap({
     };
 
     drawRoute();
-    
+
     return () => { ignore = true; };
-  }, [originCoords, destCoords]);
+  }, [originCoords, destCoords, coordsValid]);
 
   useEffect(() => {
-    if (markerRef.current && mapInstance.current) {
+    if (markerRef.current && mapInstance.current && isValidCoords(currentLocation)) {
       markerRef.current.setLatLng(currentLocation);
       mapInstance.current.panTo(currentLocation);
     }
   }, [currentLocation]);
 
+  if (!coordsValid) {
+    return (
+      <div className="flex items-center justify-center h-full w-full rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-400">
+        Chưa có dữ liệu vị trí GPS
+      </div>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden border border-gray-200 shadow-sm rounded-xl h-full w-full z-0">
       <style>{`.grayscale-map-tiles { filter: grayscale(10%); }`}</style>
       <div ref={mapRef} className="w-full h-full" />
-      
+
       {/* Overlay Status */}
       <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-gray-100 flex items-center gap-2">
         <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>

@@ -273,7 +273,7 @@ const en: Translations = {
     currentPoints: 'Current Points',
     ptsToNext: 'pts →',
     accumulatedPoints: 'Accumulated Points',
-    walletTitle: 'LunaTravel Business Pay Wallet',
+    walletTitle: 'An Chuyến Pay Wallet',
     availableBalance: 'Available Balance',
     deposit: 'Deposit',
     history: 'History',

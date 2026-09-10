@@ -89,11 +89,30 @@ export function TopDestinations({ destinations }: Props) {
 
   return (
     <section ref={containerRef} className="relative bg-[#0d1710]" style={{ height: `${100 + items.length * 60}vh` }}>
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+      {/* No overflow-* on this h-screen sticky box at all — per the CSS overflow
+          spec, clipping only one axis (e.g. overflow-x-hidden) silently forces
+          the OTHER axis to compute as "auto" even if you explicitly write
+          "overflow-y-visible", turning this box into its own scroll container
+          with a visible scrollbar the moment content (the Blurb, on shorter
+          viewports) exceeds h-screen. The horizontal clip the draggable card
+          row needs belongs on that row itself instead, where it can't affect Y. */}
+      <div className="sticky top-0 h-screen flex flex-col justify-center">
         <Heading />
-        <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max" style={{ x }}>
-          {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
-        </motion.div>
+        {/* Dedicated clipping wrapper — overflow-x-hidden here, NOT on the track
+            itself. The track (w-max) is naturally as wide as all cards combined
+            (e.g. 2268px for 7 cards); overflow-x-hidden on the track only clips
+            the track's OWN overflowing children, it does nothing to stop the
+            track's own 2268px width from pushing this flex item — and the whole
+            page — wider than the viewport (real bug: horizontal scrollbar on
+            the entire site). This wrapper has no fixed height (unlike the
+            .sticky.h-screen column), so unlike that earlier bug, letting its
+            Y axis auto-compute here is harmless — it just shrinks to the
+            track's own 460px, nothing inside it can overflow vertically. */}
+        <div className="w-full overflow-x-hidden">
+          <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max" style={{ x }}>
+            {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
+          </motion.div>
+        </div>
         <div className="px-6 lg:px-12 mt-8 lg:mt-10">
           <Blurb />
         </div>
@@ -107,7 +126,7 @@ function Heading() {
     <motion.h2
       initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.6 }}
-      className="font-display font-medium text-white text-5xl md:text-7xl text-center mb-16 px-6"
+      className="font-sans font-medium text-white text-5xl md:text-7xl text-center mb-16 px-6"
     >
       Điểm đến hàng đầu
     </motion.h2>
@@ -116,7 +135,7 @@ function Heading() {
 
 function Blurb() {
   return (
-    <p className="font-display text-white/85 text-3xl md:text-5xl text-center leading-[1.6] tracking-wide max-w-4xl mx-auto">
+    <p className="font-sans text-white/85 text-3xl md:text-5xl text-center leading-[1.6] tracking-wide max-w-4xl mx-auto">
       Từ cao nguyên sương mù đến bãi biển nắng vàng — mỗi tuyến đường An Chuyến đưa bạn đến đều được chọn lọc kỹ, xe tốt, tài xế quen thuộc cung đường, đúng giờ khởi hành như đã hẹn.
     </p>
   );
@@ -125,22 +144,42 @@ function Blurb() {
 function Card({ d, i }: { d: DestinationDetail; i: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5, delay: i * 0.08 }}
+      // No initial/whileInView fade-in here (unlike other cards on the page) —
+      // this card sits inside the sticky, horizontally-dragged row, and
+      // Framer Motion's viewport intersection check for whileInView doesn't
+      // reliably fire once an element is revealed by a CSS transform (the
+      // `x` drag) rather than real page scroll. It was getting stuck at its
+      // initial opacity: 0 forever — the card never became visible. The
+      // drag/reveal itself is already the section's "entrance", so cards
+      // just render visible immediately.
       whileHover={{ y: -6 }}
-      className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 border border-white/10"
+      // ring (box-shadow) instead of border — a real border consumes 1px of box
+      // space on each side, shrinking the content area to 338x458 vs the card's
+      // 340x460 frame; a ring paints on top without changing the box size, so
+      // the image now matches the frame exactly.
+      className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 ring-1 ring-inset ring-white/10 [transform:translateZ(0)]"
     >
       <Link to={`/destinations/${d.slug}`} className="absolute inset-0">
         <img
           src={d.heroImg}
           alt={d.location}
-          className="w-full h-full object-cover opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
+          // rounded-lg here too, not just on the card wrapper — Safari sometimes
+          // promotes this img to its own compositing layer (object-cover + the
+          // hover scale transform) and then ignores the ancestor's
+          // overflow-hidden clip, rendering square corners despite correct CSS
+          // up the tree. Redundant on Chrome/Firefox, fixes it on Safari.
+          className="w-full h-full object-cover rounded-lg opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
           loading="lazy"
           onLoad={e => e.currentTarget.classList.add('loaded')}
+          // A dead image URL (404, expired Unsplash/Pexels link...) never fires
+          // onLoad, so the card would stay invisible forever on a permanently
+          // dark tile with no indication anything went wrong — reveal it anyway
+          // so at least the title/gradient/card frame show instead of a blank box.
+          onError={e => e.currentTarget.classList.add('loaded')}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-          <h3 className="font-display text-2xl">{d.location}</h3>
+          <h3 className="font-sans text-2xl">{d.location}</h3>
         </div>
       </Link>
     </motion.div>

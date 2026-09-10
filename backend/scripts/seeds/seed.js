@@ -1,4 +1,4 @@
-const { PrismaClient, SeatClass, SeatStatus } = require('@prisma/client');
+const { PrismaClient, SeatClass } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function run() {
@@ -69,16 +69,10 @@ async function run() {
     }
   });
 
-  // 9. Create 10 Seats for this schedule
-  const seatsData = [];
-  for (let i = 1; i <= 10; i++) {
-    seatsData.push({
-      tripScheduleId: schedule.id,
-      seatNumber: `A${i}`,
-      status: SeatStatus.AVAILABLE
-    });
-  }
-  await prisma.seat.createMany({ data: seatsData });
+  // Seats are intentionally not created here — SeatService.getSeatMap() lazily
+  // generates the real T{floor}-{row}{col} seat map on first request. Pre-creating
+  // "A1".."A10" rows here used to produce seats in a format the frontend/booking
+  // flow can't parse, silently breaking seat selection for the trip this seeds.
 
   console.log("Seeding completed successfully!");
 }

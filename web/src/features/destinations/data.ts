@@ -25,7 +25,7 @@ const FALLBACK: DestinationDetail[] = [
     country: 'Lâm Đồng',
     location: 'Đà Lạt',
     desc: 'Thành phố ngàn hoa mộng mơ giữa cao nguyên se lạnh.',
-    heroImg: 'https://images.unsplash.com/photo-1558523720-060e64182081?q=80&w=1600&auto=format&fit=crop',
+    heroImg: 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1600&auto=format&fit=crop',
     rating: '4.8',
     reviewCount: '2,150',
     bestSeason: 'Mùa đẹp nhất: T11 - T3',

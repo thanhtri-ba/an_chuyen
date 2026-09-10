@@ -32,6 +32,17 @@ export const initSocket = (server: HttpServer) => {
       socket.leave(`trip_${tripId}`);
     });
 
+    // Sơ đồ ghế: khách xem trang chọn ghế join room riêng theo tripScheduleId
+    // (khác room GPS ở trên — tripId và tripScheduleId là 2 khái niệm khác
+    // nhau) để nhận cập nhật real-time khi người khác giữ/nhả/đặt ghế.
+    socket.on('join_seatmap', (tripScheduleId: string) => {
+      socket.join(`seatmap_${tripScheduleId}`);
+    });
+
+    socket.on('leave_seatmap', (tripScheduleId: string) => {
+      socket.leave(`seatmap_${tripScheduleId}`);
+    });
+
     socket.on('disconnect', () => {
       logger.info(`User disconnected from socket: ${socket.id}`);
     });
@@ -46,3 +57,18 @@ export const getIO = () => {
   }
   return io;
 };
+
+export type SeatStatusUpdate = { seatNumber: string; status: 'held' | 'available' | 'booked' };
+
+// Phát cập nhật trạng thái ghế cho mọi client đang xem trang chọn ghế của
+// đúng chuyến này. An toàn khi gọi trước khi socket.io init xong (ví dụ
+// trong unit test service layer không khởi động HTTP server) — chỉ bỏ qua,
+// không throw, vì đây là hiệu ứng phụ realtime, không phải nghiệp vụ chính.
+export function emitSeatStatus(tripScheduleId: string, seats: SeatStatusUpdate[]) {
+  if (seats.length === 0) return;
+  try {
+    getIO().to(`seatmap_${tripScheduleId}`).emit('seats_updated', { tripScheduleId, seats });
+  } catch {
+    // socket.io chưa init (test, script chạy độc lập...) — bỏ qua.
+  }
+}

@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Wifi, Usb, Droplets, Phone, Wind, ShieldC
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { getSocket } from '../../../lib/socket';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
 import { DatePicker } from '../../../shared/components/DatePicker';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -210,8 +211,20 @@ export function SeatSelectionPage() {
     return () => window.removeEventListener('resize', fn);
   }, []);
 
+  // Narrower than isMobile (1024, shared with the app's tablet/mobile nav layout) —
+  // this one gates the seat-floor toggle specifically, so a resized desktop Chrome
+  // window still gets the side-by-side 2-floor view; only real phone-width screens
+  // get the "one floor at a time" toggle.
+  const [isPhoneWidth, setIsPhoneWidth] = useState(() => window.innerWidth < 640);
+  useEffect(() => {
+    const fn = () => setIsPhoneWidth(window.innerWidth < 640);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+
   const [seats, setSeats] = useState<SeatData[]>(()=>generateMockSeats());
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [activeFloor, setActiveFloor] = useState<1|2>(1);
   const [tripDetail, setTripDetail] = useState<TripScheduleDetail|null>(null);
   const [timeLeft, setTimeLeft] = useState(600);
   const [step, setStep] = useState<'seat'|'info'>('seat');
@@ -247,6 +260,35 @@ export function SeatSelectionPage() {
     }).catch(()=>{});
   },[tripScheduleId]);
 
+  // Realtime: người khác giữ/nhả/đặt ghế trên cùng chuyến này phải thấy ngay
+  // trên sơ đồ, không cần refresh — join room riêng theo tripScheduleId
+  // (core/socket.ts), bỏ qua update cho ghế mình đang tự chọn (selectedSeats)
+  // để không tự đè lên UI optimistic của chính mình.
+  const selectedSeatsRef = useRef<string[]>([]);
+  useEffect(() => { selectedSeatsRef.current = selectedSeats; }, [selectedSeats]);
+
+  useEffect(() => {
+    if (!tripScheduleId) return;
+    const socket = getSocket();
+    socket.emit('join_seatmap', tripScheduleId);
+
+    const onSeatsUpdated = (payload: { tripScheduleId: string; seats: { seatNumber: string; status: 'held'|'available'|'booked' }[] }) => {
+      if (payload.tripScheduleId !== tripScheduleId) return;
+      setSeats(prev => prev.map(s => {
+        const update = payload.seats.find(u => u.seatNumber === s.id);
+        if (!update || selectedSeatsRef.current.includes(s.id)) return s;
+        const status: SeatData['status'] = update.status === 'available' ? 'available' : update.status === 'booked' ? 'booked' : 'blocked';
+        return { ...s, status };
+      }));
+    };
+    socket.on('seats_updated', onSeatsUpdated);
+
+    return () => {
+      socket.emit('leave_seatmap', tripScheduleId);
+      socket.off('seats_updated', onSeatsUpdated);
+    };
+  }, [tripScheduleId]);
+
   const pickupOpts = tripDetail?.checkpoints.filter(c=>c.type==='PICKUP')||[];
   const dropoffOpts = tripDetail?.checkpoints.filter(c=>c.type==='DROPOFF')||[];
   useEffect(()=>{
@@ -258,6 +300,12 @@ export function SeatSelectionPage() {
   // selectedSeats (UI). heldRef theo dõi seat nào đã hold thành công để biết
   // seat nào cần release khi bỏ chọn / rời trang / hết giờ.
   const heldRef = useRef<string[]>([]);
+  // Ghế đã gửi request /seats/hold nhưng promise chưa resolve — heldRef chỉ
+  // cập nhật trong .then(), nên nếu không track riêng phần "đang chờ" này,
+  // click 2 ghế liên tiếp thật nhanh sẽ khiến effect bên dưới tính lại
+  // newlySelected và gửi TRÙNG request hold cho ghế đầu tiên lần nữa trước
+  // khi request đầu resolve — gây 409 Conflict giả (tự đụng chính mình).
+  const pendingHoldRef = useRef<Set<string>>(new Set());
   const proceedingRef = useRef(false);
   // Hold/release chỉ gọi được khi khách có MỘT trong hai danh tính: JWT (tài
   // khoản mật khẩu cũ) hoặc phiên Email+OTP đã xác minh từ trước (khách vãng
@@ -289,18 +337,20 @@ export function SeatSelectionPage() {
   // rollback lựa chọn và báo lỗi.
   useEffect(() => {
     if (!tripScheduleId || !isLoggedIn()) return;
-    const newlySelected = selectedSeats.filter(id => !heldRef.current.includes(id));
+    const newlySelected = selectedSeats.filter(id => !heldRef.current.includes(id) && !pendingHoldRef.current.has(id));
     const deselected = heldRef.current.filter(id => !selectedSeats.includes(id));
 
     if (deselected.length > 0) releaseSeatsOnServer(deselected);
 
     if (newlySelected.length > 0) {
+      newlySelected.forEach(id => pendingHoldRef.current.add(id));
       api.post(`/trip-schedules/${tripScheduleId}/seats/hold`, { seatNumbers: newlySelected })
         .then(() => { heldRef.current = [...heldRef.current, ...newlySelected]; })
         .catch((err) => {
           toast.error(err?.response?.data?.message || 'Ghế vừa được người khác giữ, vui lòng chọn ghế khác');
           setSelectedSeats(prev => prev.filter(id => !newlySelected.includes(id)));
-        });
+        })
+        .finally(() => { newlySelected.forEach(id => pendingHoldRef.current.delete(id)); });
     }
   }, [selectedSeats, tripScheduleId]);
 
@@ -346,6 +396,7 @@ export function SeatSelectionPage() {
   const seatsTotal = selectedSeats.reduce((s,id)=>s+(seats.find(x=>x.id===id)?.price||0),0);
   const amenitiesTotal = amenityQty.water*AMENITY_PRICES.water + amenityQty.towel*AMENITY_PRICES.towel + amenityQty.pillow*AMENITY_PRICES.pillow;
   const fmt = (n:number)=>new Intl.NumberFormat('vi-VN').format(n);
+  const fmtShort = (n:number)=>`${Math.round(n/1000)}k`;
 
   const floorCount = seats.length?Math.max(2, ...seats.map(s=>s.floor)):2;
   // Cheapest available seat on each floor, shown next to each floor's header.
@@ -497,7 +548,7 @@ export function SeatSelectionPage() {
           <div className="seat-step-grid max-w-[1400px] mx-auto">
 
             {/* Center Column: Seat Map — a sibling grid item (not part of seat-col1-wrapper) so its tall content never inflates the wrapper's rows */}
-            <div style={{ gridArea: 'seat' }} className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-6 flex flex-col">
+            <div style={{ gridArea: 'seat' }} className="min-w-0 bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-6 flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <button onClick={()=>navigate('/search')} className="w-10 h-10 rounded-full border border-[#DEE2E6] flex items-center justify-center text-[#212529] hover:bg-[#F8F9FA] transition shrink-0">
                   <ArrowLeft size={14}/>
@@ -505,14 +556,15 @@ export function SeatSelectionPage() {
                 <h3 className="text-xl font-bold text-[#212529] truncate">Chọn ghế {busClass}</h3>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 mb-8">
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
-                  <Users size={14} className="text-[#6C757D]"/> {seats.length} ghế
+              <div className="grid grid-cols-3 gap-2 mb-8 sm:flex sm:flex-wrap sm:gap-3">
+                <div className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] sm:justify-start sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm">
+                  <Users size={13} className="text-[#6C757D] shrink-0"/> <span>{seats.length} ghế</span>
                 </div>
                 {floorCount > 1 && [1,2].map(f=> floorFromPrice[f]!=null && (
-                  <div key={f} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
-                    <Layers size={14} className="text-[#6C757D]"/>
-                    <span>Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
+                  <div key={f} className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] sm:justify-start sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm">
+                    <Layers size={13} className="text-[#6C757D] shrink-0"/>
+                    <span className="sm:hidden">{f===1?'Dưới':'Trên'} <span className="font-bold text-[#856404]">{fmtShort(floorFromPrice[f])}</span></span>
+                    <span className="hidden sm:inline">Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
                   </div>
                 ))}
               </div>
@@ -527,16 +579,38 @@ export function SeatSelectionPage() {
                   ))}
                 </div>
 
-                {/* Both floors shown side by side (per user request) instead of a floor toggle — each in its own framed card */}
+                {/* Phone-width only (<640px): floor toggle + one floor at a time, smaller seats so a row
+                    fits the screen without horizontal scroll. A resized desktop Chrome window (640-1024px)
+                    still gets the side-by-side view below, just like full desktop. */}
+                {isPhoneWidth && floorCount > 1 && (
+                  <div className="w-full flex items-center justify-center gap-2 px-4">
+                    {[1,2].map(f=>(
+                      <button
+                        key={f}
+                        onClick={()=>setActiveFloor(f as 1|2)}
+                        className={`flex-1 max-w-[180px] py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                          activeFloor===f
+                            ? 'bg-[#212529] border-[#212529] text-white'
+                            : 'bg-white border-[#DEE2E6] text-[#6C757D] hover:bg-[#F8F9FA]'
+                        }`}
+                      >
+                        Tầng {f===1?'1':'2'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="w-full flex items-start justify-center gap-6 py-4 px-4 overflow-x-auto">
-                  {(floorCount > 1 ? [1,2] : [1]).map(f => {
+                  {(floorCount > 1 ? (isPhoneWidth ? [activeFloor] : [1,2]) : [1]).map(f => {
                     const info = getFloorInfo(f);
                     return (
                       <div key={f} className="flex flex-col items-center gap-4 shrink-0 bg-[#FAFAFA] border border-[#DEE2E6] rounded-2xl pt-5 pb-6 px-6">
-                        <div className="text-center">
-                          <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
-                        </div>
-                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={52}/>
+                        {!isPhoneWidth && (
+                          <div className="text-center">
+                            <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
+                          </div>
+                        )}
+                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={isPhoneWidth?46:52}/>
                       </div>
                     );
                   })}
@@ -763,14 +837,16 @@ export function SeatSelectionPage() {
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div className="sm:col-span-2"><TextField label="Họ và tên" required disabled={disabled} value={p.name} onChange={v=>updatePassenger(idx,'name',v)} placeholder="Nhập họ tên"/></div>
+                  {/* 2 short fields per row even on mobile (grid-cols-2), so 7 fields take ~4 rows
+                      instead of 7 full-width rows stacked one under another. */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="col-span-2"><TextField label="Họ và tên" required disabled={disabled} value={p.name} onChange={v=>updatePassenger(idx,'name',v)} placeholder="Nhập họ tên"/></div>
                     <TextField label="Số điện thoại" required disabled={disabled} value={p.phone} onChange={v=>updatePassenger(idx,'phone',v)} placeholder="Nhập SĐT (10 số)" type="tel" inputMode="tel" maxLength={10}/>
                     <SelectField label="Giới tính" disabled={disabled} value={p.gender} onChange={v=>updatePassenger(idx,'gender',v)} options={['Nam','Nữ','Khác']}/>
-                    <div className="sm:col-span-2"><TextField label="Email (để nhận vé)" disabled={disabled} value={p.email} onChange={v=>updatePassenger(idx,'email',v)} placeholder="ten@example.com" type="email"/></div>
+                    <div className="col-span-2"><TextField label="Email (để nhận vé)" disabled={disabled} value={p.email} onChange={v=>updatePassenger(idx,'email',v)} placeholder="ten@example.com" type="email"/></div>
                     <DateField label="Ngày sinh" disabled={disabled} value={p.dob} onChange={v=>updatePassenger(idx,'dob',v)}/>
                     <TextField label="CMND/CCCD" required disabled={disabled} value={p.idNumber} onChange={v=>updatePassenger(idx,'idNumber',v)} placeholder="9 hoặc 12 số" inputMode="numeric" maxLength={12}/>
-                    <SelectField label="Quốc tịch" disabled={disabled} value={p.nationality} onChange={v=>updatePassenger(idx,'nationality',v)} options={['Việt Nam','Khác']}/>
+                    <div className="col-span-2 sm:col-span-1"><SelectField label="Quốc tịch" disabled={disabled} value={p.nationality} onChange={v=>updatePassenger(idx,'nationality',v)} options={['Việt Nam','Khác']}/></div>
                   </div>
                 </div>
               );

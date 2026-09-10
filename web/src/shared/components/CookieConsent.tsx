@@ -50,7 +50,7 @@ export function CookieConsent() {
  Bảo mật & Quyền riêng tư
  </h3>
  <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
- LunaTravel Business sử dụng cookie cần thiết để website hoạt động ổn định. Khi bạn đồng ý, chúng tôi sử dụng thêm cookie phân tích và đo lường để hiểu cách bạn tương tác với trang web, nhằm nâng cao trải nghiệm đặt vé.
+ An Chuyến sử dụng cookie cần thiết để website hoạt động ổn định. Khi bạn đồng ý, chúng tôi sử dụng thêm cookie phân tích và đo lường để hiểu cách bạn tương tác với trang web, nhằm nâng cao trải nghiệm đặt vé.
  </p>
  </div>
  </div>

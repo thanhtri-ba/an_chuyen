@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from'react';
 import { motion, AnimatePresence } from'framer-motion';
-import { MessageCircle, X, Send, Sparkles, User as UserIcon } from'lucide-react';
+import { MessageCircle, X, Send, Bot, User as UserIcon } from'lucide-react';
 
 export function FloatingChat() {
  const [isOpen, setIsOpen] = useState(false);
@@ -62,13 +62,13 @@ export function FloatingChat() {
  className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col"
  >
  {/* Header */}
- <div className="bg-gradient-to-r from-primary to-blue-600 p-4 text-white flex justify-between items-center shadow-md relative z-10">
+ <div className="bg-primary p-4 text-white flex justify-between items-center shadow-md relative z-10">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
- <Sparkles className="w-5 h-5 text-white" />
+ <Bot className="w-5 h-5 text-white" />
  </div>
  <div>
- <h3 className="font-bold text-lg leading-tight">LunaTravel Business AI</h3>
+ <h3 className="font-bold text-lg leading-tight">An Chuyến AI</h3>
  <p className="text-white/80 text-xs flex items-center gap-1">
  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Online
  </p>
@@ -85,7 +85,7 @@ export function FloatingChat() {
  <div key={idx} className={`flex gap-3 ${msg.role ==='user' ?'flex-row-reverse' :''}`}>
  {/* Avatar */}
  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role ==='ai' ?'bg-primary text-primary-foreground' :'bg-gray-200 text-gray-500'}`}>
- {msg.role ==='ai' ? <Sparkles className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
+ {msg.role ==='ai' ? <Bot className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
  </div>
  
  {/* Bubble */}
@@ -99,7 +99,7 @@ export function FloatingChat() {
  {isTyping && (
  <div className="flex gap-3">
  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
- <Sparkles className="w-4 h-4" />
+ <Bot className="w-4 h-4" />
  </div>
  <div className="bg-white px-4 py-3 border border-gray-100 shadow-sm flex items-center gap-1">
  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay:'0ms' }}></span>
