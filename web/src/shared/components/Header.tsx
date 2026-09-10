@@ -243,7 +243,11 @@ export function Header() {
       <header
         className={cn(
           "fixed top-0 w-full z-50 transition-all duration-500 font-sans",
-          scrolled ? "bg-white/95 backdrop-blur-md shadow-sm py-4" : "bg-transparent py-8",
+          // py-8 was fixed at every screen size — fine as generous breathing
+          // room over a desktop hero, but on mobile it alone added 64px of
+          // vertical padding on top of the logo/button, making the header far
+          // taller than a mobile header should be. Tighter py-4 below lg.
+          scrolled ? "bg-white/95 backdrop-blur-md shadow-sm py-3 lg:py-4" : "bg-transparent py-4 lg:py-8",
           textColor
         )}
       >
@@ -251,7 +255,7 @@ export function Header() {
           
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <span className="text-3xl font-display font-medium tracking-tight flex items-center gap-2">
+            <span className="text-xl lg:text-3xl font-display font-medium tracking-tight flex items-center gap-2">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={!scrolled && isHome ? 'text-white' : 'text-primary'}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.3 2.6c-.2.4-.1.9.3 1.1l7.3 3.8-2 2-3.4-.6c-.5-.1-.9.2-1.1.5l-1.1 2.3c-.2.4 0 .9.4 1.1L8 21l8.5-4.7c.4.2.9.4 1.3.4z"/></svg>
               An Chuyến
             </span>
