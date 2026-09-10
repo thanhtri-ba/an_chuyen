@@ -1,5 +1,6 @@
 import { SeatStatus } from '@prisma/client';
 import { prisma } from '../../core/prisma';
+import { emitSeatStatus } from '../../core/socket';
 
 const FLOORS = [1, 2];
 const ROWS = [1, 2, 3, 4, 5, 6];
@@ -170,7 +171,10 @@ export class SeatService {
         throw new Error('Một hoặc nhiều ghế vừa được người khác giữ trước. Vui lòng chọn lại.');
       }
 
-      return { expiresAt };
+      return { expiresAt, seatNumbers: seats.map((s) => s.seatNumber) };
+    }).then((result) => {
+      emitSeatStatus(tripScheduleId, result.seatNumbers.map((seatNumber) => ({ seatNumber, status: 'held' })));
+      return result;
     });
   }
 
@@ -186,5 +190,6 @@ export class SeatService {
       },
       data: { status: SeatStatus.AVAILABLE, lockedBy: null, lockExpiresAt: null }
     });
+    emitSeatStatus(tripScheduleId, seatNumbers.map((seatNumber) => ({ seatNumber, status: 'available' })));
   }
 }

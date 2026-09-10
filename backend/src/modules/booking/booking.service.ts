@@ -1,4 +1,5 @@
 import { PrismaClient, SeatStatus } from '@prisma/client';
+import { emitSeatStatus } from '../../core/socket';
 
 const prisma = new PrismaClient();
 
@@ -40,7 +41,7 @@ export class BookingService {
     // Trong thực tế, có thể lưu idempotencyKey vào một bảng riêng hoặc cột trong Booking để check.
     // Ở đây ta đơn giản hóa để tập trung vào Lớp 1 & Lớp 2.
 
-    return await prisma.$transaction(async (tx) => {
+    const booking = await prisma.$transaction(async (tx) => {
       // 1. Kiểm tra TripSchedule
       const tripSchedule = await tx.tripSchedule.findUnique({
         where: { id: tripScheduleId },
@@ -248,6 +249,9 @@ export class BookingService {
       maxWait: 15000, // 15s max wait to acquire transaction lock
       timeout: 30000  // 30s timeout for transaction execution
     });
+
+    emitSeatStatus(tripScheduleId, seatNumbers.map((seatNumber) => ({ seatNumber, status: 'booked' })));
+    return booking;
   }
 
   // Cho khách tự huỷ booking của mình khi còn ở trạng thái PENDING_PAYMENT
@@ -261,11 +265,11 @@ export class BookingService {
   // chuyển CANCELLED; hoàn tiền cho khách là việc admin xử lý thủ công qua
   // quy trình đối soát riêng (POST /api/admin/payments/:id/refund).
   static async cancelBooking(userId: string, bookingId: string) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: {
-          seatBookings: true,
+          seatBookings: { include: { seat: true } },
           tripSchedule: true,
         },
       });
@@ -314,8 +318,11 @@ export class BookingService {
         },
       });
 
-      return updated;
+      return { updated, tripScheduleId: booking.tripScheduleId, seatNumbers: booking.seatBookings.map((sb: any) => sb.seat?.seatNumber).filter(Boolean) as string[] };
     });
+
+    emitSeatStatus(result.tripScheduleId, result.seatNumbers.map((seatNumber) => ({ seatNumber, status: 'available' })));
+    return result.updated;
   }
 
   // Giải phóng ghế của các booking PENDING_PAYMENT đã quá hạn giữ chỗ —
@@ -324,12 +331,12 @@ export class BookingService {
     const cutoff = new Date(Date.now() - olderThanMinutes * 60 * 1000);
     const expired = await prisma.booking.findMany({
       where: { status: 'PENDING_PAYMENT', createdAt: { lt: cutoff } },
-      include: { seatBookings: true },
+      include: { seatBookings: { include: { seat: true } } },
     });
 
     for (const booking of expired) {
+      const seatIds = booking.seatBookings.map((sb) => sb.seatId);
       await prisma.$transaction(async (tx) => {
-        const seatIds = booking.seatBookings.map((sb) => sb.seatId);
         await tx.seat.updateMany({
           where: { id: { in: seatIds } },
           data: { status: SeatStatus.AVAILABLE },
@@ -343,6 +350,13 @@ export class BookingService {
           await tx.payment.update({ where: { id: payment.id }, data: { status: 'FAILED' } });
         }
       });
+      emitSeatStatus(
+        booking.tripScheduleId,
+        booking.seatBookings
+          .map((sb: any) => sb.seat?.seatNumber)
+          .filter(Boolean)
+          .map((seatNumber: string) => ({ seatNumber, status: 'available' as const }))
+      );
     }
 
     return expired.length;

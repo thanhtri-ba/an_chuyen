@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Wifi, Usb, Droplets, Phone, Wind, ShieldC
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { getSocket } from '../../../lib/socket';
 import { BookingStepper } from '../../../shared/components/BookingStepper';
 import { DatePicker } from '../../../shared/components/DatePicker';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -258,6 +259,35 @@ export function SeatSelectionPage() {
       if(data.filter(s=>parseSeatId(s.id)).length>0) setSeats(data);
     }).catch(()=>{});
   },[tripScheduleId]);
+
+  // Realtime: người khác giữ/nhả/đặt ghế trên cùng chuyến này phải thấy ngay
+  // trên sơ đồ, không cần refresh — join room riêng theo tripScheduleId
+  // (core/socket.ts), bỏ qua update cho ghế mình đang tự chọn (selectedSeats)
+  // để không tự đè lên UI optimistic của chính mình.
+  const selectedSeatsRef = useRef<string[]>([]);
+  useEffect(() => { selectedSeatsRef.current = selectedSeats; }, [selectedSeats]);
+
+  useEffect(() => {
+    if (!tripScheduleId) return;
+    const socket = getSocket();
+    socket.emit('join_seatmap', tripScheduleId);
+
+    const onSeatsUpdated = (payload: { tripScheduleId: string; seats: { seatNumber: string; status: 'held'|'available'|'booked' }[] }) => {
+      if (payload.tripScheduleId !== tripScheduleId) return;
+      setSeats(prev => prev.map(s => {
+        const update = payload.seats.find(u => u.seatNumber === s.id);
+        if (!update || selectedSeatsRef.current.includes(s.id)) return s;
+        const status: SeatData['status'] = update.status === 'available' ? 'available' : update.status === 'booked' ? 'booked' : 'blocked';
+        return { ...s, status };
+      }));
+    };
+    socket.on('seats_updated', onSeatsUpdated);
+
+    return () => {
+      socket.emit('leave_seatmap', tripScheduleId);
+      socket.off('seats_updated', onSeatsUpdated);
+    };
+  }, [tripScheduleId]);
 
   const pickupOpts = tripDetail?.checkpoints.filter(c=>c.type==='PICKUP')||[];
   const dropoffOpts = tripDetail?.checkpoints.filter(c=>c.type==='DROPOFF')||[];
