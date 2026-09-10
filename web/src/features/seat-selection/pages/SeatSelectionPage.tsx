@@ -270,6 +270,12 @@ export function SeatSelectionPage() {
   // selectedSeats (UI). heldRef theo dõi seat nào đã hold thành công để biết
   // seat nào cần release khi bỏ chọn / rời trang / hết giờ.
   const heldRef = useRef<string[]>([]);
+  // Ghế đã gửi request /seats/hold nhưng promise chưa resolve — heldRef chỉ
+  // cập nhật trong .then(), nên nếu không track riêng phần "đang chờ" này,
+  // click 2 ghế liên tiếp thật nhanh sẽ khiến effect bên dưới tính lại
+  // newlySelected và gửi TRÙNG request hold cho ghế đầu tiên lần nữa trước
+  // khi request đầu resolve — gây 409 Conflict giả (tự đụng chính mình).
+  const pendingHoldRef = useRef<Set<string>>(new Set());
   const proceedingRef = useRef(false);
   // Hold/release chỉ gọi được khi khách có MỘT trong hai danh tính: JWT (tài
   // khoản mật khẩu cũ) hoặc phiên Email+OTP đã xác minh từ trước (khách vãng
@@ -301,18 +307,20 @@ export function SeatSelectionPage() {
   // rollback lựa chọn và báo lỗi.
   useEffect(() => {
     if (!tripScheduleId || !isLoggedIn()) return;
-    const newlySelected = selectedSeats.filter(id => !heldRef.current.includes(id));
+    const newlySelected = selectedSeats.filter(id => !heldRef.current.includes(id) && !pendingHoldRef.current.has(id));
     const deselected = heldRef.current.filter(id => !selectedSeats.includes(id));
 
     if (deselected.length > 0) releaseSeatsOnServer(deselected);
 
     if (newlySelected.length > 0) {
+      newlySelected.forEach(id => pendingHoldRef.current.add(id));
       api.post(`/trip-schedules/${tripScheduleId}/seats/hold`, { seatNumbers: newlySelected })
         .then(() => { heldRef.current = [...heldRef.current, ...newlySelected]; })
         .catch((err) => {
           toast.error(err?.response?.data?.message || 'Ghế vừa được người khác giữ, vui lòng chọn ghế khác');
           setSelectedSeats(prev => prev.filter(id => !newlySelected.includes(id)));
-        });
+        })
+        .finally(() => { newlySelected.forEach(id => pendingHoldRef.current.delete(id)); });
     }
   }, [selectedSeats, tripScheduleId]);
 

@@ -271,7 +271,7 @@ const vi = {
     currentPoints: 'Điểm hiện có',
     ptsToNext: 'pts →',
     accumulatedPoints: 'Điểm tích lũy',
-    walletTitle: 'Ví LunaTravel Business Pay',
+    walletTitle: 'Ví An Chuyến Pay',
     availableBalance: 'Số dư khả dụng',
     deposit: 'Nạp tiền',
     history: 'Lịch sử',

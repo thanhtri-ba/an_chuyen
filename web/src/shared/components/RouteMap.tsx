@@ -11,14 +11,22 @@ interface RouteMapProps {
   duration?: string;
 }
 
+// Guard against NaN/undefined coords reaching Leaflet — it throws "Invalid LatLng
+// object: (NaN, NaN)" instead of failing gracefully, which crashes the map render
+// whenever a caller passes coordinates before real data is ready (e.g. city not
+// found, GPS not yet available).
+const isValidCoords = (c: [number, number] | undefined | null): c is [number, number] =>
+  Array.isArray(c) && c.length === 2 && Number.isFinite(c[0]) && Number.isFinite(c[1]);
+
 export function RouteMap({ originCoords, destCoords, originName ='Điểm đi', destName ='Điểm đến', distance ='-- km', duration ='--' }: RouteMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const [routeDistance, setRouteDistance] = useState(distance);
   const [routeDuration, setRouteDuration] = useState(duration);
+  const coordsValid = isValidCoords(originCoords) && isValidCoords(destCoords);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !coordsValid) return;
     if (!mapInstance.current) {
       mapInstance.current = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView(originCoords, 7);
       
@@ -86,13 +94,21 @@ export function RouteMap({ originCoords, destCoords, originName ='Điểm đi', 
     
     return () => { ignore = true; };
 
-  }, [originCoords, destCoords, originName, destName]);
+  }, [originCoords, destCoords, originName, destName, coordsValid]);
+
+  if (!coordsValid) {
+    return (
+      <div className="flex items-center justify-center h-full w-full rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-400">
+        Chưa có dữ liệu vị trí
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden border border-gray-200 shadow-inner h-full w-full rounded-xl z-0">
       {/* Inject grayscale style for the map tiles to match the admin dashboard look */}
       <style>{`.grayscale-map-tiles { filter: grayscale(20%); }`}</style>
-      
+
       <div ref={mapRef} className="w-full h-full" />
       
       {/* Route Info Overlay */}
