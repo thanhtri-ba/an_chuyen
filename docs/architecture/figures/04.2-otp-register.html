@@ -1,0 +1,309 @@
+<title>Hình 4.2 Đăng Ký OTP</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#eee9df;
+    --paper:#f6f3ea;
+    --ink:#211f1a;
+    --ink-dim:#6b6558;
+    --line:#dcd5c3;
+    --card:#ffffff;
+    --accent:#c56a3f;
+    --accent-deep:#8a4526;
+    --teal:#1f5a52;
+    --shadow: 0 1px 2px rgba(30,25,15,0.06), 0 24px 48px -24px rgba(30,25,15,0.35);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15130f; --paper:#1c1a15; --ink:#f1ece0; --ink-dim:#a89f8c;
+      --line:#332f26; --card:#221f19; --accent:#e08a5c; --accent-deep:#f2b189; --teal:#5fb3a5;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 24px 48px -24px rgba(0,0,0,0.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15130f; --paper:#1c1a15; --ink:#f1ece0; --ink-dim:#a89f8c;
+    --line:#332f26; --card:#221f19; --accent:#e08a5c; --accent-deep:#f2b189; --teal:#5fb3a5;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 24px 48px -24px rgba(0,0,0,0.7);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Be Vietnam Pro',system-ui,sans-serif;
+    padding:36px 20px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  .kicker{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent-deep); font-weight:500; margin-bottom:6px;
+  }
+  h1{font-size:clamp(20px,2.6vw,25px); font-weight:600; margin:0 0 24px; text-wrap:balance;}
+  h1 span{color:var(--ink-dim); font-weight:400;}
+
+  /* ===== MOCKUP FRAME ===== */
+  figure{margin:0;}
+  .frame{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .browser-bar{
+    display:flex; align-items:center; gap:8px;
+    padding:11px 16px; border-bottom:1px solid var(--line);
+    background:var(--card);
+  }
+  .browser-bar .dot{width:9px;height:9px;border-radius:50%;background:var(--line);}
+  .browser-bar .url{
+    margin-left:8px; font-family:'JetBrains Mono',monospace; font-size:11px;
+    color:var(--ink-dim); background:var(--bg); padding:3px 10px; border-radius:6px;
+  }
+
+  .screen{
+    display:grid; grid-template-columns:1fr 1fr;
+    min-height:600px;
+  }
+  @media (max-width:760px){ .screen{grid-template-columns:1fr;} .hero{display:none;} }
+
+  /* ---- left hero ---- */
+  .hero{
+    position:relative; overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 20% 0%, #3a7d6f 0%, transparent 55%),
+      radial-gradient(120% 100% at 90% 100%, #c56a3f 0%, transparent 60%),
+      linear-gradient(160deg,#1c4a44 0%, #244a3f 38%, #6b4a30 78%, #8a4526 100%);
+    padding:32px;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .hero .brand{
+    font-family:'Fraunces',serif; font-size:22px; font-weight:600;
+    color:#f6f1e4; letter-spacing:.01em;
+  }
+  .hero .route{ position:relative; height:230px; margin:auto 0;}
+  .hero .route svg{width:100%;height:100%;display:block;}
+  .hero .route text{font-family:'Be Vietnam Pro',sans-serif; font-size:10.5px; fill:#f6f1e4; opacity:.92;}
+  .hero .quote{
+    color:#f6f1e4;
+  }
+  .hero .quote .big{font-family:'Fraunces',serif; font-size:19px; font-weight:500; line-height:1.35; text-wrap:balance; margin:0 0 6px;}
+  .hero .quote .small{font-size:12px; color:#f6f1e4; opacity:.72;}
+
+  /* ---- right form panel ---- */
+  .panel{
+    padding:38px 40px;
+    display:flex; flex-direction:column; justify-content:center;
+    background:
+      radial-gradient(140% 100% at 100% 0%, rgba(197,106,63,0.08), transparent 55%),
+      var(--paper);
+  }
+  .panel-inner{max-width:360px; margin:0 auto; width:100%;}
+  .m-brand{
+    font-family:'Fraunces',serif; font-size:16px; font-weight:600; color:var(--accent-deep);
+    margin-bottom:22px; display:none;
+  }
+  @media (max-width:760px){ .m-brand{display:block;} }
+
+  .step-eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--teal); margin-bottom:8px; font-weight:500;
+  }
+  .panel h2{ font-family:'Fraunces',serif; font-size:26px; font-weight:600; margin:0 0 4px; color:var(--ink);}
+  .panel .lede{ font-size:13px; color:var(--ink-dim); margin:0 0 24px;}
+
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block; font-size:11.5px; font-weight:600; color:var(--ink-dim);
+    margin-bottom:5px; letter-spacing:.01em;
+  }
+  .field .box{
+    border:1px solid var(--line); border-radius:11px; background:var(--card);
+    padding:10px 13px; font-size:13.5px; color:var(--ink);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .field .box.disabled{ opacity:.55; }
+  .field .box .ph{ letter-spacing:.02em; }
+  .field .dots{ letter-spacing:3px; font-size:12px; }
+  .eye{ font-size:11px; color:var(--ink-dim); font-family:'JetBrains Mono',monospace;}
+
+  .otp-block{
+    margin-top:6px; margin-bottom:16px;
+    background:rgba(31,90,82,0.07);
+    border:1px dashed var(--teal);
+    border-radius:13px; padding:16px 16px 14px;
+  }
+  :root[data-theme="dark"] .otp-block, :root:not([data-theme="light"]) .otp-block { background:rgba(95,179,165,0.09); }
+  .otp-block label{
+    display:block; font-size:11.5px; font-weight:600; color:var(--teal); margin-bottom:9px;
+  }
+  .otp-block label b{ color:var(--ink); font-weight:600; }
+  .otp-digits{ display:flex; gap:7px; margin-bottom:11px; }
+  .otp-digits span{
+    flex:1; text-align:center; padding:9px 0;
+    border:1px solid var(--line); border-radius:8px;
+    background:var(--card); font-family:'JetBrains Mono',monospace;
+    font-size:16px; font-weight:600; color:var(--ink);
+  }
+  .otp-digits span.cur{ border-color:var(--teal); box-shadow:0 0 0 3px rgba(31,90,82,0.14); }
+  .otp-links{ display:flex; justify-content:space-between; font-size:11px; }
+  .otp-links a{ color:var(--teal); font-weight:600; text-decoration:none; }
+  .otp-links .resend{ color:var(--ink-dim); }
+
+  .submit{
+    width:100%; padding:12px; border-radius:11px; border:none;
+    background:var(--ink); color:var(--paper);
+    font-family:'Be Vietnam Pro',sans-serif; font-weight:600; font-size:13.5px;
+    text-align:center; margin-top:4px; letter-spacing:.01em;
+  }
+  :root[data-theme="dark"] .submit, :root:not([data-theme="light"]) .submit{ background:var(--accent); color:#1c1a15; }
+
+  .divider{
+    display:flex; align-items:center; gap:10px; margin:18px 0 14px;
+    font-size:11px; color:var(--ink-dim);
+  }
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .google{
+    width:100%; padding:10px; border-radius:11px; border:1px solid var(--line);
+    background:var(--card); color:var(--ink); font-size:12.5px; font-weight:500;
+    text-align:center;
+  }
+
+  .toggle{ text-align:center; font-size:12px; color:var(--ink-dim); margin-top:18px; }
+  .toggle b{ color:var(--accent-deep); font-weight:600; }
+
+  .toast{
+    position:absolute; top:20px; right:20px; z-index:3;
+    background:var(--ink); color:var(--paper);
+    font-size:11.5px; padding:9px 14px; border-radius:9px;
+    box-shadow:var(--shadow); display:flex; align-items:center; gap:8px;
+  }
+  :root[data-theme="dark"] .toast, :root:not([data-theme="light"]) .toast{background:var(--card); border:1px solid var(--line);}
+  .toast .tick{
+    width:14px;height:14px;border-radius:50%;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;flex:none;
+  }
+
+  figcaption{
+    margin-top:16px; padding:14px 18px;
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    font-size:12.5px; line-height:1.65; color:var(--ink-dim);
+  }
+  figcaption b{ color:var(--ink); font-weight:600; }
+  figcaption .cap-title{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent-deep);
+    text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px; font-weight:500;
+  }
+  .flow{
+    display:flex; flex-wrap:wrap; gap:6px 4px; margin-top:10px; align-items:center;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px;
+  }
+  .flow .step{ background:var(--paper); border:1px solid var(--line); border-radius:100px; padding:3px 9px; color:var(--ink);}
+  .flow .sep{ color:var(--ink-dim); }
+</style>
+
+<div class="wrap">
+  <div class="kicker">Đồ án — Chương 4 · Giao diện chức năng</div>
+  <h1>Hình 4.2 <span>— Giao diện đăng ký tài khoản, xác minh bằng mã OTP gửi qua email</span></h1>
+
+  <figure>
+    <div class="frame">
+      <div class="browser-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="url">anchuyen.vn/auth</span>
+      </div>
+
+      <div class="screen" style="position:relative;">
+        <div class="toast">
+          <span class="tick">✓</span>
+          Đã gửi mã xác minh tới email của bạn.
+        </div>
+
+        <!-- LEFT: hero -->
+        <div class="hero">
+          <div class="brand">An Chuyến</div>
+
+          <div class="route">
+            <svg viewBox="0 0 300 230" role="img" aria-label="Tuyến đường minh hoạ Sài Gòn đến Đà Lạt trên bản đồ cách điệu">
+              <path d="M30,190 C 70,150 60,110 110,95 S 190,70 210,40" fill="none" stroke="#f6f1e4" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity="0.85"/>
+              <circle cx="30" cy="190" r="5" fill="#f6f1e4"/>
+              <circle cx="210" cy="40" r="5" fill="#e08a5c"/>
+              <text x="40" y="205">Sài Gòn</text>
+              <text x="188" y="30">Đà Lạt</text>
+            </svg>
+          </div>
+
+          <div class="quote">
+            <p class="big">“Mỗi chuyến đi bắt đầu bằng một tài khoản — và một hộp thư chờ mã xác minh.”</p>
+            <p class="small">Đặt vé xe khách, tra cứu chuyến, thanh toán trong một nền tảng.</p>
+          </div>
+        </div>
+
+        <!-- RIGHT: form -->
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="m-brand">An Chuyến</div>
+            <div class="step-eyebrow">Bước 2 / 2 — xác minh email</div>
+            <h2>Tạo tài khoản,</h2>
+            <p class="lede">Bắt đầu hành trình tiện nghi cùng chúng tôi</p>
+
+            <div class="field">
+              <label>Họ và tên</label>
+              <div class="box"><span class="ph">Nguyễn Văn A</span></div>
+            </div>
+            <div class="field">
+              <label>Số điện thoại</label>
+              <div class="box"><span class="ph">0912 345 678</span></div>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <div class="box disabled"><span class="ph">tri.pham@example.com</span><span class="eye">đã khoá</span></div>
+            </div>
+            <div class="field">
+              <label>Mật khẩu</label>
+              <div class="box"><span class="dots">••••••••</span><span class="eye">hiện</span></div>
+            </div>
+
+            <div class="otp-block">
+              <label>Mã xác minh <b>(gửi tới tri.pham@example.com)</b></label>
+              <div class="otp-digits">
+                <span class="cur">4</span><span>8</span><span>2</span><span>0</span><span>9</span><span>1</span>
+              </div>
+              <div class="otp-links">
+                <a href="#">Đổi email</a>
+                <span class="resend">Gửi lại mã</span>
+              </div>
+            </div>
+
+            <div class="submit">Xác nhận &amp; Tạo tài khoản</div>
+
+            <div class="divider">hoặc</div>
+            <div class="google">Đăng nhập với Google</div>
+
+            <p class="toggle">Đã có tài khoản? <b>Đăng nhập</b></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <figcaption>
+      <span class="cap-title">Nguồn dựng hình</span>
+      Phục dựng theo đúng field, nhãn và luồng trong <b>web/src/features/auth/pages/AuthPage.tsx</b> —
+      một component xử lý cả đăng nhập lẫn đăng ký, khối OTP hiện ra ngay trong cùng biểu mẫu (không phải màn hình riêng).
+      Sau khi điền Họ tên / SĐT / Email / Mật khẩu và bấm <b>“Gửi mã xác minh”</b>, hệ thống gọi
+      <b>POST /identity/otp/request-registration</b>, khoá ô email lại và hiện khối nhập mã 6 số.
+      Nhập đủ mã rồi bấm <b>“Xác nhận &amp; Tạo tài khoản”</b> sẽ gọi <b>POST /auth/register</b> kèm
+      <b>otpChallengeId</b> và <b>otpCode</b> để hoàn tất.
+      <div class="flow">
+        <span class="step">Điền thông tin</span><span class="sep">→</span>
+        <span class="step">Gửi mã xác minh</span><span class="sep">→</span>
+        <span class="step">OTP gửi qua email</span><span class="sep">→</span>
+        <span class="step">Nhập mã 6 số</span><span class="sep">→</span>
+        <span class="step">Xác nhận &amp; Tạo tài khoản</span>
+      </div>
+    </figcaption>
+  </figure>
+</div>
