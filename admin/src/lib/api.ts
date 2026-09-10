@@ -39,6 +39,19 @@ class ApiClient {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
       const result = await response.json();
 
+      if (response.status === 401) {
+        // Token hết hạn (JWT 7 ngày) hoặc không hợp lệ — ProtectedRoute
+        // (App.tsx) chỉ kiểm tra token có tồn tại trong localStorage, không
+        // kiểm tra còn hạn, nên trước đây UI vẫn hiển thị "đã đăng nhập"
+        // trong khi mọi API call âm thầm fail 401. Xoá token cũ + đưa về
+        // trang đăng nhập ngay khi phát hiện, thay vì để bảng dữ liệu trống
+        // trơn không rõ lý do.
+        localStorage.removeItem("admin_token");
+        if (!window.location.pathname.startsWith("/auth/login")) {
+          window.location.href = "/auth/login";
+        }
+      }
+
       if (!response.ok) {
         throw new Error(result.message || "An error occurred");
       }
