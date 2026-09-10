@@ -1,0 +1,423 @@
+<title>Mô Hình An Chuyến</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#f3f1ea;
+    --surface:#ffffff;
+    --surface-2:#ebe7db;
+    --border:#d9d3c2;
+    --text:#242420;
+    --text-dim:#6d6c60;
+    --accent:#2c6b64;
+    --accent-strong:#1c4a45;
+    --accent-soft:#dcebe6;
+    --warn:#a95f1c;
+    --warn-soft:#f2e2cd;
+    --notimpl:#7a56a8;
+    --notimpl-soft:#ebe2f5;
+    --shadow: 0 1px 2px rgba(30,28,20,0.06), 0 8px 24px -12px rgba(30,28,20,0.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12171a;
+      --surface:#1a2124;
+      --surface-2:#20282b;
+      --border:#2c3639;
+      --text:#e9ece9;
+      --text-dim:#9aaba6;
+      --accent:#5fc7ba;
+      --accent-strong:#8fdccf;
+      --accent-soft:rgba(95,199,186,0.13);
+      --warn:#e0a457;
+      --warn-soft:rgba(224,164,87,0.14);
+      --notimpl:#b79bdf;
+      --notimpl-soft:rgba(183,155,223,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12171a;
+    --surface:#1a2124;
+    --surface-2:#20282b;
+    --border:#2c3639;
+    --text:#e9ece9;
+    --text-dim:#9aaba6;
+    --accent:#5fc7ba;
+    --accent-strong:#8fdccf;
+    --accent-soft:rgba(95,199,186,0.13);
+    --warn:#e0a457;
+    --warn-soft:rgba(224,164,87,0.14);
+    --notimpl:#b79bdf;
+    --notimpl-soft:rgba(183,155,223,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Manrope',system-ui,-apple-system,sans-serif;
+    padding:40px 24px 80px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:600;
+  }
+  h1{
+    font-size:clamp(28px,4vw,40px);
+    font-weight:800;
+    margin:8px 0 6px;
+    letter-spacing:-0.02em;
+    text-wrap:balance;
+  }
+  .sub{
+    color:var(--text-dim);
+    font-size:15px;
+    max-width:70ch;
+    line-height:1.6;
+    margin:0 0 28px;
+  }
+  .sub code{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--surface-2);padding:1px 5px;border-radius:4px;}
+
+  /* legend */
+  .legend{
+    display:flex;flex-wrap:wrap;gap:10px;
+    margin-bottom:36px;
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;font-weight:500;
+    padding:5px 10px;border-radius:100px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text-dim);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+  .dot.real{background:var(--accent);}
+  .dot.notimpl{background:var(--notimpl);}
+  .dot.warn{background:var(--warn);}
+
+  /* spine svg */
+  .spine{
+    display:block;width:100%;height:auto;
+    margin-bottom:8px;
+  }
+  .spine text{font-family:'Manrope',sans-serif;}
+  .spine .lbl{font-size:13px;font-weight:700;fill:var(--text);}
+  .spine .arrlbl{font-family:'JetBrains Mono',monospace;font-size:10.5px;fill:var(--text-dim);}
+  .spine .node{fill:var(--surface);stroke:var(--border);stroke-width:1.3;}
+  .spine .node.accent{stroke:var(--accent);}
+  .spine line, .spine path.arrow{stroke:var(--text-dim);stroke-width:1.4;fill:none;}
+
+  section{margin-bottom:34px;}
+  .section-head{
+    display:flex;align-items:baseline;gap:10px;
+    margin-bottom:14px;
+  }
+  .section-head .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--accent);font-weight:600;
+  }
+  .section-head h2{
+    font-size:16px;font-weight:700;margin:0;
+  }
+  .section-head .tag{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);
+    background:var(--surface-2);padding:2px 8px;border-radius:5px;
+  }
+
+  /* generic card grid */
+  .grid{display:grid;gap:12px;}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  @media (max-width:820px){
+    .grid.cols-2,.grid.cols-4,.grid.cols-3{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px 15px;
+    box-shadow:var(--shadow);
+  }
+  .card h3{
+    margin:0 0 3px;font-size:14px;font-weight:700;
+  }
+  .card .path{
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;
+    color:var(--accent-strong);word-break:break-word;
+    display:block;margin-bottom:8px;
+  }
+  .card .desc{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-bottom:9px;}
+  .targets{display:flex;flex-wrap:wrap;gap:6px;}
+  .tgt{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    background:var(--accent-soft);color:var(--accent-strong);
+    padding:3px 7px;border-radius:6px;font-weight:500;
+    display:inline-flex;align-items:center;gap:4px;
+  }
+  :root[data-theme="dark"] .card .path{color:var(--accent-strong);}
+
+  .card.faded{opacity:.85;}
+  .card.notimpl{border-style:dashed;border-color:var(--notimpl);}
+  .card.notimpl .path{color:var(--notimpl);}
+  .card.notimpl .tgt{background:var(--notimpl-soft);color:var(--notimpl);}
+  .card.warn{border-color:var(--warn);}
+  .card.warn .path{color:var(--warn);}
+
+  .badge{
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.04em;
+    padding:2px 6px;border-radius:4px;
+    margin-left:6px;vertical-align:middle;
+  }
+  .badge.notimpl{background:var(--notimpl-soft);color:var(--notimpl);}
+  .badge.warn{background:var(--warn-soft);color:var(--warn);}
+
+  /* mismatch panel */
+  .mismatch{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--warn);
+    border-radius:10px;
+    padding:18px 20px;
+  }
+  .mismatch h2{font-size:15px;margin:0 0 4px;}
+  .mismatch p.lead{font-size:12.5px;color:var(--text-dim);margin:0 0 14px;}
+  .mismatch ul{margin:0;padding:0;list-style:none;display:grid;gap:10px;}
+  .mismatch li{
+    font-size:12.5px;line-height:1.55;
+    display:grid;grid-template-columns:auto 1fr;gap:10px;
+    color:var(--text);
+  }
+  .mismatch li b{font-weight:700;}
+  .mismatch li .claim{
+    font-family:'JetBrains Mono',monospace;font-size:11px;
+    color:var(--text-dim);white-space:nowrap;
+  }
+  .mismatch li .arrow{color:var(--warn);}
+
+  footer{
+    margin-top:40px;padding-top:16px;border-top:1px solid var(--border);
+    font-size:11.5px;color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+  }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">An Chuyến — hệ thống đặt vé &amp; điều phối chuyến đi</div>
+  <h1>Mô hình tổng quan hệ thống</h1>
+  <p class="sub">
+    Rút trực tiếp từ source code hiện tại (<code>web/</code>, <code>admin/</code>, <code>backend/</code>).
+    Mỗi khối trỏ về route / service thật. Khối viền đứt hoặc có nhãn cảnh báo nghĩa là
+    thứ đó tồn tại trong code/tên biến nhưng chưa hoạt động thật.
+  </p>
+
+  <div class="legend">
+    <span class="chip"><span class="dot real"></span>Đang chạy thật, có dữ liệu đi qua</span>
+    <span class="chip"><span class="dot notimpl"></span>[NOT IMPLEMENTED] — có tên/route nhưng chưa nối logic</span>
+    <span class="chip"><span class="dot warn"></span>[MISSING] / [UNUSED] — khai báo nhưng lệch với phần còn lại</span>
+  </div>
+
+  <!-- SPINE DIAGRAM -->
+  <svg class="spine" viewBox="0 0 1180 190" role="img" aria-label="Luồng chính: Người dùng gọi Frontend, Frontend gọi 8 nhóm route của Backend Express cổng 3000, Backend ghi đọc PostgreSQL qua Prisma và gọi ra ngoài cho thanh toán, xác thực, AI">
+    <defs>
+      <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L8,4 L0,8 z" fill="currentColor" style="color:var(--text-dim)"></path>
+      </marker>
+    </defs>
+    <!-- nodes -->
+    <rect class="node accent" x="30" y="70" width="140" height="50" rx="9"></rect>
+    <text class="lbl" x="100" y="100" text-anchor="middle">Người dùng</text>
+
+    <rect class="node" x="260" y="40" width="180" height="42" rx="9"></rect>
+    <text class="lbl" x="350" y="66" text-anchor="middle" style="font-size:12.5px">web/ — Vite + React</text>
+    <rect class="node" x="260" y="108" width="180" height="42" rx="9"></rect>
+    <text class="lbl" x="350" y="134" text-anchor="middle" style="font-size:12.5px">admin/ — Vite + React</text>
+
+    <rect class="node accent" x="560" y="70" width="220" height="50" rx="9"></rect>
+    <text class="lbl" x="670" y="94" text-anchor="middle">backend/src/index.ts</text>
+    <text class="arrlbl" x="670" y="110" text-anchor="middle">Express · cổng 3000 · 8 nhóm route</text>
+
+    <rect class="node" x="900" y="16" width="250" height="38" rx="8"></rect>
+    <text class="lbl" x="1025" y="40" text-anchor="middle" style="font-size:12px">PostgreSQL (Supabase) qua Prisma</text>
+
+    <rect class="node" x="900" y="76" width="250" height="38" rx="8" stroke-dasharray="4 3"></rect>
+    <text class="lbl" x="1025" y="100" text-anchor="middle" style="font-size:12px">Socket.IO — chỉ GPS xe</text>
+
+    <rect class="node" x="900" y="136" width="250" height="38" rx="8"></rect>
+    <text class="lbl" x="1025" y="160" text-anchor="middle" style="font-size:12px">VNPay · MoMo · Ollama · Google OAuth</text>
+
+    <!-- arrows -->
+    <line x1="170" y1="95" x2="255" y2="61" marker-end="url(#arrow)"></line>
+    <line x1="170" y1="95" x2="255" y2="129" marker-end="url(#arrow)"></line>
+    <line x1="440" y1="61" x2="555" y2="88" marker-end="url(#arrow)"></line>
+    <line x1="440" y1="129" x2="555" y2="100" marker-end="url(#arrow)"></line>
+    <line x1="780" y1="88" x2="895" y2="42" marker-end="url(#arrow)"></line>
+    <line x1="780" y1="98" x2="895" y2="95" marker-end="url(#arrow)" stroke-dasharray="4 3"></line>
+    <line x1="780" y1="108" x2="895" y2="150" marker-end="url(#arrow)"></line>
+  </svg>
+
+  <!-- FRONTEND -->
+  <section>
+    <div class="section-head">
+      <span class="num">01</span><h2>Frontend</h2><span class="tag">React 18 · Vite · React Router</span>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>web/</h3>
+        <span class="path">src/App.tsx</span>
+        <p class="desc">Ứng dụng khách hàng: tìm chuyến, chọn ghế, đặt vé, thanh toán, tra cứu vé, loyalty, AI chat.</p>
+        <div class="targets">
+          <span class="tgt">→ /api/auth</span><span class="tgt">→ /api/bookings</span>
+          <span class="tgt">→ /api/trip-schedules</span><span class="tgt">→ /api/payments…</span>
+          <span class="tgt">→ /api/ai</span><span class="tgt">→ content &amp; public routes</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>admin/ <span class="badge warn">tên thư mục gây nhầm</span></h3>
+        <span class="path">app/(main)/... — chỉ là quy ước đặt tên, KHÔNG phải Next.js</span>
+        <p class="desc">Studio quản trị: chạy bằng Vite (<code>"dev": "vite"</code>), routing thật là React Router import thủ công trong <code>App.tsx</code>.</p>
+        <div class="targets">
+          <span class="tgt">→ /api/auth</span><span class="tgt">→ /api/admin (24 resource CRUD)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BACKEND -->
+  <section>
+    <div class="section-head">
+      <span class="num">02</span><h2>Backend — Express</h2><span class="tag">backend/src/index.ts · cổng 3000</span>
+    </div>
+    <div class="grid cols-4">
+      <div class="card">
+        <h3>Auth</h3>
+        <span class="path">/api/auth</span>
+        <p class="desc">auth.routes.ts</p>
+        <div class="targets"><span class="tgt">→ JWT</span><span class="tgt">→ Google OAuth</span></div>
+      </div>
+      <div class="card">
+        <h3>Bookings</h3>
+        <span class="path">/api/bookings</span>
+        <p class="desc">booking.routes.ts → BookingService</p>
+        <div class="targets"><span class="tgt">→ PostgreSQL</span></div>
+      </div>
+      <div class="card">
+        <h3>Seats</h3>
+        <span class="path">/api/trip-schedules</span>
+        <p class="desc">seat.routes.ts → SeatService</p>
+        <div class="targets"><span class="tgt">→ PostgreSQL</span></div>
+      </div>
+      <div class="card">
+        <h3>Payments</h3>
+        <span class="path">/api/payments, /vnpay, /momo, /mock-payment, /bank-transfer</span>
+        <p class="desc">VNPay · MoMo · SePay/Casso webhook</p>
+        <div class="targets"><span class="tgt">→ PostgreSQL</span><span class="tgt">→ 4 cổng ngoài</span></div>
+      </div>
+      <div class="card">
+        <h3>Admin</h3>
+        <span class="path">/api/admin</span>
+        <p class="desc">admin.routes.ts — requireAdmin, 24 resource CRUD</p>
+        <div class="targets"><span class="tgt">→ PostgreSQL</span><span class="tgt">→ Supabase Auth</span></div>
+      </div>
+      <div class="card">
+        <h3>AI</h3>
+        <span class="path">/api/ai</span>
+        <p class="desc">ai.routes.ts → ai.service.ts</p>
+        <div class="targets"><span class="tgt">→ Ollama (local LLM)</span></div>
+      </div>
+      <div class="card">
+        <h3>Content</h3>
+        <span class="path">/tours /hotels /destinations /rentals /deliveries /banners /hero-slides /events /contacts</span>
+        <p class="desc">CMS-style resource routes</p>
+        <div class="targets"><span class="tgt">→ Cache</span><span class="tgt">→ PostgreSQL</span></div>
+      </div>
+      <div class="card">
+        <h3>Public</h3>
+        <span class="path">/trips /promotions /reviews /stations /configs</span>
+        <p class="desc">đăng ký thẳng trong index.ts</p>
+        <div class="targets"><span class="tgt">→ Cache</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA + REALTIME -->
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>Dữ liệu &amp; realtime</h2></div>
+    <div class="grid cols-3">
+      <div class="card">
+        <h3>PostgreSQL</h3>
+        <span class="path">Supabase · Prisma · schema.prisma</span>
+        <p class="desc">49 model, nguồn dữ liệu chính cho toàn bộ route ghi.</p>
+      </div>
+      <div class="card warn">
+        <h3>Cache <span class="badge warn">MISSING vs docker-compose</span></h3>
+        <span class="path">core/cache.ts</span>
+        <p class="desc">NodeCache + AsyncLock trong bộ nhớ. <b>Không phải Redis</b> — docker-compose/README nhắc Redis nhưng không có dependency redis nào trong code.</p>
+      </div>
+      <div class="card notimpl">
+        <h3>Socket.IO <span class="badge notimpl">chưa có client</span></h3>
+        <span class="path">core/socket.ts</span>
+        <p class="desc">Event thật: <code>join_trip</code>, <code>leave_trip</code>, <code>update_location</code>, <code>location_updated</code> — chỉ theo dõi GPS xe. Không có event khoá/mở ghế. Không tìm thấy <code>socket.io-client</code> ở web/ lẫn admin/.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXTERNAL -->
+  <section>
+    <div class="section-head"><span class="num">04</span><h2>Tích hợp bên ngoài</h2></div>
+    <div class="grid cols-3">
+      <div class="card">
+        <h3>Thanh toán</h3>
+        <span class="path">vnpay.util.ts · momo.util.ts · bank-transfer.routes.ts</span>
+        <div class="targets" style="margin-top:8px">
+          <span class="tgt">VNPay</span><span class="tgt">MoMo</span><span class="tgt">SePay webhook</span><span class="tgt">Casso webhook</span>
+        </div>
+        <p class="desc" style="margin-top:8px">VietQR ở <code>BankTransferQRPage.tsx</code> — chỉ hiển thị ảnh, chạy phía FE, không gọi API.</p>
+      </div>
+      <div class="card">
+        <h3>Xác thực</h3>
+        <span class="path">auth.middleware.ts · core/supabase.ts</span>
+        <div class="targets" style="margin-top:8px">
+          <span class="tgt">JWT (jsonwebtoken)</span><span class="tgt">Supabase Auth (fallback + invite)</span><span class="tgt">Google OAuth</span>
+        </div>
+      </div>
+      <div class="card notimpl">
+        <h3>AI <span class="badge warn">provider lệch</span></h3>
+        <span class="path">ai.service.ts</span>
+        <p class="desc">Gọi thật: <code>fetch OLLAMA_BASE_URL/api/chat</code>. <code>@google/genai</code> có trong package.json nhưng <b>không import ở đâu cả</b>. <code>AI_PROVIDER=gemini</code> / <code>GEMINI_MODEL</code> trong docker-compose <b>không được code đọc</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISMATCH -->
+  <section>
+    <div class="mismatch">
+      <h2>Chênh lệch tài liệu cũ ↔ code thật</h2>
+      <p class="lead">Những chỗ hạ tầng/README từng nhắc tới nhưng không khớp với những gì đang chạy.</p>
+      <ul>
+        <li><span class="claim">Redis</span><span class="arrow">→</span><span>Thực tế là <b>NodeCache in-memory</b> (<code>core/cache.ts</code>), không có package redis nào trong dependency.</span></li>
+        <li><span class="claim">AI_PROVIDER=gemini</span><span class="arrow">→</span><span><code>ai.service.ts</code> luôn gọi <b>Ollama local</b>, không đọc biến môi trường Gemini trong docker-compose.</span></li>
+        <li><span class="claim">Socket ghế</span><span class="arrow">→</span><span>Không có event <code>seat:locked</code>/<code>seat:released</code> — socket hiện chỉ phục vụ vị trí GPS xe.</span></li>
+        <li><span class="claim">Socket client</span><span class="arrow">→</span><span>Server socket.ts tồn tại nhưng <b>chưa có consumer thật</b> — web/ và admin/ đều không có socket.io-client.</span></li>
+        <li><span class="claim">admin/ như Next.js</span><span class="arrow">→</span><span>Cấu trúc thư mục <code>app/(main)/...</code> chỉ copy quy ước đặt tên; admin chạy bằng <b>Vite + React Router</b> thật.</span></li>
+        <li><span class="claim">BookingStatus.DRAFT / REFUNDING</span><span class="arrow">→</span><span>Có trong schema.prisma nhưng chưa có service nào gán 2 trạng thái này.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    nguồn: docs/architecture/00-master-system-map.md · backend/src · web/src · admin/src — cập nhật 2026-09-09
+  </footer>
+</div>
