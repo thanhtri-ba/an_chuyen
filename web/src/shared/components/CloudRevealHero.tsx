@@ -1,6 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import cloudImg from '../../assets/hero/cloud.png';
+
+// Lazy: pulls in @react-three/fiber's whole runtime, so it should never block
+// the hero's own paint — the video/title render immediately either way.
+const Hero3D = lazy(() => import('./Hero3D').then(m => ({ default: m.Hero3D })));
+
+// Small "+" viewport marks at each corner — a deliberate departure from the
+// usual full-bleed travel-hero look, borrowed from design-tool framing
+// (crosshair guides) rather than photography chrome.
+function CrosshairCorners() {
+  const mark = (pos: string) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" className={`absolute ${pos} text-white/50`} aria-hidden="true">
+      <path d="M11 3v6M11 13v6M3 11h6M13 11h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+  return (
+    <div className="absolute inset-6 lg:inset-10 z-30 pointer-events-none">
+      {mark('top-0 left-0')}
+      {mark('top-0 right-0')}
+      {mark('bottom-0 left-0')}
+      {mark('bottom-0 right-0')}
+    </div>
+  );
+}
 
 // lucide-react ships no brand glyphs — minimal inline marks instead.
 const FacebookIcon = () => (
@@ -58,7 +81,7 @@ export function CloudRevealHero({ bgVideos, eyebrow, title, videoInterval = 14 }
   }, [bgVideos.length, videoInterval]);
 
   return (
-    <section className="relative h-screen min-h-[720px] flex flex-col overflow-hidden bg-[#0d1710]">
+    <section className="relative h-screen min-h-[720px] flex flex-col overflow-hidden bg-[#153B35]">
       <AnimatePresence>
         <motion.video
           key={bgVideos[videoIndex]}
@@ -75,6 +98,17 @@ export function CloudRevealHero({ bgVideos, eyebrow, title, videoInterval = 14 }
         />
       </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/15 to-black/55" aria-hidden="true" />
+
+      <CrosshairCorners />
+
+      {/* Draggable road-loop accent — desktop only: touch-drag on the shape would
+          fight the page's own vertical scroll on phones, and it's a decorative
+          extra, not core content, so it's fine to skip there. */}
+      <div className="hidden lg:block absolute right-[6%] top-1/2 -translate-y-1/2 z-20 w-[320px] h-[320px] opacity-90">
+        <Suspense fallback={null}>
+          <Hero3D className="w-full h-full" />
+        </Suspense>
+      </div>
 
       {/* Intro clouds — fully cover on mount, then drift up and settle into a soft
           fringe at the top edge rather than clearing away entirely. */}
@@ -109,7 +143,7 @@ export function CloudRevealHero({ bgVideos, eyebrow, title, videoInterval = 14 }
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: CONTENT_DELAY }}
       >
-        <div className="text-base md:text-lg font-bold tracking-[0.5em] uppercase text-[#d4af37] mb-6" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>{eyebrow}</div>
+        <div className="text-base md:text-lg font-bold tracking-[0.5em] uppercase text-[#D1873F] mb-6" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>{eyebrow}</div>
         <h1
           className="font-condensed font-black uppercase text-6xl md:text-8xl lg:text-[7.5rem] leading-[1.02] tracking-[0.06em] text-white max-w-6xl"
           style={{ textShadow: '0 6px 32px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.8)' }}
@@ -126,10 +160,10 @@ export function CloudRevealHero({ bgVideos, eyebrow, title, videoInterval = 14 }
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: CONTENT_DELAY + 0.3 }}
         >
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><FacebookIcon /></span>
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><InstagramIcon /></span>
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><TwitterIcon /></span>
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><YoutubeIcon /></span>
+          <span className="hover:text-[#D1873F] transition-colors cursor-pointer"><FacebookIcon /></span>
+          <span className="hover:text-[#D1873F] transition-colors cursor-pointer"><InstagramIcon /></span>
+          <span className="hover:text-[#D1873F] transition-colors cursor-pointer"><TwitterIcon /></span>
+          <span className="hover:text-[#D1873F] transition-colors cursor-pointer"><YoutubeIcon /></span>
         </motion.div>
 
         <motion.a

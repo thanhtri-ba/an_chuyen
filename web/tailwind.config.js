@@ -42,6 +42,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // An Chuyến brand palette (logo redesign) — used to migrate Home off the
+        // old yellow/black scheme without touching every hex literal at once.
+        teal: { DEFAULT: "#215951", deep: "#153B35", light: "#3D7A6D" },
+        amber: { DEFAULT: "#D1873F", deep: "#B36C2B" },
+        cream: "#F6F1E0",
       },
       fontFamily: {
         sans: ["Outfit", "Inter", "system-ui", "sans-serif"],
@@ -50,6 +55,10 @@ module.exports = {
         cormorant: ["Cormorant Garamond", "Georgia", "serif"],
         brand: ["'Instrument Serif'", "Georgia", "serif"],
         condensed: ["Barlow Condensed", "system-ui", "sans-serif"],
+        // Redesign faces (logo lockup): Fraunces for display headings, Be Vietnam
+        // Pro for body/UI (already loaded, better Vietnamese diacritic support).
+        fraunces: ["Fraunces", "Georgia", "serif"],
+        viet: ["'Be Vietnam Pro'", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
