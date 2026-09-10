@@ -152,10 +152,7 @@ function Card({ d, i }: { d: DestinationDetail; i: number }) {
           // hover scale transform) and then ignores the ancestor's
           // overflow-hidden clip, rendering square corners despite correct CSS
           // up the tree. Redundant on Chrome/Firefox, fixes it on Safari.
-          // object-contain (not cover) per user request: show the whole photo,
-          // no cropped-off top/bottom — card's own bg-white/5 fills the letterbox
-          // gap since these are landscape source photos in a portrait card.
-          className="w-full h-full object-contain rounded-lg opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
+          className="w-full h-full object-cover rounded-lg opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
           loading="lazy"
           onLoad={e => e.currentTarget.classList.add('loaded')}
           // A dead image URL (404, expired Unsplash/Pexels link...) never fires
