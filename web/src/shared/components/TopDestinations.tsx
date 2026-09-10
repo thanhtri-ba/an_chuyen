@@ -89,13 +89,16 @@ export function TopDestinations({ destinations }: Props) {
 
   return (
     <section ref={containerRef} className="relative bg-[#0d1710]" style={{ height: `${100 + items.length * 60}vh` }}>
-      {/* overflow-x-hidden only (not overflow-hidden) — the draggable card row
-          needs horizontal clipping, but clipping the Y axis too was cutting off
-          the Blurb text on shorter viewports where Heading+Cards+Blurb together
-          exceed h-screen. */}
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-x-hidden">
+      {/* No overflow-* on this h-screen sticky box at all — per the CSS overflow
+          spec, clipping only one axis (e.g. overflow-x-hidden) silently forces
+          the OTHER axis to compute as "auto" even if you explicitly write
+          "overflow-y-visible", turning this box into its own scroll container
+          with a visible scrollbar the moment content (the Blurb, on shorter
+          viewports) exceeds h-screen. The horizontal clip the draggable card
+          row needs belongs on that row itself instead, where it can't affect Y. */}
+      <div className="sticky top-0 h-screen flex flex-col justify-center">
         <Heading />
-        <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max" style={{ x }}>
+        <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max overflow-x-hidden" style={{ x }}>
           {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
         </motion.div>
         <div className="px-6 lg:px-12 mt-8 lg:mt-10">
