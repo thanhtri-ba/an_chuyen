@@ -169,6 +169,18 @@ export class IdentityService {
     return { refreshToken, expiresAt };
   }
 
+  // Đánh dấu thiết bị đã tin cậy cho MỘT user cụ thể mà không cần qua OTP
+  // của /auth/login — dùng ngay sau khi đăng ký (auth.routes.ts POST
+  // /register), vì email đã được xác minh bằng OTP riêng trong chính luồng
+  // đăng ký rồi; bắt xác minh thêm 1 lần OTP nữa ở lần đăng nhập đầu tiên chỉ
+  // là ma sát thừa cho khách vừa đăng ký xong.
+  static async createDeviceSession(userId: string, deviceInfo?: string, ipAddress?: string) {
+    const refreshToken = crypto.randomBytes(48).toString('hex');
+    const expiresAt = new Date(Date.now() + DEVICE_SESSION_DAYS * 24 * 60 * 60 * 1000);
+    await prisma.deviceSession.create({ data: { userId, refreshToken, deviceInfo, ipAddress, expiresAt } });
+    return { refreshToken, expiresAt };
+  }
+
   // Xác minh email TRƯỚC KHI tạo tài khoản mật khẩu mới (auth.routes.ts
   // POST /register) — khác hẳn requestOtp/identifyGuestByEmail ở trên: CHỦ Ý
   // KHÔNG tự tạo User ở bước này vì tài khoản chưa nên tồn tại cho tới khi cả

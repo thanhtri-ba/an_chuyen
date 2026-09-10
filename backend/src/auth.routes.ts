@@ -93,6 +93,20 @@ router.post('/register', async (req, res) => {
       { subject: user.id, expiresIn: '7d' },
     );
 
+    // Email vừa được xác minh bằng OTP ở chính luồng đăng ký (yêu cầu bắt
+    // buộc phía trên) — đánh dấu luôn thiết bị này tin cậy để lần đăng nhập
+    // kế tiếp không bị hỏi OTP thêm lần nữa (xem createDeviceSession).
+    const deviceInfo = req.headers['user-agent'];
+    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress;
+    const { refreshToken, expiresAt } = await IdentityService.createDeviceSession(user.id, deviceInfo, ipAddress);
+    res.cookie(DEVICE_SESSION_COOKIE, refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: expiresAt,
+      path: '/',
+    });
+
     res.status(201).json({ token, user, isNewUser: true });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
