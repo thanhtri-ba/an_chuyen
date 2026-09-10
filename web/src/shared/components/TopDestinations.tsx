@@ -141,13 +141,18 @@ function Card({ d, i }: { d: DestinationDetail; i: number }) {
       // drag/reveal itself is already the section's "entrance", so cards
       // just render visible immediately.
       whileHover={{ y: -6 }}
-      className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 border border-white/10"
+      className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 border border-white/10 [transform:translateZ(0)]"
     >
       <Link to={`/destinations/${d.slug}`} className="absolute inset-0">
         <img
           src={d.heroImg}
           alt={d.location}
-          className="w-full h-full object-cover opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
+          // rounded-lg here too, not just on the card wrapper — Safari sometimes
+          // promotes this img to its own compositing layer (object-cover + the
+          // hover scale transform) and then ignores the ancestor's
+          // overflow-hidden clip, rendering square corners despite correct CSS
+          // up the tree. Redundant on Chrome/Firefox, fixes it on Safari.
+          className="w-full h-full object-cover rounded-lg opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
           loading="lazy"
           onLoad={e => e.currentTarget.classList.add('loaded')}
           // A dead image URL (404, expired Unsplash/Pexels link...) never fires
