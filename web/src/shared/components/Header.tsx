@@ -255,7 +255,7 @@ export function Header() {
           
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <span className="text-xl lg:text-3xl font-display font-medium tracking-tight flex items-center gap-2">
+            <span className={`text-xl lg:text-3xl font-display font-medium tracking-tight flex items-center gap-2 ${!scrolled && isHome ? 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]' : ''}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={!scrolled && isHome ? 'text-white' : 'text-primary'}><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.3 2.6c-.2.4-.1.9.3 1.1l7.3 3.8-2 2-3.4-.6c-.5-.1-.9.2-1.1.5l-1.1 2.3c-.2.4 0 .9.4 1.1L8 21l8.5-4.7c.4.2.9.4 1.3.4z"/></svg>
               An Chuyến
             </span>
@@ -284,9 +284,14 @@ export function Header() {
             </Link>
             <button
               onClick={() => { setRightDrawerOpen(true); setMobileMenuOpen(true); }}
-              className={`w-11 h-11 rounded-full border flex items-center justify-center transition-colors ${borderColor} ${hoverBgColor}`}
+              className={`w-11 h-11 rounded-full border flex items-center justify-center transition-colors ${borderColor} ${hoverBgColor} ${!scrolled && isHome ? 'shadow-[0_1px_6px_rgba(0,0,0,0.35)]' : ''}`}
             >
-              <Menu className="w-5 h-5" />
+              {/* drop-shadow, not just the button's own box-shadow — the icon glyph
+                  itself is white (textColor) on the un-scrolled home header, which
+                  assumes a dark hero behind it; during CloudRevealHero's light/white
+                  cloud-reveal moment that makes it near-invisible (white-on-white),
+                  same failure as the logo text below. */}
+              <Menu className={`w-5 h-5 ${!scrolled && isHome ? 'drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]' : ''}`} />
             </button>
           </div>
         </div>
