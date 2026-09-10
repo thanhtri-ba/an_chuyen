@@ -31,6 +31,7 @@ const MyBookingsPage = lazy(() => import('./features/my-bookings/pages/MyBooking
 const OffersPage = lazy(() => import('./features/offers/pages/OffersPage').then(m => ({ default: m.OffersPage })));
 const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const AboutPage = lazy(() => import('./features/about/pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const PartnerDetailPage = lazy(() => import('./features/about/pages/PartnerDetailPage').then(m => ({ default: m.PartnerDetailPage })));
 const ContactPage = lazy(() => import('./features/contact/pages/ContactPage').then(m => ({ default: m.ContactPage })));
 const BlogPage = lazy(() => import('./features/blog/pages/BlogPage').then(m => ({ default: m.BlogPage })));
 const BlogDetailPage = lazy(() => import('./features/blog/pages/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
@@ -108,6 +109,7 @@ const AppRoutes = memo(() => {
                 <Route path="/offers" element={<PageTransition><OffersPage /></PageTransition>} />
                 <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
                 <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
+                <Route path="/about/:slug" element={<PageTransition><PartnerDetailPage /></PageTransition>} />
                 <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
                 <Route path="/blog" element={<PageTransition><BlogPage /></PageTransition>} />
                 <Route path="/blog/:slug" element={<PageTransition><BlogDetailPage /></PageTransition>} />
