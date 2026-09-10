@@ -141,7 +141,11 @@ function Card({ d, i }: { d: DestinationDetail; i: number }) {
       // drag/reveal itself is already the section's "entrance", so cards
       // just render visible immediately.
       whileHover={{ y: -6 }}
-      className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 border border-white/10 [transform:translateZ(0)]"
+      // ring (box-shadow) instead of border — a real border consumes 1px of box
+      // space on each side, shrinking the content area to 338x458 vs the card's
+      // 340x460 frame; a ring paints on top without changing the box size, so
+      // the image now matches the frame exactly.
+      className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 ring-1 ring-inset ring-white/10 [transform:translateZ(0)]"
     >
       <Link to={`/destinations/${d.slug}`} className="absolute inset-0">
         <img
