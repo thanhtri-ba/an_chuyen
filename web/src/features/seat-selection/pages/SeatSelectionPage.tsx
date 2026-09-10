@@ -799,14 +799,16 @@ export function SeatSelectionPage() {
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div className="sm:col-span-2"><TextField label="Họ và tên" required disabled={disabled} value={p.name} onChange={v=>updatePassenger(idx,'name',v)} placeholder="Nhập họ tên"/></div>
+                  {/* 2 short fields per row even on mobile (grid-cols-2), so 7 fields take ~4 rows
+                      instead of 7 full-width rows stacked one under another. */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="col-span-2"><TextField label="Họ và tên" required disabled={disabled} value={p.name} onChange={v=>updatePassenger(idx,'name',v)} placeholder="Nhập họ tên"/></div>
                     <TextField label="Số điện thoại" required disabled={disabled} value={p.phone} onChange={v=>updatePassenger(idx,'phone',v)} placeholder="Nhập SĐT (10 số)" type="tel" inputMode="tel" maxLength={10}/>
                     <SelectField label="Giới tính" disabled={disabled} value={p.gender} onChange={v=>updatePassenger(idx,'gender',v)} options={['Nam','Nữ','Khác']}/>
-                    <div className="sm:col-span-2"><TextField label="Email (để nhận vé)" disabled={disabled} value={p.email} onChange={v=>updatePassenger(idx,'email',v)} placeholder="ten@example.com" type="email"/></div>
+                    <div className="col-span-2"><TextField label="Email (để nhận vé)" disabled={disabled} value={p.email} onChange={v=>updatePassenger(idx,'email',v)} placeholder="ten@example.com" type="email"/></div>
                     <DateField label="Ngày sinh" disabled={disabled} value={p.dob} onChange={v=>updatePassenger(idx,'dob',v)}/>
                     <TextField label="CMND/CCCD" required disabled={disabled} value={p.idNumber} onChange={v=>updatePassenger(idx,'idNumber',v)} placeholder="9 hoặc 12 số" inputMode="numeric" maxLength={12}/>
-                    <SelectField label="Quốc tịch" disabled={disabled} value={p.nationality} onChange={v=>updatePassenger(idx,'nationality',v)} options={['Việt Nam','Khác']}/>
+                    <div className="col-span-2 sm:col-span-1"><SelectField label="Quốc tịch" disabled={disabled} value={p.nationality} onChange={v=>updatePassenger(idx,'nationality',v)} options={['Việt Nam','Khác']}/></div>
                   </div>
                 </div>
               );
