@@ -132,8 +132,14 @@ function Blurb() {
 function Card({ d, i }: { d: DestinationDetail; i: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5, delay: i * 0.08 }}
+      // No initial/whileInView fade-in here (unlike other cards on the page) —
+      // this card sits inside the sticky, horizontally-dragged row, and
+      // Framer Motion's viewport intersection check for whileInView doesn't
+      // reliably fire once an element is revealed by a CSS transform (the
+      // `x` drag) rather than real page scroll. It was getting stuck at its
+      // initial opacity: 0 forever — the card never became visible. The
+      // drag/reveal itself is already the section's "entrance", so cards
+      // just render visible immediately.
       whileHover={{ y: -6 }}
       className="group relative shrink-0 w-[300px] sm:w-[340px] h-[460px] rounded-lg overflow-hidden bg-white/5 border border-white/10"
     >
