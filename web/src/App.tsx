@@ -39,6 +39,13 @@ const LoyaltyPage = lazy(() => import('./features/loyalty/pages/LoyaltyPage').th
 const DeliveryPage = lazy(() => import('./features/services/pages/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const RentalPage = lazy(() => import('./features/services/pages/RentalPage').then(m => ({ default: m.RentalPage })));
 const DestinationDetailPage = lazy(() => import('./features/destinations/pages/DestinationDetailPage').then(m => ({ default: m.DestinationDetailPage })));
+const DestinationsPage = lazy(() => import('./features/destinations/pages/DestinationsPage').then(m => ({ default: m.DestinationsPage })));
+const HotelsPage = lazy(() => import('./features/services/pages/HotelsPage').then(m => ({ default: m.HotelsPage })));
+const ToursPage = lazy(() => import('./features/services/pages/ToursPage').then(m => ({ default: m.ToursPage })));
+const ExperiencesPage = lazy(() => import('./features/services/pages/ExperiencesPage').then(m => ({ default: m.ExperiencesPage })));
+const FaqPage = lazy(() => import('./features/legal/pages/FaqPage').then(m => ({ default: m.FaqPage })));
+const PrivacyPage = lazy(() => import('./features/legal/pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('./features/legal/pages/TermsPage').then(m => ({ default: m.TermsPage })));
 
 // Lazy load optional components
 const FloatingChatLazy = lazy(() => import('./shared/components/FloatingChat').then(m => ({ default: m.FloatingChat })));
@@ -109,6 +116,13 @@ const AppRoutes = memo(() => {
                 <Route path="/delivery" element={<PageTransition><DeliveryPage /></PageTransition>} />
                 <Route path="/rental" element={<PageTransition><RentalPage /></PageTransition>} />
                 <Route path="/destinations/:slug" element={<PageTransition><DestinationDetailPage /></PageTransition>} />
+                <Route path="/destinations" element={<PageTransition><DestinationsPage /></PageTransition>} />
+                <Route path="/hotels" element={<PageTransition><HotelsPage /></PageTransition>} />
+                <Route path="/tours" element={<PageTransition><ToursPage /></PageTransition>} />
+                <Route path="/experiences" element={<PageTransition><ExperiencesPage /></PageTransition>} />
+                <Route path="/faq" element={<PageTransition><FaqPage /></PageTransition>} />
+                <Route path="/privacy" element={<PageTransition><PrivacyPage /></PageTransition>} />
+                <Route path="/terms" element={<PageTransition><TermsPage /></PageTransition>} />
               </Routes>
             </AnimatePresence>
           </Suspense>
