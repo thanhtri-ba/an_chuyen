@@ -158,18 +158,12 @@ async function seedProductionData() {
           }
         });
 
-        // Create 40 seats (A1-A40)
-        for (let i = 1; i <= 40; i++) {
-          await prisma.seat.create({
-            data: {
-              tripScheduleId: schedule.id,
-              seatNumber: `A${i}`,
-              status: 'AVAILABLE'
-            }
-          });
-        }
-
-        console.log(`✅ Created Trip & Schedule for ${routeKey} (40 seats)`);
+        // Seats are intentionally not created here — SeatService.getSeatMap() lazily
+        // generates the real T{floor}-{row}{col} seat map (2 floors x 6 rows x 3 cols)
+        // on first request. Pre-creating "A1".."A40" rows here used to produce seats
+        // in a format the frontend/booking flow can't parse, silently breaking seat
+        // selection for every trip this script seeded.
+        console.log(`✅ Created Trip & Schedule for ${routeKey}`);
       }
     }
 
