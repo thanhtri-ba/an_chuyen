@@ -142,6 +142,7 @@ export function PaymentPage() {
         pickupPointId: pendingBooking.pickupPoint,
         dropoffPointId: pendingBooking.dropoffPoint,
         notes: pendingBooking.notes || '',
+        amenities: pendingBooking.amenities,
         promoCode: appliedPromo?.code,
         contactName: pendingBooking.passengerInfo.name,
         contactPhone: pendingBooking.passengerInfo.phone,

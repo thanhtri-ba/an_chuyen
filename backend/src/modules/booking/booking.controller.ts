@@ -27,7 +27,16 @@ const createBookingSchema = z.object({
   // điền nhanh cho lần đặt vé sau, không bắt buộc.
   contactName: z.string().trim().min(1).optional(),
   contactPhone: z.string().trim().min(1).optional(),
-  contactEmail: z.string().trim().email().optional().or(z.literal(''))
+  contactEmail: z.string().trim().email().optional().or(z.literal('')),
+  notes: z.string().trim().max(200).optional(),
+  // Tiện ích chọn thêm lúc chọn ghế (nước suối/khăn lạnh/gối/USB) — xem AMENITY_PRICES
+  // trong SeatSelectionPage.tsx. Backend không tin amenitiesTotal client gửi lên, tự tính lại.
+  amenities: z.object({
+    nuocSuoi: z.number().int().min(0).default(0),
+    khanLanh: z.number().int().min(0).default(0),
+    goiTuaCo: z.number().int().min(0).default(0),
+    oCamUSB: z.boolean().default(false)
+  }).optional()
 });
 
 export const createBooking = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

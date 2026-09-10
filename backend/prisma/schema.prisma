@@ -545,6 +545,9 @@ model Booking {
   returnBookingId String?
   pickupPointId   String?
   dropoffPointId  String?
+  notes           String?
+  amenities       Json? // { nuocSuoi, khanLanh, goiTuaCo: number; oCamUSB: boolean } chosen at checkout — see AMENITY_PRICES in SeatSelectionPage.tsx
+  amenitiesTotal  Float         @default(0)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime? // Soft Delete
