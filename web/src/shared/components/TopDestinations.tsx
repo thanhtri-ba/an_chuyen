@@ -98,15 +98,21 @@ export function TopDestinations({ destinations }: Props) {
           row needs belongs on that row itself instead, where it can't affect Y. */}
       <div className="sticky top-0 h-screen flex flex-col justify-center">
         <Heading />
-        {/* shrink-0 is load-bearing: this row is a flex item inside the outer
-            .sticky.h-screen column, and overflow-x-hidden makes its automatic
-            minimum size 0 (CSS overflow spec) — without shrink-0, the column
-            was free to squash this row shorter than its cards' real 460px
-            height (measured 404px) whenever Heading+row+Blurb together
-            exceeded the viewport, clipping the bottom of every card's photo. */}
-        <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max overflow-x-hidden shrink-0" style={{ x }}>
-          {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
-        </motion.div>
+        {/* Dedicated clipping wrapper — overflow-x-hidden here, NOT on the track
+            itself. The track (w-max) is naturally as wide as all cards combined
+            (e.g. 2268px for 7 cards); overflow-x-hidden on the track only clips
+            the track's OWN overflowing children, it does nothing to stop the
+            track's own 2268px width from pushing this flex item — and the whole
+            page — wider than the viewport (real bug: horizontal scrollbar on
+            the entire site). This wrapper has no fixed height (unlike the
+            .sticky.h-screen column), so unlike that earlier bug, letting its
+            Y axis auto-compute here is harmless — it just shrinks to the
+            track's own 460px, nothing inside it can overflow vertically. */}
+        <div className="w-full overflow-x-hidden">
+          <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max" style={{ x }}>
+            {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
+          </motion.div>
+        </div>
         <div className="px-6 lg:px-12 mt-8 lg:mt-10">
           <Blurb />
         </div>
