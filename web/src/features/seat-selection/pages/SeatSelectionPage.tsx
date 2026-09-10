@@ -210,6 +210,17 @@ export function SeatSelectionPage() {
     return () => window.removeEventListener('resize', fn);
   }, []);
 
+  // Narrower than isMobile (1024, shared with the app's tablet/mobile nav layout) —
+  // this one gates the seat-floor toggle specifically, so a resized desktop Chrome
+  // window still gets the side-by-side 2-floor view; only real phone-width screens
+  // get the "one floor at a time" toggle.
+  const [isPhoneWidth, setIsPhoneWidth] = useState(() => window.innerWidth < 640);
+  useEffect(() => {
+    const fn = () => setIsPhoneWidth(window.innerWidth < 640);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+
   const [seats, setSeats] = useState<SeatData[]>(()=>generateMockSeats());
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [activeFloor, setActiveFloor] = useState<1|2>(1);
@@ -507,15 +518,15 @@ export function SeatSelectionPage() {
                 <h3 className="text-xl font-bold text-[#212529] truncate">Chọn ghế {busClass}</h3>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mb-8 lg:flex lg:flex-wrap lg:gap-3">
-                <div className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] lg:justify-start lg:gap-2 lg:px-4 lg:py-2.5 lg:text-sm">
+              <div className="grid grid-cols-3 gap-2 mb-8 sm:flex sm:flex-wrap sm:gap-3">
+                <div className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] sm:justify-start sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm">
                   <Users size={13} className="text-[#6C757D] shrink-0"/> <span>{seats.length} ghế</span>
                 </div>
                 {floorCount > 1 && [1,2].map(f=> floorFromPrice[f]!=null && (
-                  <div key={f} className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] lg:justify-start lg:gap-2 lg:px-4 lg:py-2.5 lg:text-sm">
+                  <div key={f} className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] sm:justify-start sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm">
                     <Layers size={13} className="text-[#6C757D] shrink-0"/>
-                    <span className="lg:hidden">{f===1?'Dưới':'Trên'} <span className="font-bold text-[#856404]">{fmtShort(floorFromPrice[f])}</span></span>
-                    <span className="hidden lg:inline">Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
+                    <span className="sm:hidden">{f===1?'Dưới':'Trên'} <span className="font-bold text-[#856404]">{fmtShort(floorFromPrice[f])}</span></span>
+                    <span className="hidden sm:inline">Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
                   </div>
                 ))}
               </div>
@@ -530,9 +541,10 @@ export function SeatSelectionPage() {
                   ))}
                 </div>
 
-                {/* Mobile: floor toggle + one floor at a time, smaller seats so a row fits the screen without horizontal scroll.
-                    Desktop: both floors shown side by side (per user request), full seat size. */}
-                {isMobile && floorCount > 1 && (
+                {/* Phone-width only (<640px): floor toggle + one floor at a time, smaller seats so a row
+                    fits the screen without horizontal scroll. A resized desktop Chrome window (640-1024px)
+                    still gets the side-by-side view below, just like full desktop. */}
+                {isPhoneWidth && floorCount > 1 && (
                   <div className="w-full flex items-center justify-center gap-2 px-4">
                     {[1,2].map(f=>(
                       <button
@@ -550,17 +562,17 @@ export function SeatSelectionPage() {
                   </div>
                 )}
 
-                <div className="w-full flex items-start justify-start lg:justify-center gap-6 py-4 px-4 overflow-x-auto">
-                  {(floorCount > 1 ? (isMobile ? [activeFloor] : [1,2]) : [1]).map(f => {
+                <div className="w-full flex items-start justify-start sm:justify-center gap-6 py-4 px-4 overflow-x-auto">
+                  {(floorCount > 1 ? (isPhoneWidth ? [activeFloor] : [1,2]) : [1]).map(f => {
                     const info = getFloorInfo(f);
                     return (
                       <div key={f} className="flex flex-col items-center gap-4 shrink-0 bg-[#FAFAFA] border border-[#DEE2E6] rounded-2xl pt-5 pb-6 px-6">
-                        {!isMobile && (
+                        {!isPhoneWidth && (
                           <div className="text-center">
                             <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
                           </div>
                         )}
-                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={isMobile?40:52}/>
+                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={isPhoneWidth?40:52}/>
                       </div>
                     );
                   })}
