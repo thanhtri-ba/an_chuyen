@@ -89,7 +89,11 @@ export function TopDestinations({ destinations }: Props) {
 
   return (
     <section ref={containerRef} className="relative bg-[#0d1710]" style={{ height: `${100 + items.length * 60}vh` }}>
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+      {/* overflow-x-hidden only (not overflow-hidden) — the draggable card row
+          needs horizontal clipping, but clipping the Y axis too was cutting off
+          the Blurb text on shorter viewports where Heading+Cards+Blurb together
+          exceed h-screen. */}
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-x-hidden">
         <Heading />
         <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max" style={{ x }}>
           {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
