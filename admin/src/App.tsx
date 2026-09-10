@@ -49,11 +49,26 @@ const AuthLayout = lazy(() => import("@/app/(main)/auth/v2/layout"));
 const LoginPage = lazy(() => import("@/app/(main)/auth/v2/login/page"));
 const RegisterPage = lazy(() => import("@/app/(main)/auth/v2/register/page"));
 
+// JWT admin_token hết hạn sau 7 ngày (auth.routes.ts issueToken) — đọc thẳng
+// claim `exp` từ token thay vì chỉ kiểm tra có tồn tại trong localStorage,
+// để token cũ hết hạn bị chặn lại ở đây thay vì vào được dashboard rồi mọi
+// API call mới âm thầm fail 401 (xem thêm xử lý 401 ở lib/api.ts).
+function isTokenExpired(token: string): boolean {
+  try {
+    const payloadB64 = token.split(".")[1];
+    const payload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload.exp === "number" && payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem("admin_token");
   const location = useLocation();
 
-  if (!token) {
+  if (!token || isTokenExpired(token)) {
+    if (token) localStorage.removeItem("admin_token");
     // Redirect them to the /login page, but save the current location they were trying to go to when they were redirected.
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, ArrowLeft, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../lib/api';
 import { useTranslation } from 'react-i18next';
+import { PARTNERS } from '../partners-data';
 
 export function AboutPage() {
   const { t } = useTranslation();
@@ -32,36 +34,9 @@ export function AboutPage() {
     },
   ];
 
-  const DEFAULT_SPECIALISTS = [
-    {
-      name: 'Phuong Trang',
-      role: 'Strategic Partner',
-      quote: '"Safety and passenger satisfaction are always the top priorities on every journey."',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop',
-      stat: '20+ yrs',
-      statLabel: 'Experience',
-    },
-    {
-      name: 'Thanh Buoi',
-      role: 'Transport Partner',
-      quote: '"Experienced drivers, ready to serve 24/7."',
-      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop',
-      stat: '500+',
-      statLabel: 'Vehicles',
-    },
-    {
-      name: 'Hai Van',
-      role: 'Transport Partner',
-      quote: '"5-star service, bringing a completely different experience."',
-      image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=800&auto=format&fit=crop',
-      stat: '4.9★',
-      statLabel: 'Rating',
-    },
-  ];
-
   const [activeSpecialist, setActiveSpecialist] = useState(0);
   const [services, setServices] = useState(DEFAULT_SERVICES);
-  const [specialists] = useState(DEFAULT_SPECIALISTS);
+  const [specialists] = useState(PARTNERS);
   const [, setLoading] = useState(true);
 
   useEffect(() => {
@@ -298,10 +273,13 @@ export function AboutPage() {
                   </div>
                 </div>
 
-                <button className="flex items-center gap-3 text-xs font-bold tracking-widest uppercase text-primary transition-all group w-fit hover:text-primary-hover">
+                <Link
+                  to={`/about/${specialists[activeSpecialist].slug}`}
+                  className="flex items-center gap-3 text-xs font-bold tracking-widest uppercase text-primary transition-all group w-fit hover:text-primary-hover"
+                >
                   Discover More
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1.5" />
-                </button>
+                </Link>
               </motion.div>
             </AnimatePresence>
 
@@ -322,7 +300,10 @@ export function AboutPage() {
                     className="w-full h-[500px] object-cover rounded-[2rem] shadow-sm"
                   />
                   {/* Name overlay */}
-                  <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white flex items-center justify-between">
+                  <Link
+                    to={`/about/${specialists[activeSpecialist].slug}`}
+                    className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white flex items-center justify-between hover:bg-white transition-colors"
+                  >
                     <div>
                       <div className="font-display font-medium text-2xl text-[#1a1a1a]">
                         {specialists[activeSpecialist].name}
@@ -334,7 +315,7 @@ export function AboutPage() {
                     <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
                       <ArrowUpRight className="w-5 h-5 text-gray-400" />
                     </div>
-                  </div>
+                  </Link>
                 </div>
               </motion.div>
             </AnimatePresence>

@@ -233,6 +233,7 @@ export function SeatSelectionPage() {
   const [amenityQty, setAmenityQty] = useState({ water: 0, towel: 0, pillow: 0 });
   const [usbSelected, setUsbSelected] = useState(true);
   const [notes, setNotes] = useState('');
+  const [identityConsent, setIdentityConsent] = useState(false);
   const [pickupPoint,setPickupPoint] = useState('');
   const [dropoffPoint,setDropoffPoint] = useState('');
   const { user } = useAuth();
@@ -467,6 +468,7 @@ export function SeatSelectionPage() {
     if(step==='seat'){setStep('info');return;}
     const validationError=validatePassengers();
     if(validationError){toast.error(validationError);return;}
+    if(!identityUser && !identityConsent){toast.error('Vui lòng đồng ý cho phép sử dụng thông tin trước khi tiếp tục');return;}
     const pickupLabel = pickupOpts.find(c=>c.id===pickupPoint)?.station.name||'';
     const dropoffLabel = dropoffOpts.find(c=>c.id===dropoffPoint)?.station.name||'';
     const primary = passengers[0];
@@ -852,7 +854,7 @@ export function SeatSelectionPage() {
               );
             })}
 
-            <CustomerIdentityFields />
+            <CustomerIdentityFields consent={identityConsent} onConsentChange={setIdentityConsent} />
 
             {/* Add-ons */}
             <div className="flex flex-col gap-4">

@@ -308,7 +308,17 @@ export function TripSearchPage() {
   };
 
   const handleSearch = () => {
-    const params: Record<string, string> = { origin: formOrigin, destination: formDest, date: formDate, passengers: formPass };
+    // formOrigin/formDest chỉ được set khi khách chủ động chọn trong ô gợi ý —
+    // ô vẫn hiển thị effectiveOrigin/effectiveDest làm placeholder mặc định dù
+    // formOrigin/formDest còn rỗng, nên phải rơi về giá trị đang hiển thị đó,
+    // nếu không bấm "Tìm chuyến xe" sẽ gửi origin/destination rỗng và không
+    // bao giờ trả kết quả (xem hasSearched ở trên).
+    const params: Record<string, string> = {
+      origin: formOrigin.trim() || effectiveOrigin,
+      destination: formDest.trim() || effectiveDest,
+      date: formDate,
+      passengers: formPass,
+    };
     if (isReturn) params.returnDate = formReturnDate;
     setSearchParams(params);
   };

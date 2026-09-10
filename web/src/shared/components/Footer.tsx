@@ -35,19 +35,19 @@ export const Footer = memo(() => {
   const { t } = useTranslation();
 
   const quickLinks = [
-    { to: '#', label: t('roamora.nav.destinations') },
-    { to: '#', label: t('roamora.nav.experiences') },
-    { to: '#', label: t('roamora.nav.hotels') },
-    { to: '#', label: t('roamora.nav.tours') },
-    { to: '#', label: t('roamora.nav.deals') },
-    { to: '#', label: t('roamora.nav.aboutUs') },
+    { to: '/destinations', label: t('roamora.nav.destinations') },
+    { to: '/experiences', label: t('roamora.nav.experiences') },
+    { to: '/hotels', label: t('roamora.nav.hotels') },
+    { to: '/tours', label: t('roamora.nav.tours') },
+    { to: '/offers', label: t('roamora.nav.deals') },
+    { to: '/about', label: t('roamora.nav.aboutUs') },
   ];
 
   const supportLinks = [
-    { to: '#', label: t('roamora.nav.faqs') },
-    { to: '#', label: t('roamora.nav.privacy') },
-    { to: '#', label: t('roamora.nav.terms') },
-    { to: '#', label: t('roamora.nav.contactUs') },
+    { to: '/faq', label: t('roamora.nav.faqs') },
+    { to: '/privacy', label: t('roamora.nav.privacy') },
+    { to: '/terms', label: t('roamora.nav.terms') },
+    { to: '/contact', label: t('roamora.nav.contactUs') },
   ];
 
   return (

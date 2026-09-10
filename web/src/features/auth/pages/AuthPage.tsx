@@ -190,12 +190,22 @@ export function AuthPage() {
     }
   };
 
+  const switchMode = (toLogin: boolean) => {
+    if (toLogin === isLogin) return;
+    setIsLogin(toLogin);
+    setError('');
+    setOtpStep(false);
+    setOtpChallengeId('');
+    setOtpCode('');
+    setOtpForLogin(false);
+  };
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex bg-background">
-      
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex bg-[#fcfcfc] font-sans">
+
       {/* ── LEFT — cinematic card ── */}
       <div className="hidden lg:flex w-[45%] xl:w-[50%] p-6 items-center justify-center relative">
-        <div className="w-full h-full rounded-[2rem] overflow-hidden relative shadow-[0_30px_60px_rgba(0,0,0,0.12)]">
+        <div className="w-full h-full rounded-[2rem] overflow-hidden relative shadow-[0_30px_60px_rgba(0,0,0,0.15)]">
           {/* slide image */}
           <AnimatePresence mode="wait">
             <motion.img
@@ -211,11 +221,11 @@ export function AuthPage() {
           </AnimatePresence>
 
           {/* vignette */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a332a]/90 via-black/10 to-black/30 pointer-events-none" />
 
           {/* TOP nav overlay */}
           <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-8 z-10">
-            <Link to="/" className="font-display text-3xl font-bold text-white tracking-wide">
+            <Link to="/" className="font-display text-3xl font-medium text-white tracking-wide">
               An Chuyến
             </Link>
           </div>
@@ -226,8 +236,8 @@ export function AuthPage() {
               <motion.div key={slide}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}>
-                <div className="text-[10px] font-bold tracking-widest uppercase text-primary mb-3">✦ Tuyến đường nổi bật</div>
-                <div className="font-display text-4xl text-white mb-2 leading-tight">{SLIDES[slide].caption}</div>
+                <div className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-3">✦ Tuyến đường nổi bật</div>
+                <div className="font-display italic text-4xl text-white mb-2 leading-tight">{SLIDES[slide].caption}</div>
                 <div className="text-sm text-white/70">{SLIDES[slide].sub}</div>
               </motion.div>
             </AnimatePresence>
@@ -235,7 +245,7 @@ export function AuthPage() {
             <div className="flex gap-4">
               {[{ fn: prevSlide, icon: <ChevronLeft size={20} /> }, { fn: nextSlide, icon: <ChevronRight size={20} /> }].map((btn, i) => (
                 <button key={i} onClick={btn.fn}
-                  className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-primary hover:border-primary transition-all duration-300">
+                  className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-[#d4af37] hover:border-[#d4af37] hover:text-[#1a332a] transition-all duration-300">
                   {btn.icon}
                 </button>
               ))}
@@ -246,26 +256,26 @@ export function AuthPage() {
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
             {SLIDES.map((_, i) => (
               <button key={i} onClick={() => setSlide(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${i === slide ? 'w-6 bg-primary' : 'w-1.5 bg-white/40'}`} />
+                className={`h-1.5 rounded-full transition-all duration-300 ${i === slide ? 'w-6 bg-[#d4af37]' : 'w-1.5 bg-white/40'}`} />
             ))}
           </div>
         </div>
       </div>
 
       {/* ── RIGHT — form ── */}
-      <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
-        
+      <div className="flex-1 flex flex-col bg-[#fcfcfc] relative overflow-hidden">
+
         {/* Decorative background elements */}
-        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-[#d4af37]/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-[#1a332a]/5 rounded-full blur-[100px] pointer-events-none" />
 
         {/* top bar */}
         <div className="flex items-center justify-between p-8 lg:px-16 relative z-10">
-          <Link to="/" className="lg:hidden font-display text-2xl font-bold text-[#1a1a1a]">
+          <Link to="/" className="lg:hidden font-display text-2xl font-medium text-[#1a1a1a]">
             An Chuyến
           </Link>
           <span className="hidden lg:block" />
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-xs font-bold tracking-widest uppercase text-muted-foreground hover:text-primary hover:border-primary hover:bg-white transition-all shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-xs font-bold tracking-widest uppercase text-gray-400 hover:text-[#1a332a] hover:border-[#d4af37] hover:bg-white transition-all shadow-sm">
             <Globe size={14} /> VI
           </button>
         </div>
@@ -275,21 +285,37 @@ export function AuthPage() {
           <motion.div
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            className="w-full max-w-[440px] bg-white/60 backdrop-blur-2xl p-10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.03)] border border-white"
+            className="w-full max-w-[440px] bg-white p-10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.04)] border border-black/5"
           >
+            {/* mode tabs */}
+            <div className="flex mb-10 border-b border-black/5">
+              {[{ key: true, label: 'Đăng nhập' }, { key: false, label: 'Đăng ký' }].map(tab => (
+                <button
+                  key={String(tab.key)}
+                  type="button"
+                  onClick={() => switchMode(tab.key)}
+                  className={`flex-1 pb-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 border-b-2 -mb-[1px] ${
+                    isLogin === tab.key ? 'border-[#d4af37] text-[#1a1a1a]' : 'border-transparent text-gray-300 hover:text-gray-500'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
             <AnimatePresence mode="wait">
               <motion.div key={isLogin ? 'login' : 'register'}
                 initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
 
                 {/* greeting */}
-                <div className="mb-10 text-center">
-                  <h1 className="font-display text-4xl text-[#1a1a1a] mb-3">
-                    {isLogin ? 'Xin chào,' : 'Tạo tài khoản,'}
-                  </h1>
-                  <p className="text-sm text-muted-foreground font-light">
-                    {isLogin ? 'Chào mừng trở lại với An Chuyến' : 'Bắt đầu hành trình tiện nghi cùng chúng tôi'}
+                <div className="mb-8">
+                  <p className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-3">
+                    {isLogin ? 'Chào mừng trở lại' : 'Thành viên mới'}
                   </p>
+                  <h1 className="font-display font-medium text-4xl text-[#1a1a1a] leading-tight">
+                    {isLogin ? 'Xin chào' : 'Tạo tài khoản'}
+                  </h1>
                 </div>
 
                 {error && (
@@ -304,45 +330,45 @@ export function AuthPage() {
                     {!isLogin && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-5 overflow-hidden">
                         <div>
-                          <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2 block ml-1">Họ và tên</label>
+                          <label className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2 block ml-1">Họ và tên</label>
                           <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Nguyễn Văn A"
-                            className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner" />
+                            className="w-full bg-[#fcfcfc] border border-gray-200 px-5 py-4 rounded-xl text-sm focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2 block ml-1">Số điện thoại</label>
+                          <label className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2 block ml-1">Số điện thoại</label>
                           <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required placeholder="09xxxxxxxx"
-                            className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner" />
+                            className="w-full bg-[#fcfcfc] border border-gray-200 px-5 py-4 rounded-xl text-sm focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all" />
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
                   <div>
-                    <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2 block ml-1">Email</label>
+                    <label className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-2 block ml-1">Email</label>
                     <div className="relative">
-                      <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" />
                       <input type="text" value={email} onChange={e => setEmail(e.target.value)} required disabled={otpStep} placeholder="ten@example.com"
-                        className="w-full bg-gray-50 border border-gray-100 pl-12 pr-5 py-4 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner disabled:opacity-60" />
+                        className="w-full bg-[#fcfcfc] border border-gray-200 pl-12 pr-5 py-4 rounded-xl text-sm focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all disabled:opacity-60" />
                     </div>
                   </div>
 
                   {otpStep && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-2 overflow-hidden">
                       <div className="flex justify-between items-center mx-1">
-                        <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">Mã xác minh (gửi tới {email})</label>
+                        <label className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Mã xác minh (gửi tới {email})</label>
                         {!otpForLogin && (
                           <button type="button" onClick={() => { setOtpStep(false); setOtpChallengeId(''); setOtpCode(''); }}
-                            className="text-[11px] text-primary hover:underline">Đổi email</button>
+                            className="text-[11px] text-[#1a332a] font-semibold hover:underline">Đổi email</button>
                         )}
                       </div>
                       {otpForLogin && (
-                        <p className="text-[11px] text-muted-foreground -mt-1">Thiết bị này chưa quen thuộc hoặc đã lâu bạn chưa đăng nhập — vui lòng xác minh để tiếp tục.</p>
+                        <p className="text-[11px] text-gray-400 -mt-1">Thiết bị này chưa quen thuộc hoặc đã lâu bạn chưa đăng nhập — vui lòng xác minh để tiếp tục.</p>
                       )}
                       <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
                         required placeholder="Nhập mã 6 số"
-                        className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-xl text-sm tracking-[0.4em] text-center focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner" />
+                        className="w-full bg-[#fcfcfc] border border-gray-200 px-5 py-4 rounded-xl text-sm tracking-[0.4em] text-center focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all" />
                       <button type="button" onClick={otpForLogin ? handleResendLoginOtp : handleRequestOtp} disabled={isSendingOtp}
-                        className="self-start text-[11px] text-muted-foreground hover:text-primary hover:underline mt-1">
+                        className="self-start text-[11px] text-gray-400 hover:text-[#1a332a] hover:underline mt-1">
                         {isSendingOtp ? 'Đang gửi lại...' : 'Gửi lại mã'}
                       </button>
                     </motion.div>
@@ -350,15 +376,15 @@ export function AuthPage() {
 
                   <div>
                     <div className="flex justify-between items-center mb-2 mx-1">
-                      <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">Mật khẩu</label>
-                      {isLogin && <Link to="/forgot-password" className="text-[11px] text-primary hover:underline">Quên mật khẩu?</Link>}
+                      <label className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Mật khẩu</label>
+                      {isLogin && <Link to="/forgot-password" className="text-[11px] text-[#1a332a] font-semibold hover:underline">Quên mật khẩu?</Link>}
                     </div>
                     <div className="relative">
-                      <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" />
                       <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
-                        className="w-full bg-gray-50 border border-gray-100 pl-12 pr-12 py-4 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-inner" />
+                        className="w-full bg-[#fcfcfc] border border-gray-200 pl-12 pr-12 py-4 rounded-xl text-sm focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#1a332a] transition-colors">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
@@ -366,20 +392,20 @@ export function AuthPage() {
 
                   {/* submit */}
                   <button type="submit" disabled={isSubmitting || isSendingOtp}
-                    className="w-full bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:hover:translate-y-0">
+                    className="w-full bg-[#1a332a] hover:bg-[#0d1f19] text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:hover:translate-y-0">
                     {isSubmitting || isSendingOtp
                       ? 'Đang xử lý...'
                       : isLogin
                         ? (otpStep && otpForLogin ? 'Xác nhận đăng nhập' : 'Đăng nhập')
                         : otpStep ? 'Xác nhận & Tạo tài khoản' : 'Gửi mã xác minh'}
-                    {!isSubmitting && !isSendingOtp && <ArrowRight size={16} className="text-primary group-hover:translate-x-1 transition-transform" />}
+                    {!isSubmitting && !isSendingOtp && <ArrowRight size={16} className="text-[#d4af37] group-hover:translate-x-1 transition-transform" />}
                   </button>
                 </form>
 
                 {/* divider */}
                 <div className="flex items-center gap-4 my-8">
                   <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">hoặc</span>
+                  <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">hoặc</span>
                   <div className="flex-1 h-px bg-gray-200" />
                 </div>
 
@@ -405,14 +431,6 @@ export function AuthPage() {
                     Đăng nhập với Google
                   </button>
                 )}
-
-                <p className="text-center mt-8 text-sm text-muted-foreground">
-                  {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-                  <button type="button" onClick={() => { setIsLogin(!isLogin); setError(''); setOtpStep(false); setOtpChallengeId(''); setOtpCode(''); setOtpForLogin(false); }}
-                    className="text-primary font-bold hover:underline transition-all">
-                    {isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}
-                  </button>
-                </p>
               </motion.div>
             </AnimatePresence>
           </motion.div>
