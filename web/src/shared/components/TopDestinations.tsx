@@ -98,7 +98,13 @@ export function TopDestinations({ destinations }: Props) {
           row needs belongs on that row itself instead, where it can't affect Y. */}
       <div className="sticky top-0 h-screen flex flex-col justify-center">
         <Heading />
-        <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max overflow-x-hidden" style={{ x }}>
+        {/* shrink-0 is load-bearing: this row is a flex item inside the outer
+            .sticky.h-screen column, and overflow-x-hidden makes its automatic
+            minimum size 0 (CSS overflow spec) — without shrink-0, the column
+            was free to squash this row shorter than its cards' real 460px
+            height (measured 404px) whenever Heading+row+Blurb together
+            exceeded the viewport, clipping the bottom of every card's photo. */}
+        <motion.div ref={trackRef} className="flex gap-6 pl-6 lg:pl-12 w-max overflow-x-hidden shrink-0" style={{ x }}>
           {items.map((d, i) => <Card key={d.slug} d={d} i={i} />)}
         </motion.div>
         <div className="px-6 lg:px-12 mt-8 lg:mt-10">
