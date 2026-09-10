@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCustomerIdentity } from '../../../contexts/CustomerIdentityContext';
 
@@ -8,9 +7,13 @@ import { useCustomerIdentity } from '../../../contexts/CustomerIdentityContext';
 // tự động phía backend từ email khi gọi POST /bookings/create
 // (guestBookingIdentity.middleware.ts) — component này chỉ cần thu thập sự
 // đồng ý, không cần input email/CCCD riêng (đã có sẵn ở form hành khách).
-export function CustomerIdentityFields() {
+//
+// `consent`/`onConsentChange` được nâng lên SeatSelectionPage để nút "Tiếp
+// tục" có thể bắt buộc đã tick trước khi cho qua bước thanh toán — nếu để
+// state cục bộ trong component này thì việc tick hay không hoàn toàn không
+// có tác dụng gì (đã xảy ra: khách không tick vẫn tiếp tục được bình thường).
+export function CustomerIdentityFields({ consent, onConsentChange }: { consent: boolean; onConsentChange: (v: boolean) => void }) {
   const { identityUser, logout } = useCustomerIdentity();
-  const [consent, setConsent] = useState(false);
 
   // Đã được nhận diện từ trước (thiết bị quen, do đặt vé lần trước hoặc đã
   // tra cứu đơn hàng cũ) — không cần hỏi lại gì cả.
@@ -36,7 +39,7 @@ export function CustomerIdentityFields() {
       <input
         type="checkbox"
         checked={consent}
-        onChange={(e) => setConsent(e.target.checked)}
+        onChange={(e) => onConsentChange(e.target.checked)}
         className="mt-0.5"
       />
       Tôi đồng ý cung cấp thông tin (email, SĐT, CCCD) ở trên cho An Chuyến để phục vụ việc đặt vé.
