@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import { Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Logo } from './Logo';
 
 // Memoized link column component
 const FooterLinkColumn = memo(({ title, links }: { title: string; links: { to: string; label: string }[] }) => (
@@ -56,11 +57,8 @@ export const Footer = memo(() => {
           
           {/* Brand Col */}
           <div className="lg:col-span-4">
-            <Link to="/" className="flex items-center space-x-2 mb-4 group">
-              <span className="text-xl font-bold tracking-tight text-[#1a1a1a] flex items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.3 2.6c-.2.4-.1.9.3 1.1l7.3 3.8-2 2-3.4-.6c-.5-.1-.9.2-1.1.5l-1.1 2.3c-.2.4 0 .9.4 1.1L8 21l8.5-4.7c.4.2.9.4 1.3.4z"/></svg>
-                An Chuyến
-              </span>
+            <Link to="/" className="inline-block mb-4">
+              <Logo size="md" showTagline={true} />
             </Link>
             <p className="text-sm leading-relaxed max-w-sm">
               {t('roamora.footer.desc')}
