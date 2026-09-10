@@ -144,6 +144,11 @@ function Card({ d, i }: { d: DestinationDetail; i: number }) {
           className="w-full h-full object-cover opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-110 [&.loaded]:opacity-100"
           loading="lazy"
           onLoad={e => e.currentTarget.classList.add('loaded')}
+          // A dead image URL (404, expired Unsplash/Pexels link...) never fires
+          // onLoad, so the card would stay invisible forever on a permanently
+          // dark tile with no indication anything went wrong — reveal it anyway
+          // so at least the title/gradient/card frame show instead of a blank box.
+          onError={e => e.currentTarget.classList.add('loaded')}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
