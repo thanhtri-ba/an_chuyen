@@ -497,7 +497,7 @@ export function SeatSelectionPage() {
           <div className="seat-step-grid max-w-[1400px] mx-auto">
 
             {/* Center Column: Seat Map — a sibling grid item (not part of seat-col1-wrapper) so its tall content never inflates the wrapper's rows */}
-            <div style={{ gridArea: 'seat' }} className="bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-6 flex flex-col">
+            <div style={{ gridArea: 'seat' }} className="min-w-0 bg-white border border-[rgba(222,226,230,0.5)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-2xl p-6 flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <button onClick={()=>navigate('/search')} className="w-10 h-10 rounded-full border border-[#DEE2E6] flex items-center justify-center text-[#212529] hover:bg-[#F8F9FA] transition shrink-0">
                   <ArrowLeft size={14}/>
@@ -528,7 +528,7 @@ export function SeatSelectionPage() {
                 </div>
 
                 {/* Both floors shown side by side (per user request) instead of a floor toggle — each in its own framed card */}
-                <div className="w-full flex items-start justify-center gap-6 py-4 px-4 overflow-x-auto">
+                <div className="w-full flex items-start justify-start lg:justify-center gap-6 py-4 px-4 overflow-x-auto">
                   {(floorCount > 1 ? [1,2] : [1]).map(f => {
                     const info = getFloorInfo(f);
                     return (
