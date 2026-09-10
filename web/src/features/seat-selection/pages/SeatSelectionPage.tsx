@@ -562,7 +562,7 @@ export function SeatSelectionPage() {
                   </div>
                 )}
 
-                <div className="w-full flex items-start justify-start sm:justify-center gap-6 py-4 px-4 overflow-x-auto">
+                <div className="w-full flex items-start justify-center gap-6 py-4 px-4 overflow-x-auto">
                   {(floorCount > 1 ? (isPhoneWidth ? [activeFloor] : [1,2]) : [1]).map(f => {
                     const info = getFloorInfo(f);
                     return (
@@ -572,7 +572,7 @@ export function SeatSelectionPage() {
                             <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
                           </div>
                         )}
-                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={isPhoneWidth?40:52}/>
+                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={isPhoneWidth?46:52}/>
                       </div>
                     );
                   })}
