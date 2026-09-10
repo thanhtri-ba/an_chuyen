@@ -212,6 +212,7 @@ export function SeatSelectionPage() {
 
   const [seats, setSeats] = useState<SeatData[]>(()=>generateMockSeats());
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [activeFloor, setActiveFloor] = useState<1|2>(1);
   const [tripDetail, setTripDetail] = useState<TripScheduleDetail|null>(null);
   const [timeLeft, setTimeLeft] = useState(600);
   const [step, setStep] = useState<'seat'|'info'>('seat');
@@ -346,6 +347,7 @@ export function SeatSelectionPage() {
   const seatsTotal = selectedSeats.reduce((s,id)=>s+(seats.find(x=>x.id===id)?.price||0),0);
   const amenitiesTotal = amenityQty.water*AMENITY_PRICES.water + amenityQty.towel*AMENITY_PRICES.towel + amenityQty.pillow*AMENITY_PRICES.pillow;
   const fmt = (n:number)=>new Intl.NumberFormat('vi-VN').format(n);
+  const fmtShort = (n:number)=>`${Math.round(n/1000)}k`;
 
   const floorCount = seats.length?Math.max(2, ...seats.map(s=>s.floor)):2;
   // Cheapest available seat on each floor, shown next to each floor's header.
@@ -505,14 +507,15 @@ export function SeatSelectionPage() {
                 <h3 className="text-xl font-bold text-[#212529] truncate">Chọn ghế {busClass}</h3>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 mb-8">
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
-                  <Users size={14} className="text-[#6C757D]"/> {seats.length} ghế
+              <div className="grid grid-cols-3 gap-2 mb-8 lg:flex lg:flex-wrap lg:gap-3">
+                <div className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] lg:justify-start lg:gap-2 lg:px-4 lg:py-2.5 lg:text-sm">
+                  <Users size={13} className="text-[#6C757D] shrink-0"/> <span>{seats.length} ghế</span>
                 </div>
                 {floorCount > 1 && [1,2].map(f=> floorFromPrice[f]!=null && (
-                  <div key={f} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-[#DEE2E6] text-[#212529]">
-                    <Layers size={14} className="text-[#6C757D]"/>
-                    <span>Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
+                  <div key={f} className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-white border border-[#DEE2E6] text-[#212529] lg:justify-start lg:gap-2 lg:px-4 lg:py-2.5 lg:text-sm">
+                    <Layers size={13} className="text-[#6C757D] shrink-0"/>
+                    <span className="lg:hidden">{f===1?'Dưới':'Trên'} <span className="font-bold text-[#856404]">{fmtShort(floorFromPrice[f])}</span></span>
+                    <span className="hidden lg:inline">Tầng {f===1?'dưới':'trên'} từ <span className="font-bold text-[#856404]">{fmt(floorFromPrice[f])}đ</span></span>
                   </div>
                 ))}
               </div>
@@ -527,16 +530,37 @@ export function SeatSelectionPage() {
                   ))}
                 </div>
 
-                {/* Both floors shown side by side (per user request) instead of a floor toggle — each in its own framed card */}
+                {/* Mobile: floor toggle + one floor at a time, smaller seats so a row fits the screen without horizontal scroll.
+                    Desktop: both floors shown side by side (per user request), full seat size. */}
+                {isMobile && floorCount > 1 && (
+                  <div className="w-full flex items-center justify-center gap-2 px-4">
+                    {[1,2].map(f=>(
+                      <button
+                        key={f}
+                        onClick={()=>setActiveFloor(f as 1|2)}
+                        className={`flex-1 max-w-[180px] py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                          activeFloor===f
+                            ? 'bg-[#212529] border-[#212529] text-white'
+                            : 'bg-white border-[#DEE2E6] text-[#6C757D] hover:bg-[#F8F9FA]'
+                        }`}
+                      >
+                        Tầng {f===1?'1':'2'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="w-full flex items-start justify-start lg:justify-center gap-6 py-4 px-4 overflow-x-auto">
-                  {(floorCount > 1 ? [1,2] : [1]).map(f => {
+                  {(floorCount > 1 ? (isMobile ? [activeFloor] : [1,2]) : [1]).map(f => {
                     const info = getFloorInfo(f);
                     return (
                       <div key={f} className="flex flex-col items-center gap-4 shrink-0 bg-[#FAFAFA] border border-[#DEE2E6] rounded-2xl pt-5 pb-6 px-6">
-                        <div className="text-center">
-                          <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
-                        </div>
-                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={52}/>
+                        {!isMobile && (
+                          <div className="text-center">
+                            <div className="text-xs font-bold uppercase tracking-wide text-[#212529]">Tầng {f===1?'1':'2'} <span className="text-[#ADB5BD] font-normal normal-case">({f===1?'1st':'2nd'} floor)</span></div>
+                          </div>
+                        )}
+                        <SeatMap seats={info.seats} selectedSeats={selectedSeats} onToggle={toggleSeat} seatSize={isMobile?40:52}/>
                       </div>
                     );
                   })}
