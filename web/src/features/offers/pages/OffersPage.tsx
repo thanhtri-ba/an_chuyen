@@ -46,18 +46,18 @@ function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: stri
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80" />
 
         {/* Tag */}
-        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold tracking-widest text-[#1a1a1a] shadow-sm uppercase">
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold tracking-widest text-foreground shadow-sm uppercase">
           {promo.tag}
         </div>
 
         {/* Discount pill */}
         {promo.discountPct > 0 && (
-          <div className="absolute top-4 right-4 bg-[#d4af37] text-white text-[11px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm">
+          <div className="absolute top-4 right-4 bg-brand-gold text-white text-[11px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm">
             -{promo.discountPct}%
           </div>
         )}
         {promo.badge && !promo.discountPct && (
-          <div className="absolute top-4 right-4 bg-[#d4af37] text-white text-[11px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">
+          <div className="absolute top-4 right-4 bg-brand-gold text-white text-[11px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">
             {promo.badge}
           </div>
         )}
@@ -65,7 +65,7 @@ function PromoCard({ promo, onApply, index }: { promo: any; onApply: (code: stri
 
       {/* Content */}
       <div className="p-6 flex-1 flex flex-col gap-4">
-        <h3 className="font-display font-medium text-2xl text-[#1a1a1a] leading-tight m-0">
+        <h3 className="font-display font-medium text-2xl text-foreground leading-tight m-0">
           {promo.title}
         </h3>
 
@@ -126,7 +126,7 @@ export function OffersPage() {
   }));
 
   return (
-    <div className="bg-[#fcfcfc] text-[#1a1a1a] min-h-screen font-sans">
+    <div className="bg-[#fcfcfc] text-foreground min-h-screen font-sans">
 
       {/* ─── HERO ─── */}
       <section className="relative h-[55vh] min-h-[460px] overflow-hidden flex flex-col justify-end">
@@ -143,15 +143,15 @@ export function OffersPage() {
           <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             {/* Eyebrow */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-[2px] bg-[#d4af37]" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+              <div className="w-8 h-[2px] bg-brand-gold" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-brand-gold">
                 {t('offers.subtitle')}
               </span>
             </div>
 
             <h1
               className="font-display font-medium text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-6 max-w-3xl"
-              dangerouslySetInnerHTML={{ __html: t('offers.title').replace('<em>', '<em class="text-[#d4af37] font-serif italic">') }}
+              dangerouslySetInnerHTML={{ __html: t('offers.title').replace('<em>', '<em class="text-brand-gold font-serif italic">') }}
             />
 
             <p className="text-lg text-gray-200 leading-relaxed max-w-lg font-medium">
@@ -202,8 +202,8 @@ export function OffersPage() {
             </div>
 
             <h2
-              className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] leading-[1.1] mb-6"
-              dangerouslySetInnerHTML={{ __html: t('offers.referralTitle').replace('<em>', '<em class="text-[#d4af37] font-serif italic">') }}
+              className="font-display font-medium text-4xl md:text-5xl text-foreground leading-[1.1] mb-6"
+              dangerouslySetInnerHTML={{ __html: t('offers.referralTitle').replace('<em>', '<em class="text-brand-gold font-serif italic">') }}
             />
 
             <p className="text-gray-500 text-lg leading-relaxed mb-10 max-w-md font-medium">
@@ -244,7 +244,7 @@ export function OffersPage() {
                 <Ticket size={24} className="text-orange-400" />
               </div>
               <div className="text-center">
-                <div className="text-sm font-bold text-[#1a1a1a] tracking-wide">AN CHUYẾN</div>
+                <div className="text-sm font-bold text-foreground tracking-wide">AN CHUYẾN</div>
                 <div className="text-[10px] text-gray-400 font-bold tracking-widest mt-1">THẺ THÀNH VIÊN</div>
               </div>
             </div>

@@ -26,7 +26,7 @@ export function BlogDetailPage() {
   const paragraphs = article.content.trim().split('\n').filter((l) => l.trim() !== '');
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans pb-32">
 
       {/* ─── HERO ─── */}
       <section className="relative h-[85vh] max-h-[800px] min-h-[500px] w-full overflow-hidden">
@@ -61,14 +61,14 @@ export function BlogDetailPage() {
 
             {/* Category pill */}
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-10 h-px bg-[#d4af37]" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+              <div className="w-10 h-px bg-brand-gold" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-brand-gold">
                 {article.category}
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-[5.5rem] text-[#1a1a1a] leading-[1.05] mb-10">
+            <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-[5.5rem] text-foreground leading-[1.05] mb-10">
               {article.title}
             </h1>
 
@@ -92,7 +92,7 @@ export function BlogDetailPage() {
       </section>
 
       {/* ─── GOLD RULE ─── */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent w-full opacity-50" />
+      <div className="h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent w-full opacity-50" />
 
       {/* ─── ARTICLE BODY ─── */}
       <main className="px-6 lg:px-12 py-24 max-w-[900px] mx-auto">
@@ -111,12 +111,12 @@ export function BlogDetailPage() {
                 return (
                   <div key={i} className="mt-16 mb-8">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-6 h-px bg-[#d4af37]" />
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+                      <div className="w-6 h-px bg-brand-gold" />
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-brand-gold">
                         {String(i).padStart(2, '0')}
                       </span>
                     </div>
-                    <h2 className="font-display font-medium text-3xl md:text-4xl text-[#1a1a1a] leading-tight m-0">
+                    <h2 className="font-display font-medium text-3xl md:text-4xl text-foreground leading-tight m-0">
                       {line.replace('## ', '')}
                     </h2>
                   </div>
@@ -128,7 +128,7 @@ export function BlogDetailPage() {
                 return (
                   <div key={i} className="flex items-center gap-4 my-16">
                     <div className="flex-1 h-px bg-gray-100" />
-                    <div className="w-1.5 h-1.5 bg-[#d4af37] rotate-45" />
+                    <div className="w-1.5 h-1.5 bg-brand-gold rotate-45" />
                     <div className="flex-1 h-px bg-gray-100" />
                   </div>
                 );
@@ -137,7 +137,7 @@ export function BlogDetailPage() {
               // Italic note (*text*)
               if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
                 return (
-                  <div key={i} className="my-10 p-6 md:p-8 bg-gray-50 border-l-2 border-[#d4af37] rounded-r-2xl">
+                  <div key={i} className="my-10 p-6 md:p-8 bg-gray-50 border-l-2 border-brand-gold rounded-r-2xl">
                     <p className="font-display font-medium text-xl italic text-gray-700 m-0 leading-[1.7]">
                       {line.replace(/\*/g, '')}
                     </p>
@@ -148,7 +148,7 @@ export function BlogDetailPage() {
               // Bold label (**text**)
               if (line.startsWith('**') && line.endsWith('**')) {
                 return (
-                  <p key={i} className="text-[11px] font-bold text-[#1a1a1a] tracking-widest uppercase mt-12 mb-4">
+                  <p key={i} className="text-[11px] font-bold text-foreground tracking-widest uppercase mt-12 mb-4">
                     {line.replace(/\*\*/g, '')}
                   </p>
                 );
@@ -156,10 +156,10 @@ export function BlogDetailPage() {
 
               // List item
               if (line.startsWith('- ')) {
-                const text = line.replace('- ', '').replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-[#1a1a1a]">$1</strong>');
+                const text = line.replace('- ', '').replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>');
                 return (
                   <div key={i} className="flex gap-4 my-4 items-start">
-                    <span className="text-[#d4af37] text-[10px] mt-2 shrink-0">◆</span>
+                    <span className="text-brand-gold text-[10px] mt-2 shrink-0">◆</span>
                     <p className="m-0 text-lg leading-[1.8] text-gray-600" dangerouslySetInnerHTML={{ __html: text }} />
                   </div>
                 );
@@ -196,8 +196,8 @@ export function BlogDetailPage() {
         {/* Section header */}
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">
-            <div className="w-8 h-px bg-[#d4af37]" />
-            <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+            <div className="w-8 h-px bg-brand-gold" />
+            <span className="text-[10px] font-bold tracking-widest uppercase text-brand-gold">
               Bài viết liên quan
             </span>
           </div>
@@ -223,7 +223,7 @@ export function BlogDetailPage() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
-                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm text-[#1a1a1a] text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm">
+                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm text-foreground text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm">
                     {a.category}
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export function BlogDetailPage() {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-display font-medium text-xl text-[#1a1a1a] leading-snug mb-4 group-hover:text-primary transition-colors px-1">
+                <h3 className="font-display font-medium text-xl text-foreground leading-snug mb-4 group-hover:text-primary transition-colors px-1">
                   {a.title}
                 </h3>
 

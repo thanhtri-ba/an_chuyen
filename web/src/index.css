@@ -41,8 +41,14 @@
   --destructive-foreground: 210 40% 98%;
   --border: 0 0% 92%;           /* #ebebeb */
   --input: 0 0% 92%;
-  --ring: 157 39% 14%;          
+  --ring: 157 39% 14%;
   --radius: 1rem;
+
+  /* Brand accent tokens (hero/dark sections) */
+  --brand-navy: 213 56% 12%;      /* #0d1c2e */
+  --brand-gold-dark: 45 100% 24%; /* #785900 */
+  --brand-gold: 46 65% 52%;       /* #d4af37 */
+  --brand-tan: 38 32% 75%;        /* #d4c5ab */
  }
 }
 

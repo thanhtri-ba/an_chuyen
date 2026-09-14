@@ -40,7 +40,7 @@ export function ForgotPasswordPage() {
           <ArrowLeft size={14} /> Quay lại đăng nhập
         </button>
 
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">Quên mật khẩu?</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Quên mật khẩu?</h1>
         <p className="text-sm text-muted-foreground mb-6">Nhập email đã đăng ký, chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
 
         {sent ? (
@@ -67,7 +67,7 @@ export function ForgotPasswordPage() {
               </div>
             </div>
             <button type="submit" disabled={isSubmitting}
-              className="w-full bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
+              className="w-full bg-foreground hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
               {isSubmitting ? 'Đang gửi...' : 'Gửi link đặt lại'}
               {!isSubmitting && <ArrowRight size={16} />}
             </button>

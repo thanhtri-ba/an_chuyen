@@ -109,7 +109,7 @@ export function CloudRevealHero({ bgVideos, eyebrow, title, videoInterval = 14 }
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: CONTENT_DELAY }}
       >
-        <div className="text-base md:text-lg font-bold tracking-[0.5em] uppercase text-[#d4af37] mb-6" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>{eyebrow}</div>
+        <div className="text-base md:text-lg font-bold tracking-[0.5em] uppercase text-brand-gold mb-6" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>{eyebrow}</div>
         <h1
           className="font-condensed font-black uppercase text-6xl md:text-8xl lg:text-[7.5rem] leading-[1.02] tracking-[0.06em] text-white max-w-6xl"
           style={{ textShadow: '0 6px 32px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.8)' }}
@@ -126,10 +126,10 @@ export function CloudRevealHero({ bgVideos, eyebrow, title, videoInterval = 14 }
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: CONTENT_DELAY + 0.3 }}
         >
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><FacebookIcon /></span>
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><InstagramIcon /></span>
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><TwitterIcon /></span>
-          <span className="hover:text-[#d4af37] transition-colors cursor-pointer"><YoutubeIcon /></span>
+          <span className="hover:text-brand-gold transition-colors cursor-pointer"><FacebookIcon /></span>
+          <span className="hover:text-brand-gold transition-colors cursor-pointer"><InstagramIcon /></span>
+          <span className="hover:text-brand-gold transition-colors cursor-pointer"><TwitterIcon /></span>
+          <span className="hover:text-brand-gold transition-colors cursor-pointer"><YoutubeIcon /></span>
         </motion.div>
 
         <motion.a

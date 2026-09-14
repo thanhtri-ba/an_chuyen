@@ -42,6 +42,10 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "brand-navy": "hsl(var(--brand-navy))",
+        "brand-gold-dark": "hsl(var(--brand-gold-dark))",
+        "brand-gold": "hsl(var(--brand-gold))",
+        "brand-tan": "hsl(var(--brand-tan))",
       },
       fontFamily: {
         sans: ["Outfit", "Inter", "system-ui", "sans-serif"],

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 // Memoized link column component
 const FooterLinkColumn = memo(({ title, links }: { title: string; links: { to: string; label: string }[] }) => (
   <div>
-    <h4 className="font-bold text-[#1a1a1a] text-sm mb-4">{title}</h4>
+    <h4 className="font-bold text-foreground text-sm mb-4">{title}</h4>
     <ul className="space-y-3">
       {links.map((link, idx) => (
         <li key={idx}>
@@ -23,7 +23,7 @@ const FooterLinkColumn = memo(({ title, links }: { title: string; links: { to: s
 const SocialLinks = memo(() => (
   <div className="flex gap-4 mt-6">
     {['f', 'ig', 'yt', 'tw'].map(s => (
-      <a key={s} href="#" className="text-gray-400 hover:text-[#1a1a1a] transition-colors">
+      <a key={s} href="#" className="text-gray-400 hover:text-foreground transition-colors">
         <div className="w-5 h-5 flex items-center justify-center font-bold text-xs uppercase">{s}</div>
       </a>
     ))}
@@ -57,7 +57,7 @@ export const Footer = memo(() => {
           {/* Brand Col */}
           <div className="lg:col-span-4">
             <Link to="/" className="flex items-center space-x-2 mb-4 group">
-              <span className="text-xl font-bold tracking-tight text-[#1a1a1a] flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.3 2.6c-.2.4-.1.9.3 1.1l7.3 3.8-2 2-3.4-.6c-.5-.1-.9.2-1.1.5l-1.1 2.3c-.2.4 0 .9.4 1.1L8 21l8.5-4.7c.4.2.9.4 1.3.4z"/></svg>
                 An Chuyến
               </span>
@@ -78,10 +78,10 @@ export const Footer = memo(() => {
           
           {/* Newsletter */}
           <div className="lg:col-span-4">
-            <h4 className="font-bold text-[#1a1a1a] text-sm mb-4">{t('roamora.footer.newsletter')}</h4>
+            <h4 className="font-bold text-foreground text-sm mb-4">{t('roamora.footer.newsletter')}</h4>
             <p className="text-sm mb-4 max-w-xs">{t('roamora.footer.newsletterDesc')}</p>
             <div className="relative mt-2 max-w-sm">
-              <input type="email" placeholder={t('roamora.footer.emailPlaceholder')} className="w-full h-12 bg-white pl-4 pr-12 text-sm border border-gray-200 focus:border-primary outline-none transition-all text-[#1a1a1a] rounded-full shadow-sm" />
+              <input type="email" placeholder={t('roamora.footer.emailPlaceholder')} className="w-full h-12 bg-white pl-4 pr-12 text-sm border border-gray-200 focus:border-primary outline-none transition-all text-foreground rounded-full shadow-sm" />
               <button className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#1a332a] rounded-full flex items-center justify-center text-white hover:bg-[#0d1f19] transition-colors shadow-sm">
                 <Send className="w-4 h-4 ml-0.5" />
               </button>

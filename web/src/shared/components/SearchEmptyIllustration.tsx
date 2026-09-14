@@ -31,7 +31,7 @@ export function SearchEmptyIllustration({ title, subtitle, className = '', compa
       </svg>
 
       <div className={`flex flex-col gap-1.5 ${compact ? 'max-w-[220px]' : 'max-w-[340px]'}`}>
-        <span className={`font-bold text-[#0D1C2E] ${compact ? 'text-sm' : 'text-lg'}`}>{title}</span>
+        <span className={`font-bold text-brand-navy ${compact ? 'text-sm' : 'text-lg'}`}>{title}</span>
         {subtitle && <span className={`text-[#585E6C] leading-relaxed ${compact ? 'text-xs' : 'text-sm'}`}>{subtitle}</span>}
       </div>
     </div>

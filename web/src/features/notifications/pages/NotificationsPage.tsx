@@ -95,7 +95,7 @@ export function NotificationsPage() {
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-bold text-xs mb-4 uppercase tracking-widest shadow-sm">
               <Bell className="w-3.5 h-3.5 text-primary" /> {t('notifications.center')}
             </motion.div>
-            <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-5xl font-display font-medium text-[#1a1a1a] tracking-tight">
+            <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-5xl font-display font-medium text-foreground tracking-tight">
               {t('notifications.title')}
             </motion.h1>
           </div>
@@ -123,8 +123,8 @@ export function NotificationsPage() {
               onClick={() => setActiveFilter(filter.id)}
               className={`px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-300 ${
                 activeFilter === filter.id
-                  ? 'bg-[#1a1a1a] text-white shadow-md'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-[#1a1a1a]'
+                  ? 'bg-foreground text-white shadow-md'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-foreground'
               }`}
             >
               {filter.label}
@@ -198,7 +198,7 @@ export function NotificationsPage() {
                 <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Bell className="w-10 h-10 text-gray-300" />
                 </div>
-                <h3 className="text-2xl font-display font-medium text-[#1a1a1a] mb-2">{t('notifications.empty')}</h3>
+                <h3 className="text-2xl font-display font-medium text-foreground mb-2">{t('notifications.empty')}</h3>
                 <p className="text-gray-500 font-medium">{t('notifications.emptyDesc')}</p>
               </motion.div>
             )}

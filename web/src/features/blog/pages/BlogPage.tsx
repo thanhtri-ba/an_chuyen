@@ -19,7 +19,7 @@ export function BlogPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans pb-32">
 
       {/* ─── HERO ─── */}
       <section className="relative h-[92vh] max-h-[800px] min-h-[600px] w-full overflow-hidden">
@@ -39,14 +39,14 @@ export function BlogPage() {
           <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }} className="max-w-3xl">
             {/* Eyebrow */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-8 h-px bg-[#d4af37]" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37]">
+              <div className="w-8 h-px bg-brand-gold" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-brand-gold">
                 {t('blog.featuredCategories')} — {FEATURED_ARTICLE.category}
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-7xl text-[#1a1a1a] leading-[1.1] mb-6">
+            <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.1] mb-6">
               {FEATURED_ARTICLE.title}
             </h1>
             <p className="text-gray-700 font-medium text-lg leading-relaxed mb-8 max-w-xl">
@@ -78,7 +78,7 @@ export function BlogPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('blog.searchPlaceholder')}
-                  className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-[#1a1a1a] placeholder:text-gray-400 min-w-0"
+                  className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-foreground placeholder:text-gray-400 min-w-0"
                 />
                 <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-colors shrink-0">
                   {t('blog.searchBtn')}
@@ -100,7 +100,7 @@ export function BlogPage() {
                 className={`py-6 px-4 text-xs font-bold tracking-widest uppercase whitespace-nowrap transition-colors border-b-2 -mb-px ${
                   activeCategory === cat 
                     ? 'border-primary text-primary' 
-                    : 'border-transparent text-gray-400 hover:text-[#1a1a1a]'
+                    : 'border-transparent text-gray-400 hover:text-foreground'
                 }`}
               >
                 {cat}
@@ -159,9 +159,9 @@ export function BlogPage() {
             <p className="text-[10px] font-bold tracking-widest uppercase text-primary mb-6">
               Cẩm nang du lịch
             </p>
-            <h2 className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] mb-6 leading-tight">
+            <h2 className="font-display font-medium text-4xl md:text-5xl text-foreground mb-6 leading-tight">
               Nhận cảm hứng du lịch <br/>
-              <em className="text-[#d4af37] font-serif italic">mỗi tuần</em>
+              <em className="text-brand-gold font-serif italic">mỗi tuần</em>
             </h2>
             <p className="text-gray-500 font-medium mb-12 text-lg">
               Bài viết hay, kinh nghiệm đặt vé và điểm đến mới nhất gửi thẳng vào hộp thư của bạn.
@@ -210,7 +210,7 @@ function ArticleCard({ article, large }: { article: Article; large?: boolean }) 
           {/* Tags */}
           <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
             {article.tag && (
-              <div className="bg-white/90 backdrop-blur-sm text-[#1a1a1a] text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm">
+              <div className="bg-white/90 backdrop-blur-sm text-foreground text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm">
                 {article.tag}
               </div>
             )}
@@ -232,7 +232,7 @@ function ArticleCard({ article, large }: { article: Article; large?: boolean }) 
           </div>
 
           {/* Title */}
-          <h3 className={`font-display font-medium text-[#1a1a1a] leading-snug mb-3 group-hover:text-primary transition-colors ${large ? 'text-3xl' : 'text-xl'}`}>
+          <h3 className={`font-display font-medium text-foreground leading-snug mb-3 group-hover:text-primary transition-colors ${large ? 'text-3xl' : 'text-xl'}`}>
             {article.title}
           </h3>
 

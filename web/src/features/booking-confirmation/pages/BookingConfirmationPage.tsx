@@ -246,7 +246,7 @@ export function BookingConfirmationPage() {
               <div className="bg-[#F2C118]/10 border border-[#F2C118] rounded-lg p-[13px] flex gap-3 items-start">
                 <CheckCircle2 size={20} className="text-[#C97B2F] shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-bold text-[#785900]">Đã thanh toán</p>
+                  <p className="text-sm font-bold text-brand-gold-dark">Đã thanh toán</p>
                   {paymentMethodLabel && <p className="text-xs font-semibold text-[#4A4E46]">Phương thức: {paymentMethodLabel}</p>}
                   <p className="text-xs font-semibold text-[#4A4E46]">Mã đặt vé: {lookupCode}</p>
                   {bookingDate && <p className="text-xs font-semibold text-[#4A4E46]">Thời gian: {fmtDateTime(bookingDate)}</p>}
@@ -260,7 +260,7 @@ export function BookingConfirmationPage() {
                 <QRCodeSVG value={qrValue} size={136} fgColor="#0C0D0B" bgColor="#FFFFFF" level="M" />
               </div>
               <p className="text-xs font-semibold text-[#4A4E46]">Mã vé (Ticket ID)</p>
-              <h4 className="text-xl font-bold tracking-[2px] text-[#785900]">{lookupCode}</h4>
+              <h4 className="text-xl font-bold tracking-[2px] text-brand-gold-dark">{lookupCode}</h4>
               <p className="text-xs font-semibold text-[#4A4E46] text-center mt-2">Quét mã để lên xe và kiểm tra thông tin</p>
             </div>
 
@@ -278,7 +278,7 @@ export function BookingConfirmationPage() {
               <button onClick={handleShare} disabled={!booking} className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md border border-[#827660] bg-[#F8F9FF] text-xs font-semibold text-[#0C0D0B] hover:bg-[#F5F3EE] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <Share2 size={14} /> Chia sẻ vé
               </button>
-              <button onClick={handleDownloadPdf} disabled={!booking} className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md bg-[#785900] hover:bg-[#5E4700] text-white text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <button onClick={handleDownloadPdf} disabled={!booking} className="flex-1 min-w-[110px] flex items-center justify-center gap-2 h-11 px-3 rounded-md bg-brand-gold-dark hover:bg-[#5E4700] text-white text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <Download size={14} /> Tải vé PDF
               </button>
             </div>
@@ -353,15 +353,15 @@ export function BookingConfirmationPage() {
             </div>
 
             <div className="bg-[#EFF4FF] border border-[#E0DDD7] rounded-lg p-[13px] flex flex-col gap-2">
-              <p className="flex items-center gap-1.5 text-sm font-bold text-[#785900]">
+              <p className="flex items-center gap-1.5 text-sm font-bold text-brand-gold-dark">
                 <Phone size={16} /> Mọi thắc mắc vui lòng liên hệ
               </p>
               <div className="text-xs font-semibold text-[#4A4E46] flex flex-col gap-1">
                 <p className="flex items-center gap-1.5">
-                  <Phone size={12} /> Hotline: <span className="font-bold text-[#785900]">1900 1234</span>
+                  <Phone size={12} /> Hotline: <span className="font-bold text-brand-gold-dark">1900 1234</span>
                 </p>
                 <p className="flex items-center gap-1.5">
-                  <Mail size={12} /> Email: <span className="font-bold text-[#785900]">support@anchuyen.vn</span>
+                  <Mail size={12} /> Email: <span className="font-bold text-brand-gold-dark">support@anchuyen.vn</span>
                 </p>
               </div>
             </div>

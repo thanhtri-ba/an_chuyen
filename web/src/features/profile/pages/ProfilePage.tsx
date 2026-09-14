@@ -45,8 +45,8 @@ const TIER_CONFIG = {
   },
 };
 
-const inputBase = "w-full bg-[#F8F9FF] border border-[#D4C5AB] rounded-lg pl-[41px] pr-[17px] py-[13px] text-sm text-[#0D1C2E] outline-none transition-colors";
-const inputFocus = "focus:border-[#785900] focus:ring-2 focus:ring-[#785900]/10";
+const inputBase = "w-full bg-[#F8F9FF] border border-brand-tan rounded-lg pl-[41px] pr-[17px] py-[13px] text-sm text-brand-navy outline-none transition-colors";
+const inputFocus = "focus:border-brand-gold-dark focus:ring-2 focus:ring-brand-gold-dark/10";
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="block text-xs font-bold text-[#4F4632] tracking-[0.24px] mb-1.5">{children}</label>;
@@ -147,7 +147,7 @@ export function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8F9FF] pt-[104px] pb-16 font-['Be_Vietnam_Pro',_sans-serif] text-[#0D1C2E]">
+    <div className="min-h-screen bg-[#F8F9FF] pt-[104px] pb-16 font-['Be_Vietnam_Pro',_sans-serif] text-brand-navy">
       <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-8">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
 
@@ -155,13 +155,13 @@ export function ProfilePage() {
           <div className="w-full lg:w-[360px] shrink-0 flex flex-col gap-6">
 
             {/* Profile Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-brand-tan rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full border-2 border-[#FFC107] bg-[#C5CBD3] flex items-center justify-center text-xl font-bold text-white shrink-0">
                   {fullName.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="flex flex-col gap-1 min-w-0">
-                  <h2 className="text-xl font-semibold text-[#0D1C2E] truncate">{fullName || t('profile.fullNamePlaceholder')}</h2>
+                  <h2 className="text-xl font-semibold text-brand-navy truncate">{fullName || t('profile.fullNamePlaceholder')}</h2>
                   <div className="flex items-center gap-1.5 text-sm text-[#4F4632] truncate"><Mail size={12} className="shrink-0" /> <span className="truncate">{user.email}</span></div>
                 </div>
               </div>
@@ -192,22 +192,22 @@ export function ProfilePage() {
               </div>
 
               <div className="flex gap-2">
-                <button onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex-1 flex items-center justify-center gap-2 bg-[#E5EEFF] rounded-lg py-3 text-xs font-semibold text-[#0D1C2E] tracking-[0.24px] hover:brightness-95 transition-all">
+                <button onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex-1 flex items-center justify-center gap-2 bg-[#E5EEFF] rounded-lg py-3 text-xs font-semibold text-brand-navy tracking-[0.24px] hover:brightness-95 transition-all">
                   <Pencil size={13} /> Chỉnh sửa
                 </button>
-                <button onClick={() => toast('Tính năng Mã QR đang được phát triển')} className="flex-1 flex items-center justify-center gap-2 bg-[#E5EEFF] rounded-lg py-3 text-xs font-semibold text-[#0D1C2E] tracking-[0.24px] hover:brightness-95 transition-all">
+                <button onClick={() => toast('Tính năng Mã QR đang được phát triển')} className="flex-1 flex items-center justify-center gap-2 bg-[#E5EEFF] rounded-lg py-3 text-xs font-semibold text-brand-navy tracking-[0.24px] hover:brightness-95 transition-all">
                   <QrCode size={13} /> Mã QR
                 </button>
               </div>
             </motion.div>
 
             {/* Wallet Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-brand-tan rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[21px] flex flex-col gap-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#E5EEFF] flex items-center justify-center shrink-0"><Wallet size={18} className="text-[#0D1C2E]" /></div>
+                <div className="w-10 h-10 rounded-full bg-[#E5EEFF] flex items-center justify-center shrink-0"><Wallet size={18} className="text-brand-navy" /></div>
                 <div className="flex flex-col gap-1 min-w-0">
                   <div className="text-xs font-semibold tracking-[0.24px] text-[#4F4632] truncate">{t('profile.walletTitle')}</div>
-                  <div className="text-xl font-semibold text-[#0D1C2E]">{balance.toLocaleString('vi-VN')} đ</div>
+                  <div className="text-xl font-semibold text-brand-navy">{balance.toLocaleString('vi-VN')} đ</div>
                 </div>
               </div>
               <button className="w-full bg-[#FFC107] rounded-lg py-3 text-xs font-bold tracking-[0.24px] text-[#6D5100] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:brightness-95 transition-all">
@@ -216,7 +216,7 @@ export function ProfilePage() {
             </motion.div>
 
             {/* Quick Links */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-2 flex flex-col">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white border border-brand-tan rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-2 flex flex-col">
               {quickLinks.map((item, i) => (
                 <a key={i} href={item.href} className="flex items-center justify-between gap-4 p-3 rounded-lg hover:bg-[#F8F9FF] transition-colors">
                   <div className="flex items-center gap-4 min-w-0">
@@ -224,7 +224,7 @@ export function ProfilePage() {
                       <item.icon size={18} style={{ color: item.color }} />
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-bold text-[#0D1C2E] truncate">{item.label}</span>
+                      <span className="text-sm font-bold text-brand-navy truncate">{item.label}</span>
                       <span className="text-[11px] text-[#4F4632] opacity-70 truncate">{item.sub}</span>
                     </div>
                   </div>
@@ -238,10 +238,10 @@ export function ProfilePage() {
           <div className="flex-1 min-w-0 flex flex-col gap-8">
 
             {/* Personal Info Form */}
-            <motion.div ref={formRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[24px] sm:p-[33px] flex flex-col gap-8">
-              <div className="flex items-center gap-2 border-b border-[#D4C5AB] pb-[17px]">
-                <User size={16} className="text-[#0D1C2E]" />
-                <h3 className="text-xl font-semibold text-[#0D1C2E]">{t('profile.personalInfo')}</h3>
+            <motion.div ref={formRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white border border-brand-tan rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] p-[24px] sm:p-[33px] flex flex-col gap-8">
+              <div className="flex items-center gap-2 border-b border-brand-tan pb-[17px]">
+                <User size={16} className="text-brand-navy" />
+                <h3 className="text-xl font-semibold text-brand-navy">{t('profile.personalInfo')}</h3>
               </div>
 
               {message && (
@@ -271,11 +271,11 @@ export function ProfilePage() {
                         const selected = gender === g;
                         return (
                           <label key={g} className="flex items-center gap-2 cursor-pointer select-none">
-                            <span className={`w-[18px] h-[18px] rounded-full border flex items-center justify-center transition-colors ${selected ? 'bg-[#785900] border-[#785900]' : 'bg-[#F8F9FF] border-[#D4C5AB]'}`}>
+                            <span className={`w-[18px] h-[18px] rounded-full border flex items-center justify-center transition-colors ${selected ? 'bg-brand-gold-dark border-brand-gold-dark' : 'bg-[#F8F9FF] border-brand-tan'}`}>
                               {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </span>
                             <input type="radio" name="gender" value={g} checked={selected} onChange={e => setGender(e.target.value as any)} className="sr-only" />
-                            <span className="text-sm font-medium text-[#0D1C2E]">
+                            <span className="text-sm font-medium text-brand-navy">
                               {g === 'MALE' ? t('profile.genderMale') : g === 'FEMALE' ? t('profile.genderFemale') : t('profile.genderOther')}
                             </span>
                           </label>
@@ -330,14 +330,14 @@ export function ProfilePage() {
 
             {/* Stats */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-col gap-6">
-              <h3 className="text-xl font-semibold text-[#0D1C2E]">{t('profile.myStats')}</h3>
+              <h3 className="text-xl font-semibold text-brand-navy">{t('profile.myStats')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {stats.map((stat, i) => (
-                  <div key={i} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.05)] p-[25px] flex flex-col items-center gap-3">
+                  <div key={i} className="bg-white border border-brand-tan rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.05)] p-[25px] flex flex-col items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-[#E5EEFF] flex items-center justify-center">
-                      <stat.icon size={18} className="text-[#0D1C2E]" />
+                      <stat.icon size={18} className="text-brand-navy" />
                     </div>
-                    <div className="text-xl font-bold text-[#0D1C2E] text-center">{stat.value}</div>
+                    <div className="text-xl font-bold text-brand-navy text-center">{stat.value}</div>
                     <div className="text-xs font-medium text-[#4F4632] tracking-[0.24px] text-center">{stat.label}</div>
                   </div>
                 ))}
@@ -347,15 +347,15 @@ export function ProfilePage() {
             {/* Membership Benefits */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex flex-col gap-6 pb-10">
               <div className="flex items-center gap-2">
-                <Award size={16} className="text-[#785900]" />
-                <h3 className="text-xl font-semibold text-[#0D1C2E]">{t('profile.memberBenefits')} {tier.label}</h3>
+                <Award size={16} className="text-brand-gold-dark" />
+                <h3 className="text-xl font-semibold text-brand-navy">{t('profile.memberBenefits')} {tier.label}</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {benefits.map((b, i) => (
-                  <div key={i} className="bg-white border border-[#D4C5AB] rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.05)] p-[21px] flex gap-4 items-start">
+                  <div key={i} className="bg-white border border-brand-tan rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.05)] p-[21px] flex gap-4 items-start">
                     <span className="text-3xl leading-none shrink-0">{b.icon}</span>
                     <div className="flex flex-col gap-1 min-w-0">
-                      <div className="text-base font-bold text-[#0D1C2E] leading-tight">{b.title}</div>
+                      <div className="text-base font-bold text-brand-navy leading-tight">{b.title}</div>
                       <div className="text-xs text-[#4F4632] tracking-[0.24px] leading-snug">{b.desc}</div>
                     </div>
                   </div>

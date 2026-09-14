@@ -64,7 +64,7 @@ export function EventsPage() {
                                                 {new Date(event.startDate).toLocaleDateString('vi-VN')}
                                             </span>
                                         </div>
-                                        <h3 className="group-hover:text-[#163328]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 20, color: '#1a1a1a', marginBottom: 8, transition: 'color 0.2s' }}>{event.title}</h3>
+                                        <h3 className="group-hover:text-primary" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 20, color: '#1a1a1a', marginBottom: 8, transition: 'color 0.2s' }}>{event.title}</h3>
                                         <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.description}</p>
                                         <button style={{
                                             width: '100%', marginTop: 16, background: 'rgba(0,0,0,0.05)', color: '#1a1a1a',

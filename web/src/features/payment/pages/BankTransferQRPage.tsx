@@ -48,7 +48,7 @@ export function BankTransferQRPage() {
         className="w-full max-w-[440px] bg-white/60 backdrop-blur-2xl p-10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.03)] border border-white relative z-10"
       >
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl text-[#1a1a1a] mb-3">Chuyển khoản ngân hàng</h1>
+          <h1 className="font-display text-3xl text-foreground mb-3">Chuyển khoản ngân hàng</h1>
           <p className="text-sm text-muted-foreground font-light">Quét mã QR bằng app ngân hàng bất kỳ để chuyển khoản tự động điền đúng số tiền.</p>
         </div>
 
@@ -61,13 +61,13 @@ export function BankTransferQRPage() {
             </div>
 
             <div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-5 space-y-2.5 text-sm mb-4">
-              <div className="flex justify-between"><span className="text-muted-foreground font-light">Ngân hàng thụ hưởng</span><span className="font-semibold text-[#1a1a1a]">BIN {bankInfo.bankBin}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground font-light">Chủ tài khoản</span><span className="font-semibold text-[#1a1a1a]">{bankInfo.accountName}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground font-light">Số tài khoản</span><span className="font-semibold text-[#1a1a1a]">{bankInfo.accountNumber}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground font-light">Số tiền</span><span className="font-display text-lg text-[#1a1a1a]">{new Intl.NumberFormat('vi-VN').format(amount)}đ</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground font-light">Ngân hàng thụ hưởng</span><span className="font-semibold text-foreground">BIN {bankInfo.bankBin}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground font-light">Chủ tài khoản</span><span className="font-semibold text-foreground">{bankInfo.accountName}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground font-light">Số tài khoản</span><span className="font-semibold text-foreground">{bankInfo.accountNumber}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground font-light">Số tiền</span><span className="font-display text-lg text-foreground">{new Intl.NumberFormat('vi-VN').format(amount)}đ</span></div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground font-light">Nội dung CK</span>
-                <button onClick={copyContent} className="flex items-center gap-1.5 font-semibold text-[#1a1a1a]">
+                <button onClick={copyContent} className="flex items-center gap-1.5 font-semibold text-foreground">
                   {transferContent} {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
                 </button>
               </div>
@@ -80,7 +80,7 @@ export function BankTransferQRPage() {
           </>
         )}
 
-        <Link to="/my-bookings" className="block w-full text-center bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+        <Link to="/my-bookings" className="block w-full text-center bg-foreground hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
           Đã chuyển khoản, xem đơn hàng
         </Link>
       </motion.div>

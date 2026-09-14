@@ -26,7 +26,7 @@ export function TourDetailPage() {
 
   if (tour === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FF] text-[#0D1C2E]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FF] text-brand-navy">
         <p className="text-sm font-semibold animate-pulse">Đang tải...</p>
       </div>
     );
@@ -34,9 +34,9 @@ export function TourDetailPage() {
 
   if (!tour) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F9FF] text-[#0D1C2E]">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F9FF] text-brand-navy">
         <p className="text-lg font-semibold">Không tìm thấy tour này.</p>
-        <button onClick={() => navigate('/tour')} className="text-sm font-semibold text-[#785900] hover:underline">
+        <button onClick={() => navigate('/tour')} className="text-sm font-semibold text-brand-gold-dark hover:underline">
           Quay về danh sách tour
         </button>
       </div>
@@ -47,7 +47,7 @@ export function TourDetailPage() {
   const similar = allTours.filter(t => t.id !== tour.id).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FF] text-[#0D1C2E] font-sans">
+    <div className="min-h-screen bg-[#F8F9FF] text-brand-navy font-sans">
       {/* ===== HERO ===== */}
       <div className="relative h-[420px] md:h-[500px] w-full overflow-hidden">
         <img src={tour.imageUrl || undefined} alt={tour.title} className="absolute inset-0 w-full h-full object-cover" />
@@ -80,7 +80,7 @@ export function TourDetailPage() {
           </div>
 
           {tour.description && (
-            <div className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl p-5 flex flex-col gap-4">
+            <div className="bg-white border border-brand-tan/30 shadow-sm rounded-xl p-5 flex flex-col gap-4">
               <h2 className="flex items-center gap-2 text-xl font-semibold">
                 <Info size={20} /> Về tour này
               </h2>
@@ -89,12 +89,12 @@ export function TourDetailPage() {
           )}
 
           {tour.itinerary.length > 0 && (
-            <div className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl p-5 flex flex-col gap-4">
+            <div className="bg-white border border-brand-tan/30 shadow-sm rounded-xl p-5 flex flex-col gap-4">
               <h2 className="flex items-center gap-2 text-xl font-semibold">
                 <ListChecks size={18} /> Lịch trình chi tiết
               </h2>
               <div className="relative flex flex-col gap-4">
-                <div className="absolute left-[19px] top-0 bottom-0 w-[2px] bg-[#D4C5AB]/50" />
+                <div className="absolute left-[19px] top-0 bottom-0 w-[2px] bg-brand-tan/50" />
                 {tour.itinerary.map((day, i) => (
                   <div key={i} className="relative flex flex-col gap-1 pl-12">
                     <div className="absolute left-0 top-1 bg-secondary border-4 border-white size-10 rounded-full flex items-center justify-center shadow-sm">
@@ -105,7 +105,7 @@ export function TourDetailPage() {
                     {day.tags && (
                       <div className="flex gap-2 flex-wrap mt-1">
                         {day.tags.split(',').map((tag, ti) => (
-                          <span key={ti} className="text-[10px] font-bold px-2.5 py-1 bg-[#F8F9FF] text-[#585E6C] rounded-full border border-[#D4C5AB]/40">{tag.trim()}</span>
+                          <span key={ti} className="text-[10px] font-bold px-2.5 py-1 bg-[#F8F9FF] text-[#585E6C] rounded-full border border-brand-tan/40">{tag.trim()}</span>
                         ))}
                       </div>
                     )}
@@ -131,8 +131,8 @@ export function TourDetailPage() {
 
         {/* Right Column: Booking Sidebar */}
         <aside className="w-full lg:w-[360px] shrink-0">
-          <div className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl p-5 flex flex-col gap-4 sticky top-6">
-            <div className="border-b border-[#D4C5AB]/30 pb-4">
+          <div className="bg-white border border-brand-tan/30 shadow-sm rounded-xl p-5 flex flex-col gap-4 sticky top-6">
+            <div className="border-b border-brand-tan/30 pb-4">
               <div className="text-sm text-[#4F4632]">Giá từ</div>
               <div className="text-2xl font-bold">{new Intl.NumberFormat('vi-VN').format(tour.price)}đ<span className="text-sm font-normal text-[#4F4632]"> /khách</span></div>
             </div>
@@ -142,10 +142,10 @@ export function TourDetailPage() {
                 <div className="font-bold text-sm">Người lớn</div>
                 <div className="text-xs text-[#4F4632]">Từ 12 tuổi</div>
               </div>
-              <div className="flex items-center gap-3 bg-[#F8F9FF] p-1.5 rounded-lg border border-[#D4C5AB]/40">
-                <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 bg-white rounded-md shadow-sm border border-[#D4C5AB]/40 flex items-center justify-center"><Minus size={12} /></button>
+              <div className="flex items-center gap-3 bg-[#F8F9FF] p-1.5 rounded-lg border border-brand-tan/40">
+                <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 bg-white rounded-md shadow-sm border border-brand-tan/40 flex items-center justify-center"><Minus size={12} /></button>
                 <span className="font-bold w-4 text-center">{adults}</span>
-                <button onClick={() => setAdults(adults + 1)} className="w-7 h-7 bg-white rounded-md shadow-sm border border-[#D4C5AB]/40 flex items-center justify-center"><Plus size={12} /></button>
+                <button onClick={() => setAdults(adults + 1)} className="w-7 h-7 bg-white rounded-md shadow-sm border border-brand-tan/40 flex items-center justify-center"><Plus size={12} /></button>
               </div>
             </div>
 
@@ -154,21 +154,21 @@ export function TourDetailPage() {
                 <div className="font-bold text-sm">Trẻ em</div>
                 <div className="text-xs text-[#4F4632]">2-11 tuổi</div>
               </div>
-              <div className="flex items-center gap-3 bg-[#F8F9FF] p-1.5 rounded-lg border border-[#D4C5AB]/40">
-                <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 bg-white rounded-md shadow-sm border border-[#D4C5AB]/40 flex items-center justify-center"><Minus size={12} /></button>
+              <div className="flex items-center gap-3 bg-[#F8F9FF] p-1.5 rounded-lg border border-brand-tan/40">
+                <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 bg-white rounded-md shadow-sm border border-brand-tan/40 flex items-center justify-center"><Minus size={12} /></button>
                 <span className="font-bold w-4 text-center">{children}</span>
-                <button onClick={() => setChildren(children + 1)} className="w-7 h-7 bg-white rounded-md shadow-sm border border-[#D4C5AB]/40 flex items-center justify-center"><Plus size={12} /></button>
+                <button onClick={() => setChildren(children + 1)} className="w-7 h-7 bg-white rounded-md shadow-sm border border-brand-tan/40 flex items-center justify-center"><Plus size={12} /></button>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#D4C5AB]/30 flex items-end justify-between">
+            <div className="pt-4 border-t border-brand-tan/30 flex items-end justify-between">
               <div className="text-sm font-bold text-[#4F4632]">Tạm tính</div>
               <div className="text-2xl font-bold">{new Intl.NumberFormat('vi-VN').format(estTotal)}đ</div>
             </div>
 
             <button
               onClick={() => navigate(`/tour/${tour.id}`)}
-              className="w-full bg-[#785900] hover:bg-[#6D5100] transition-colors text-white text-xs font-bold tracking-wide rounded-lg py-3 flex items-center justify-center gap-2"
+              className="w-full bg-brand-gold-dark hover:bg-[#6D5100] transition-colors text-white text-xs font-bold tracking-wide rounded-lg py-3 flex items-center justify-center gap-2"
             >
               Tiến hành đặt tour <ArrowRight size={14} />
             </button>
@@ -178,21 +178,21 @@ export function TourDetailPage() {
 
       {/* ===== SIMILAR TOURS ===== */}
       {similar.length > 0 && (
-        <section className="bg-[#EFF4FF] border-t border-[#D4C5AB]/30 py-10">
+        <section className="bg-[#EFF4FF] border-t border-brand-tan/30 py-10">
           <div className="max-w-[1280px] mx-auto px-6 flex flex-col gap-4">
             <div className="flex items-end justify-between">
               <div>
-                <div className="text-xs font-semibold text-[#785900] tracking-wide uppercase">Khám phá thêm</div>
+                <div className="text-xs font-semibold text-brand-gold-dark tracking-wide uppercase">Khám phá thêm</div>
                 <h2 className="text-xl font-semibold">Các tour tương tự</h2>
               </div>
-              <Link to="/tour" className="flex items-center gap-1 text-xs font-semibold text-[#585E6C] hover:text-[#0D1C2E] transition-colors">
+              <Link to="/tour" className="flex items-center gap-1 text-xs font-semibold text-[#585E6C] hover:text-brand-navy transition-colors">
                 Xem tất cả <ArrowRight size={12} />
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {similar.map(t => (
                 <motion.div key={t.id} whileHover={{ y: -4 }}>
-                  <Link to={`/tour/${t.id}`} className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl overflow-hidden flex flex-col h-full">
+                  <Link to={`/tour/${t.id}`} className="bg-white border border-brand-tan/30 shadow-sm rounded-xl overflow-hidden flex flex-col h-full">
                     <div className="relative h-48 w-full">
                       <img src={t.imageUrl || undefined} alt={t.title} className="w-full h-full object-cover" loading="lazy" />
                       <div className="absolute top-3 left-3 backdrop-blur-[4px] bg-white/90 flex items-center gap-1 px-2 py-1 rounded text-xs font-bold">

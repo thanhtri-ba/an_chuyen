@@ -47,7 +47,7 @@ export function ResetPasswordPage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.08)] p-8">
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">Đặt lại mật khẩu</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Đặt lại mật khẩu</h1>
         <p className="text-sm text-muted-foreground mb-6">Nhập mật khẩu mới cho tài khoản của bạn.</p>
 
         {done ? (
@@ -70,7 +70,7 @@ export function ResetPasswordPage() {
               </div>
             </div>
             <button type="submit" disabled={isSubmitting}
-              className="w-full bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
+              className="w-full bg-foreground hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
               {isSubmitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
               {!isSubmitting && <ArrowRight size={16} />}
             </button>

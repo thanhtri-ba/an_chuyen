@@ -3,7 +3,7 @@ import { Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 
 export function ContactPage() {
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans pb-32">
       
       {/* ─── INTRO HERO ─── */}
       <section className="relative pt-40 pb-20 px-6 lg:px-12 max-w-[1400px] mx-auto">
@@ -13,16 +13,16 @@ export function ContactPage() {
           transition={{ duration: 0.8 }}
         >
           {/* Top Divider */}
-          <div className="h-px bg-gradient-to-r from-[#d4af37] to-transparent mb-12 max-w-2xl" />
+          <div className="h-px bg-gradient-to-r from-brand-gold to-transparent mb-12 max-w-2xl" />
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <p className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-6">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-brand-gold mb-6">
                 Support & Contact
               </p>
-              <h1 className="font-display font-medium text-6xl md:text-7xl lg:text-[7.5rem] leading-[0.9] text-[#1a1a1a]">
+              <h1 className="font-display font-medium text-6xl md:text-7xl lg:text-[7.5rem] leading-[0.9] text-foreground">
                 We'd love to <br />
-                <em className="text-[#d4af37] font-serif italic">hear from you</em>
+                <em className="text-brand-gold font-serif italic">hear from you</em>
               </h1>
             </div>
             <p className="max-w-xs text-gray-500 leading-relaxed md:text-right pb-3 font-medium text-lg">
@@ -31,7 +31,7 @@ export function ContactPage() {
           </div>
 
           {/* Bottom Divider */}
-          <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mt-16 max-w-4xl ml-auto" />
+          <div className="h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent mt-16 max-w-4xl ml-auto" />
         </motion.div>
       </section>
 
@@ -50,7 +50,7 @@ export function ContactPage() {
               <Mail className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-display font-medium text-2xl text-[#1a1a1a] mb-2">Email Us</h3>
+              <h3 className="font-display font-medium text-2xl text-foreground mb-2">Email Us</h3>
               <p className="text-gray-500 font-medium mb-4">Our friendly team is here to help.</p>
               <a href="mailto:support@roamora.com" className="text-primary font-bold hover:text-primary-hover transition-colors">
                 support@roamora.com
@@ -69,7 +69,7 @@ export function ContactPage() {
               <Phone className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-display font-medium text-2xl text-[#1a1a1a] mb-2">Call Us</h3>
+              <h3 className="font-display font-medium text-2xl text-foreground mb-2">Call Us</h3>
               <p className="text-gray-500 font-medium mb-4">Mon-Fri from 8am to 5pm.</p>
               <a href="tel:+84900123456" className="text-primary font-bold hover:text-primary-hover transition-colors">
                 +84 (900) 123-456
@@ -88,7 +88,7 @@ export function ContactPage() {
               <MapPin className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-display font-medium text-2xl text-[#1a1a1a] mb-2">Office</h3>
+              <h3 className="font-display font-medium text-2xl text-foreground mb-2">Office</h3>
               <p className="text-gray-500 font-medium mb-4">Come say hello at our HQ.</p>
               <div className="text-primary font-bold">
                 123 Điện Biên Phủ,<br/>
@@ -120,7 +120,7 @@ export function ContactPage() {
 
           <div className="bg-white border border-gray-100 rounded-[3rem] p-10 md:p-16 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
             <div className="mb-12">
-              <h2 className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] leading-none mb-4">
+              <h2 className="font-display font-medium text-4xl md:text-5xl text-foreground leading-none mb-4">
                 Send us a message
               </h2>
               <p className="text-gray-500 font-medium text-lg">
@@ -138,7 +138,7 @@ export function ContactPage() {
                   <input
                     type="text"
                     placeholder="Jane"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-[#1a1a1a] outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
                   />
                 </div>
                 <div>
@@ -148,7 +148,7 @@ export function ContactPage() {
                   <input
                     type="text"
                     placeholder="Doe"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-[#1a1a1a] outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -160,7 +160,7 @@ export function ContactPage() {
                 <input
                   type="email"
                   placeholder="jane@example.com"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-[#1a1a1a] outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
                 />
               </div>
 
@@ -170,7 +170,7 @@ export function ContactPage() {
                 </label>
                 <textarea
                   placeholder="How can we help?"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-[#1a1a1a] outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400 resize-none h-32"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400 resize-none h-32"
                 ></textarea>
               </div>
 

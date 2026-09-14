@@ -103,7 +103,7 @@ export function CompleteProfilePage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.08)] p-8">
-        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-1">Khai báo thông tin</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-1">Khai báo thông tin</h1>
         <p className="text-sm text-muted-foreground mb-6">
           Chào {user.fullName}! Vui lòng cung cấp thông tin để hoàn tất hồ sơ.
         </p>
@@ -114,13 +114,13 @@ export function CompleteProfilePage() {
             <div key={label} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors
-                  ${i < stepIdx ? 'bg-[#1a1a1a] text-white' : i === stepIdx ? 'bg-primary text-black' : 'bg-gray-100 text-gray-400'}`}>
+                  ${i < stepIdx ? 'bg-foreground text-white' : i === stepIdx ? 'bg-primary text-black' : 'bg-gray-100 text-gray-400'}`}>
                   {i < stepIdx ? <Check size={14} /> : i + 1}
                 </div>
-                <span className={`text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${i <= stepIdx ? 'text-[#1a1a1a]' : 'text-gray-400'}`}>{label}</span>
+                <span className={`text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${i <= stepIdx ? 'text-foreground' : 'text-gray-400'}`}>{label}</span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`h-0.5 flex-1 mx-2 mb-4 transition-colors ${i < stepIdx ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`} />
+                <div className={`h-0.5 flex-1 mx-2 mb-4 transition-colors ${i < stepIdx ? 'bg-foreground' : 'bg-gray-100'}`} />
               )}
             </div>
           ))}
@@ -193,9 +193,9 @@ export function CompleteProfilePage() {
               </div>
 
               <div className="bg-[#FEFCE8] border border-[#FEF9C3] rounded-xl p-4 space-y-1.5 text-sm">
-                <div className="flex justify-between"><span className="text-[#92400E]">Họ tên</span><span className="font-semibold text-[#1a1a1a]">{fullName}</span></div>
-                <div className="flex justify-between"><span className="text-[#92400E]">SĐT</span><span className="font-semibold text-[#1a1a1a]">{phone}</span></div>
-                {address && <div className="flex justify-between"><span className="text-[#92400E]">Địa chỉ</span><span className="font-semibold text-[#1a1a1a] text-right">{address}</span></div>}
+                <div className="flex justify-between"><span className="text-[#92400E]">Họ tên</span><span className="font-semibold text-foreground">{fullName}</span></div>
+                <div className="flex justify-between"><span className="text-[#92400E]">SĐT</span><span className="font-semibold text-foreground">{phone}</span></div>
+                {address && <div className="flex justify-between"><span className="text-[#92400E]">Địa chỉ</span><span className="font-semibold text-foreground text-right">{address}</span></div>}
               </div>
             </motion.div>
           )}
@@ -210,12 +210,12 @@ export function CompleteProfilePage() {
           )}
           {stepIdx < STEPS.length - 1 ? (
             <button type="button" onClick={goNext}
-              className="flex-1 bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2">
+              className="flex-1 bg-foreground hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2">
               Tiếp tục <ArrowRight size={16} />
             </button>
           ) : (
             <button type="button" onClick={handleSubmit} disabled={isSubmitting}
-              className="flex-1 bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
+              className="flex-1 bg-foreground hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
               {isSubmitting ? 'Đang lưu...' : 'Hoàn tất'}
               {!isSubmitting && <Check size={16} />}
             </button>

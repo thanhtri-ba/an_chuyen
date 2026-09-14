@@ -43,7 +43,7 @@ export function TourPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-24">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans pb-24">
 
       {/* ===== HERO ===== */}
       <section className="relative h-[60vh] min-h-[440px] flex items-center px-6 lg:px-12 pt-20 bg-[#0d1710]">
@@ -54,11 +54,11 @@ export function TourPage() {
 
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative z-10 w-full mx-auto max-w-[1400px] text-white">
           <div className="flex items-center gap-3 mb-4">
-            <span className="w-8 h-[2px] bg-[#d4af37]" />
-            <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-[#d4af37]">Trải nghiệm chọn lọc</span>
+            <span className="w-8 h-[2px] bg-brand-gold" />
+            <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-brand-gold">Trải nghiệm chọn lọc</span>
           </div>
           <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-4 max-w-2xl">
-            Hành trình <span className="text-[#d4af37] italic">đáng nhớ</span> đang chờ
+            Hành trình <span className="text-brand-gold italic">đáng nhớ</span> đang chờ
           </h1>
           <p className="text-gray-200 text-lg max-w-md leading-relaxed font-medium">
             Tour trọn gói được tuyển chọn kỹ, đưa bạn đến những điểm đến đẹp nhất Việt Nam.
@@ -72,23 +72,23 @@ export function TourPage() {
           <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full border-b md:border-b-0 md:border-r border-gray-100 group cursor-pointer transition-colors hover:bg-gray-50/50 rounded-2xl md:rounded-l-full">
             <Search className="text-gray-400 w-5 h-5 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5">Bạn muốn đi đâu?</label>
-              <input type="text" placeholder="Tìm điểm đến, tour..." className="text-sm border-none outline-none text-[#1a1a1a] font-medium placeholder:text-gray-400 w-full bg-transparent" />
+              <label className="text-[11px] font-bold text-foreground mb-0.5">Bạn muốn đi đâu?</label>
+              <input type="text" placeholder="Tìm điểm đến, tour..." className="text-sm border-none outline-none text-foreground font-medium placeholder:text-gray-400 w-full bg-transparent" />
             </div>
           </div>
 
           <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full border-b md:border-b-0 md:border-r border-gray-100 group cursor-pointer transition-colors hover:bg-gray-50/50">
             <Calendar className="text-gray-400 w-5 h-5 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5">Ngày khởi hành</label>
-              <input type="date" className="text-sm border-none outline-none text-[#1a1a1a] font-medium w-full bg-transparent cursor-pointer text-gray-500" />
+              <label className="text-[11px] font-bold text-foreground mb-0.5">Ngày khởi hành</label>
+              <input type="date" className="text-sm border-none outline-none text-foreground font-medium w-full bg-transparent cursor-pointer text-gray-500" />
             </div>
           </div>
 
           <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full group cursor-pointer transition-colors hover:bg-gray-50/50">
             <Users className="text-gray-400 w-5 h-5 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5">Số khách</label>
+              <label className="text-[11px] font-bold text-foreground mb-0.5">Số khách</label>
               <div className="text-sm font-medium text-gray-500">{adults} người lớn, {children} trẻ em</div>
             </div>
           </div>
@@ -106,7 +106,7 @@ export function TourPage() {
           <button
             onClick={() => setActiveCategory('all')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border ${
-              activeCategory === 'all' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-[#1a1a1a]'
+              activeCategory === 'all' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-foreground'
             }`}
           >
             Tất cả
@@ -116,7 +116,7 @@ export function TourPage() {
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border ${
-                activeCategory === cat.id ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-[#1a1a1a]'
+                activeCategory === cat.id ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-foreground'
               }`}
             >
               <cat.icon className="w-4 h-4" />
@@ -131,7 +131,7 @@ export function TourPage() {
           <div className="lg:col-span-8 flex flex-col gap-12">
 
             <div>
-              <h2 className="text-3xl font-display font-medium text-[#1a1a1a] mb-8">Tour nổi bật</h2>
+              <h2 className="text-3xl font-display font-medium text-foreground mb-8">Tour nổi bật</h2>
 
               {loading ? (
                 <div className="flex justify-center py-20">
@@ -148,7 +148,7 @@ export function TourPage() {
                         {isImageLeft && (
                           <div className="md:w-5/12 relative h-64 md:h-auto overflow-hidden">
                             <img src={tour.imageUrl ?? undefined} alt={tour.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-[#1a1a1a] flex items-center gap-1.5 shadow-sm">
+                            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-foreground flex items-center gap-1.5 shadow-sm">
                               <Star className="w-3 h-3 text-secondary fill-secondary" /> 4.9 (128)
                             </div>
                           </div>
@@ -156,7 +156,7 @@ export function TourPage() {
 
                         <div className="md:w-7/12 p-8 flex flex-col justify-center">
                           <div className="flex justify-between items-start gap-4 mb-2">
-                            <h3 className="text-xl font-bold text-[#1a1a1a] leading-tight">{tour.title}</h3>
+                            <h3 className="text-xl font-bold text-foreground leading-tight">{tour.title}</h3>
                             <div className="text-xl font-bold text-primary whitespace-nowrap">{new Intl.NumberFormat('vi-VN').format(tour.price)}đ</div>
                           </div>
 
@@ -171,7 +171,7 @@ export function TourPage() {
                             </div>
                           </div>
 
-                          <Link to={`/tour/${tour.id}`} className="w-full text-center bg-white border border-gray-200 text-[#1a1a1a] hover:border-primary hover:text-primary font-bold py-3 rounded-xl transition-colors shadow-sm">
+                          <Link to={`/tour/${tour.id}`} className="w-full text-center bg-white border border-gray-200 text-foreground hover:border-primary hover:text-primary font-bold py-3 rounded-xl transition-colors shadow-sm">
                             Xem chi tiết
                           </Link>
                         </div>
@@ -179,7 +179,7 @@ export function TourPage() {
                         {!isImageLeft && (
                           <div className="md:w-5/12 relative h-64 md:h-auto overflow-hidden">
                             <img src={tour.imageUrl ?? undefined} alt={tour.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-[#1a1a1a] flex items-center gap-1.5 shadow-sm">
+                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-foreground flex items-center gap-1.5 shadow-sm">
                               <Star className="w-3 h-3 text-secondary fill-secondary" /> 4.8 (95)
                             </div>
                           </div>
@@ -195,7 +195,7 @@ export function TourPage() {
                 not tied to a specific tour since Tour rows don't carry per-tour reviews yet. */}
             {reviews.length > 0 && (
               <div>
-                <h2 className="text-3xl font-display font-medium text-[#1a1a1a] mb-8">Khách hàng nói gì</h2>
+                <h2 className="text-3xl font-display font-medium text-foreground mb-8">Khách hàng nói gì</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {reviews.map((review) => (
                     <div key={review.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
@@ -208,7 +208,7 @@ export function TourPage() {
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-[#1a1a1a] text-sm">{review.name}</div>
+                          <div className="font-bold text-foreground text-sm">{review.name}</div>
                           <div className="flex text-secondary mt-0.5">
                             {[...Array(review.rating)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
                           </div>
@@ -227,44 +227,44 @@ export function TourPage() {
 
             {/* Customize Group */}
             <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-              <h3 className="text-lg font-bold text-[#1a1a1a] mb-6">Tuỳ chỉnh đoàn</h3>
+              <h3 className="text-lg font-bold text-foreground mb-6">Tuỳ chỉnh đoàn</h3>
 
               <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-bold text-[#1a1a1a] text-sm">Người lớn</div>
+                    <div className="font-bold text-foreground text-sm">Người lớn</div>
                     <div className="text-xs text-gray-400">Từ 12 tuổi</div>
                   </div>
                   <div className="flex items-center gap-4 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
-                    <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 bg-white font-bold text-[#1a1a1a] flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">-</button>
-                    <span className="font-bold w-4 text-center text-[#1a1a1a]">{adults}</span>
-                    <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 bg-white font-bold text-[#1a1a1a] flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">+</button>
+                    <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 bg-white font-bold text-foreground flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">-</button>
+                    <span className="font-bold w-4 text-center text-foreground">{adults}</span>
+                    <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 bg-white font-bold text-foreground flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">+</button>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-bold text-[#1a1a1a] text-sm">Trẻ em</div>
+                    <div className="font-bold text-foreground text-sm">Trẻ em</div>
                     <div className="text-xs text-gray-400">2-11 tuổi</div>
                   </div>
                   <div className="flex items-center gap-4 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
-                    <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 bg-white font-bold text-[#1a1a1a] flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">-</button>
-                    <span className="font-bold w-4 text-center text-[#1a1a1a]">{children}</span>
-                    <button onClick={() => setChildren(children + 1)} className="w-8 h-8 bg-white font-bold text-[#1a1a1a] flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">+</button>
+                    <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 bg-white font-bold text-foreground flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">-</button>
+                    <span className="font-bold w-4 text-center text-foreground">{children}</span>
+                    <button onClick={() => setChildren(children + 1)} className="w-8 h-8 bg-white font-bold text-foreground flex items-center justify-center rounded-lg shadow-sm border border-gray-100 hover:bg-gray-50">+</button>
                   </div>
                 </div>
 
                 <div>
-                  <div className="font-bold text-[#1a1a1a] text-sm mb-2">Yêu cầu đặc biệt</div>
+                  <div className="font-bold text-foreground text-sm mb-2">Yêu cầu đặc biệt</div>
                   <textarea
                     placeholder="Chế độ ăn, hỗ trợ di chuyển..."
-                    className="w-full bg-gray-50 border border-gray-200 p-4 text-sm text-[#1a1a1a] outline-none resize-none h-24 rounded-xl focus:border-primary transition-colors placeholder:text-gray-400"
+                    className="w-full bg-gray-50 border border-gray-200 p-4 text-sm text-foreground outline-none resize-none h-24 rounded-xl focus:border-primary transition-colors placeholder:text-gray-400"
                   />
                 </div>
 
                 <div className="pt-6 border-t border-gray-100 flex items-end justify-between">
                   <div className="text-sm font-bold text-gray-400">Tạm tính</div>
-                  <div className="text-3xl font-bold text-[#1a1a1a]">{new Intl.NumberFormat('vi-VN').format(estTotal)}đ</div>
+                  <div className="text-3xl font-bold text-foreground">{new Intl.NumberFormat('vi-VN').format(estTotal)}đ</div>
                 </div>
 
                 {filteredTours.length > 0 && (
@@ -277,14 +277,14 @@ export function TourPage() {
 
             {/* Sample Itinerary */}
             <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
-              <h3 className="text-lg font-bold text-[#1a1a1a] mb-8">Lịch trình mẫu</h3>
+              <h3 className="text-lg font-bold text-foreground mb-8">Lịch trình mẫu</h3>
 
               <div className="relative border-l-2 border-gray-100 ml-3 flex flex-col gap-8 pb-4">
                 {filteredTours.length > 0 && filteredTours[0].itinerary?.map((item, idx: number) => (
                   <div key={idx} className="relative">
                     <div className={`absolute -left-[25px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${idx === 0 ? 'bg-primary border-4 border-white shadow-sm' : 'bg-white border-2 border-gray-200'}`} />
                     <div className="pl-6">
-                      <h4 className="font-bold text-sm text-[#1a1a1a] mb-2">Ngày {item.day}: {item.title}</h4>
+                      <h4 className="font-bold text-sm text-foreground mb-2">Ngày {item.day}: {item.title}</h4>
                       <p className="text-xs text-gray-500 leading-relaxed mb-3">{item.description}</p>
                       {item.tags && (
                         <div className="flex gap-2 flex-wrap">

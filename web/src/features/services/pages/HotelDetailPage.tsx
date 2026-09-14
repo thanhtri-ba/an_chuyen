@@ -39,7 +39,7 @@ export function HotelDetailPage() {
 
   if (hotel === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FF] text-[#0D1C2E]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FF] text-brand-navy">
         <p className="text-sm font-semibold animate-pulse">Đang tải...</p>
       </div>
     );
@@ -47,9 +47,9 @@ export function HotelDetailPage() {
 
   if (!hotel) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F9FF] text-[#0D1C2E]">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F9FF] text-brand-navy">
         <p className="text-lg font-semibold">Không tìm thấy khách sạn này.</p>
-        <button onClick={() => navigate('/hotels')} className="text-sm font-semibold text-[#785900] hover:underline">
+        <button onClick={() => navigate('/hotels')} className="text-sm font-semibold text-brand-gold-dark hover:underline">
           Quay về danh sách khách sạn
         </button>
       </div>
@@ -60,7 +60,7 @@ export function HotelDetailPage() {
   const similar = allHotels.filter(h => h.slug !== hotel.slug).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FF] text-[#0D1C2E] font-sans">
+    <div className="min-h-screen bg-[#F8F9FF] text-brand-navy font-sans">
       {/* ===== HERO ===== */}
       <div className="relative h-[420px] md:h-[500px] w-full overflow-hidden">
         <img src={hotel.imageUrl} alt={hotel.name} className="absolute inset-0 w-full h-full object-cover" />
@@ -97,7 +97,7 @@ export function HotelDetailPage() {
             })}
           </div>
 
-          <div className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl p-5 flex flex-col gap-4">
+          <div className="bg-white border border-brand-tan/30 shadow-sm rounded-xl p-5 flex flex-col gap-4">
             <h2 className="flex items-center gap-2 text-xl font-semibold">
               <Info size={20} /> Về khách sạn này
             </h2>
@@ -122,8 +122,8 @@ export function HotelDetailPage() {
 
         {/* Right Column: Booking Sidebar */}
         <aside className="w-full lg:w-[360px] shrink-0">
-          <div className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl p-5 flex flex-col gap-4 sticky top-6">
-            <div className="border-b border-[#D4C5AB]/30 pb-4 flex items-end justify-between">
+          <div className="bg-white border border-brand-tan/30 shadow-sm rounded-xl p-5 flex flex-col gap-4 sticky top-6">
+            <div className="border-b border-brand-tan/30 pb-4 flex items-end justify-between">
               <div>
                 <div className="text-sm text-[#4F4632]">Giá từ</div>
                 <div className="text-2xl font-bold">{finalPrice.toLocaleString('vi-VN')}đ<span className="text-sm font-normal text-[#4F4632]"> /đêm</span></div>
@@ -135,11 +135,11 @@ export function HotelDetailPage() {
               <label className="text-xs font-semibold tracking-wide">Nhận / Trả phòng</label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0D1C2E]" />
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-navy" />
                   <input type="date" className="w-full bg-[#F8F9FF] border border-[#826050]/50 rounded-lg pl-9 pr-2 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20" />
                 </div>
                 <div className="relative flex-1">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0D1C2E]" />
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-navy" />
                   <input type="date" className="w-full bg-[#F8F9FF] border border-[#826050]/50 rounded-lg pl-9 pr-2 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20" />
                 </div>
               </div>
@@ -159,10 +159,10 @@ export function HotelDetailPage() {
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
-              <button onClick={() => navigate(`/search?destination=${encodeURIComponent(hotel.location)}`)} className="bg-[#785900] hover:bg-[#6D5100] transition-colors text-white text-xs font-bold tracking-wide rounded-lg py-3 flex items-center justify-center gap-2">
+              <button onClick={() => navigate(`/search?destination=${encodeURIComponent(hotel.location)}`)} className="bg-brand-gold-dark hover:bg-[#6D5100] transition-colors text-white text-xs font-bold tracking-wide rounded-lg py-3 flex items-center justify-center gap-2">
                 Đặt Phòng Ngay <ArrowRight size={14} />
               </button>
-              <button className="bg-white border border-[#785900] text-[#785900] text-xs font-bold tracking-wide rounded-lg py-3 flex items-center justify-center gap-2 hover:bg-[#785900]/5 transition-colors">
+              <button className="bg-white border border-brand-gold-dark text-brand-gold-dark text-xs font-bold tracking-wide rounded-lg py-3 flex items-center justify-center gap-2 hover:bg-brand-gold-dark/5 transition-colors">
                 <Heart size={15} /> Lưu vào yêu thích
               </button>
             </div>
@@ -175,21 +175,21 @@ export function HotelDetailPage() {
       </div>
 
       {/* ===== SIMILAR HOTELS ===== */}
-      <section className="bg-[#EFF4FF] border-t border-[#D4C5AB]/30 py-10">
+      <section className="bg-[#EFF4FF] border-t border-brand-tan/30 py-10">
         <div className="max-w-[1280px] mx-auto px-6 flex flex-col gap-4">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-xs font-semibold text-[#785900] tracking-wide uppercase">Khám phá thêm</div>
+              <div className="text-xs font-semibold text-brand-gold-dark tracking-wide uppercase">Khám phá thêm</div>
               <h2 className="text-xl font-semibold">Các khách sạn tương tự</h2>
             </div>
-            <Link to="/hotels" className="flex items-center gap-1 text-xs font-semibold text-[#585E6C] hover:text-[#0D1C2E] transition-colors">
+            <Link to="/hotels" className="flex items-center gap-1 text-xs font-semibold text-[#585E6C] hover:text-brand-navy transition-colors">
               Xem tất cả <ArrowRight size={12} />
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {similar.map(h => (
               <motion.div key={h.slug} whileHover={{ y: -4 }}>
-                <Link to={`/hotels/${h.slug}`} className="bg-white border border-[#D4C5AB]/30 shadow-sm rounded-xl overflow-hidden flex flex-col h-full">
+                <Link to={`/hotels/${h.slug}`} className="bg-white border border-brand-tan/30 shadow-sm rounded-xl overflow-hidden flex flex-col h-full">
                   <div className="relative h-48 w-full">
                     <img src={h.imageUrl} alt={h.name} className="w-full h-full object-cover" loading="lazy" />
                     <div className="absolute top-3 left-3 backdrop-blur-[4px] bg-white/90 flex items-center gap-1 px-2 py-1 rounded text-xs font-bold">

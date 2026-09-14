@@ -82,7 +82,7 @@ export function AboutPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-32">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans pb-32">
       
       {/* ─── INTRO HERO ─── */}
       <section className="relative pt-40 pb-20 px-6 lg:px-12 max-w-[1400px] mx-auto">
@@ -92,16 +92,16 @@ export function AboutPage() {
           transition={{ duration: 0.8 }}
         >
           {/* Top Divider */}
-          <div className="h-px bg-gradient-to-r from-[#d4af37] to-transparent mb-12 max-w-2xl" />
+          <div className="h-px bg-gradient-to-r from-brand-gold to-transparent mb-12 max-w-2xl" />
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <p className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-6">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-brand-gold mb-6">
                 About Us — An Chuyến
               </p>
-              <h1 className="font-display font-medium text-6xl md:text-7xl lg:text-[7.5rem] leading-[0.9] text-[#1a1a1a]">
+              <h1 className="font-display font-medium text-6xl md:text-7xl lg:text-[7.5rem] leading-[0.9] text-foreground">
                 A Journey <br />
-                <em className="text-[#d4af37] font-serif italic">You Can Trust</em>
+                <em className="text-brand-gold font-serif italic">You Can Trust</em>
               </h1>
             </div>
             <p className="max-w-xs text-gray-500 leading-relaxed md:text-right pb-3 font-medium text-lg">
@@ -110,7 +110,7 @@ export function AboutPage() {
           </div>
 
           {/* Bottom Divider */}
-          <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mt-16 max-w-4xl ml-auto" />
+          <div className="h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent mt-16 max-w-4xl ml-auto" />
         </motion.div>
       </section>
 
@@ -128,7 +128,7 @@ export function AboutPage() {
             >
               {/* Number */}
               <div className="col-span-1 hidden md:flex justify-center">
-                <span className="font-mono text-sm font-bold tracking-widest text-[#d4af37]/60 group-hover:text-[#d4af37] transition-colors">
+                <span className="font-mono text-sm font-bold tracking-widest text-brand-gold/60 group-hover:text-brand-gold transition-colors">
                   {service.number}
                 </span>
               </div>
@@ -136,11 +136,11 @@ export function AboutPage() {
               {/* Service title */}
               <div className="col-span-12 md:col-span-3 px-4 md:px-0">
                 {service.highlight && (
-                  <div className="text-[9px] font-black px-2.5 py-1 w-max mb-4 tracking-widest bg-[#d4af37] text-white uppercase rounded-sm shadow-sm">
+                  <div className="text-[9px] font-black px-2.5 py-1 w-max mb-4 tracking-widest bg-brand-gold text-white uppercase rounded-sm shadow-sm">
                     {service.highlight}
                   </div>
                 )}
-                <h3 className="font-display font-medium text-3xl md:text-4xl text-[#1a1a1a] leading-tight group-hover:text-primary transition-colors">
+                <h3 className="font-display font-medium text-3xl md:text-4xl text-foreground leading-tight group-hover:text-primary transition-colors">
                   {service.title}
                 </h3>
               </div>
@@ -213,10 +213,10 @@ export function AboutPage() {
         {/* Section header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
           <div>
-            <p className="text-[10px] font-bold tracking-widest uppercase text-[#d4af37] mb-4">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-brand-gold mb-4">
               Strategic Partners
             </p>
-            <h2 className="font-display font-medium text-5xl md:text-7xl text-[#1a1a1a] leading-none">
+            <h2 className="font-display font-medium text-5xl md:text-7xl text-foreground leading-none">
               PARTNERS
             </h2>
           </div>
@@ -246,7 +246,7 @@ export function AboutPage() {
                 activeSpecialist === idx ? 'border-primary' : 'border-transparent'
               }`}
             >
-              <div className={`font-bold text-lg transition-colors ${activeSpecialist === idx ? 'text-[#1a1a1a]' : 'text-gray-400'}`}>
+              <div className={`font-bold text-lg transition-colors ${activeSpecialist === idx ? 'text-foreground' : 'text-gray-400'}`}>
                 {spec.name}
               </div>
               <div className={`text-[10px] font-bold tracking-widest uppercase mt-1.5 transition-colors ${activeSpecialist === idx ? 'text-primary' : 'text-gray-300'}`}>
@@ -274,13 +274,13 @@ export function AboutPage() {
                   "
                 </div>
                 
-                <blockquote className="relative z-10 font-display text-3xl text-[#1a1a1a] font-medium leading-snug mb-10 italic">
+                <blockquote className="relative z-10 font-display text-3xl text-foreground font-medium leading-snug mb-10 italic">
                   {specialists[activeSpecialist].quote.replace(/^"|"$/g, '')}
                 </blockquote>
 
                 <div className="flex items-center gap-8 mb-10">
                   <div>
-                    <div className="font-bold text-lg text-[#1a1a1a]">
+                    <div className="font-bold text-lg text-foreground">
                       {specialists[activeSpecialist].name}
                     </div>
                     <div className="text-[10px] font-bold tracking-widest uppercase text-primary mt-1">
@@ -289,7 +289,7 @@ export function AboutPage() {
                   </div>
                   <div className="w-px h-12 bg-gray-200" />
                   <div>
-                    <div className="font-display font-medium text-3xl text-[#d4af37]">
+                    <div className="font-display font-medium text-3xl text-brand-gold">
                       {specialists[activeSpecialist].stat}
                     </div>
                     <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
@@ -324,7 +324,7 @@ export function AboutPage() {
                   {/* Name overlay */}
                   <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white flex items-center justify-between">
                     <div>
-                      <div className="font-display font-medium text-2xl text-[#1a1a1a]">
+                      <div className="font-display font-medium text-2xl text-foreground">
                         {specialists[activeSpecialist].name}
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-gray-500 mt-1">
@@ -355,7 +355,7 @@ export function AboutPage() {
             <p className="text-[10px] font-bold tracking-widest uppercase text-primary mb-4">
               Contact — Free Consultation
             </p>
-            <h2 className="font-display font-medium text-4xl md:text-5xl text-[#1a1a1a] leading-none">
+            <h2 className="font-display font-medium text-4xl md:text-5xl text-foreground leading-none">
               GET IN TOUCH
             </h2>
           </div>
@@ -373,7 +373,7 @@ export function AboutPage() {
                   <input
                     type={field.type}
                     placeholder={field.placeholder}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-[#1a1a1a] outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:bg-white placeholder:text-gray-400"
                   />
                 </div>
               ))}
@@ -393,7 +393,7 @@ export function AboutPage() {
                       className={`text-xs font-bold px-6 py-3 rounded-full transition-all duration-200 border ${
                         i === 0
                           ? 'bg-primary text-white border-primary shadow-sm'
-                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-[#1a1a1a]'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-foreground'
                       }`}
                     >
                       {svc}
@@ -415,7 +415,7 @@ export function AboutPage() {
                       className={`text-xs font-bold px-6 py-3 rounded-full transition-all duration-200 border ${
                         i === 0
                           ? 'bg-primary text-white border-primary shadow-sm'
-                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-[#1a1a1a]'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-foreground'
                       }`}
                     >
                       {d}

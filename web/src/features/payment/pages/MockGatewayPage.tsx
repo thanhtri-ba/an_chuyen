@@ -64,13 +64,13 @@ export function MockGatewayPage() {
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="font-display text-4xl text-[#1a1a1a] mb-3">Xác nhận thanh toán</h1>
+          <h1 className="font-display text-4xl text-foreground mb-3">Xác nhận thanh toán</h1>
           <p className="text-sm text-muted-foreground font-light">Demo cho đồ án — không thu tiền thật</p>
         </div>
 
         <div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-6 text-center mb-6">
           <div className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2">Số tiền cần thanh toán</div>
-          <div className="font-display text-5xl text-[#1a1a1a] tabular-nums">
+          <div className="font-display text-5xl text-foreground tabular-nums">
             {fmt(amount)}<span className="text-xl text-muted-foreground ml-1">đ</span>
           </div>
           <div className="text-[11px] text-gray-400 font-mono mt-3">Mã đơn: {bookingId}</div>
@@ -78,14 +78,14 @@ export function MockGatewayPage() {
 
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mb-8">
           <span className="font-light">Phiên giao dịch hết hạn sau</span>
-          <span className="font-mono font-bold text-[#1a1a1a] tabular-nums">{mm}:{ss}</span>
+          <span className="font-mono font-bold text-foreground tabular-nums">{mm}:{ss}</span>
         </div>
 
         <div className="flex flex-col gap-3">
           <button
             onClick={() => handleOutcome('success')}
             disabled={processing !== null}
-            className="w-full bg-[#1a1a1a] hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0"
+            className="w-full bg-foreground hover:bg-black text-white py-4 rounded-xl text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {processing === 'success' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
             Giả lập thanh toán thành công
@@ -101,7 +101,7 @@ export function MockGatewayPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground font-light leading-relaxed mt-8 pt-6 border-t border-dashed border-gray-200">
-          "Thành công" ở đây chỉ mô phỏng việc khách đã trả tiền — booking vẫn cần <span className="font-semibold text-[#1a1a1a]">admin duyệt</span> trong trang quản trị thì mới chính thức được xác nhận. Trang giả lập nội bộ, không kết nối tới VNPay/MoMo hay bất kỳ ngân hàng nào.
+          "Thành công" ở đây chỉ mô phỏng việc khách đã trả tiền — booking vẫn cần <span className="font-semibold text-foreground">admin duyệt</span> trong trang quản trị thì mới chính thức được xác nhận. Trang giả lập nội bộ, không kết nối tới VNPay/MoMo hay bất kỳ ngân hàng nào.
         </p>
       </motion.div>
     </motion.div>

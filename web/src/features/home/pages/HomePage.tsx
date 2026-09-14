@@ -118,7 +118,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans">
 
       {/* ===== HERO — intro clouds part on load to reveal a looping video background, per
            Figma (node 29:260 intro state → 29:170 revealed state): centered eyebrow + title,
@@ -144,7 +144,7 @@ export function HomePage() {
           <div className="relative flex-1 min-w-0 flex items-center gap-3 px-6 py-3 w-full lg:w-auto border-b lg:border-b-0 border-gray-100 group hover:bg-gray-50/50 rounded-2xl lg:rounded-l-full cursor-pointer transition-colors">
             <MapPin className="text-gray-400 w-5 h-5 shrink-0 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full min-w-0">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5 cursor-pointer truncate">Điểm đi</label>
+              <label className="text-[11px] font-bold text-foreground mb-0.5 cursor-pointer truncate">Điểm đi</label>
               <input
                 type="text"
                 value={origin}
@@ -152,7 +152,7 @@ export function HomePage() {
                 onFocus={() => setShowOriginDropdown(true)}
                 onBlur={() => setTimeout(() => setShowOriginDropdown(false), 200)}
                 placeholder="Bạn khởi hành từ đâu?"
-                className="text-sm border-none outline-none text-[#1a1a1a] font-medium placeholder:text-gray-400 placeholder:font-normal w-full bg-transparent truncate"
+                className="text-sm border-none outline-none text-foreground font-medium placeholder:text-gray-400 placeholder:font-normal w-full bg-transparent truncate"
               />
             </div>
 
@@ -191,7 +191,7 @@ export function HomePage() {
           <div className="relative flex-1 min-w-0 flex items-center gap-3 px-6 py-3 w-full lg:w-auto border-b lg:border-b-0 lg:border-l border-gray-100 group hover:bg-gray-50/50 cursor-pointer transition-colors">
             <MapPin className="text-gray-400 w-5 h-5 shrink-0 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full min-w-0">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5 cursor-pointer truncate">Điểm đến</label>
+              <label className="text-[11px] font-bold text-foreground mb-0.5 cursor-pointer truncate">Điểm đến</label>
               <input
                 type="text"
                 value={destination}
@@ -199,7 +199,7 @@ export function HomePage() {
                 onFocus={() => setShowDestDropdown(true)}
                 onBlur={() => setTimeout(() => setShowDestDropdown(false), 200)}
                 placeholder="Bạn muốn đến đâu?"
-                className="text-sm border-none outline-none text-[#1a1a1a] font-medium placeholder:text-gray-400 placeholder:font-normal w-full bg-transparent truncate"
+                className="text-sm border-none outline-none text-foreground font-medium placeholder:text-gray-400 placeholder:font-normal w-full bg-transparent truncate"
               />
             </div>
 
@@ -228,16 +228,16 @@ export function HomePage() {
           <div className="flex-1 min-w-0 flex items-center gap-3 px-6 py-3 w-full lg:w-auto border-b lg:border-b-0 lg:border-l border-gray-100 group hover:bg-gray-50/50 cursor-pointer transition-colors">
             <Calendar className="text-gray-400 w-5 h-5 shrink-0 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full min-w-0">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5 cursor-pointer truncate">Ngày đi</label>
-              <input type="date" min={today} value={date} onChange={e => setDate(e.target.value)} className="text-sm border-none outline-none text-[#1a1a1a] font-medium w-full bg-transparent cursor-pointer truncate" />
+              <label className="text-[11px] font-bold text-foreground mb-0.5 cursor-pointer truncate">Ngày đi</label>
+              <input type="date" min={today} value={date} onChange={e => setDate(e.target.value)} className="text-sm border-none outline-none text-foreground font-medium w-full bg-transparent cursor-pointer truncate" />
             </div>
           </div>
 
           <div className="flex-1 min-w-0 flex items-center gap-3 px-6 py-3 w-full lg:w-auto lg:border-l border-gray-100 group hover:bg-gray-50/50 cursor-pointer transition-colors">
             <Users className="text-gray-400 w-5 h-5 shrink-0 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full min-w-0">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5 cursor-pointer truncate">Hành khách</label>
-              <select value={passengers} onChange={e => setPassengers(Number(e.target.value))} className="text-sm border-none outline-none text-[#1a1a1a] font-medium w-full bg-transparent cursor-pointer appearance-none truncate">
+              <label className="text-[11px] font-bold text-foreground mb-0.5 cursor-pointer truncate">Hành khách</label>
+              <select value={passengers} onChange={e => setPassengers(Number(e.target.value))} className="text-sm border-none outline-none text-foreground font-medium w-full bg-transparent cursor-pointer appearance-none truncate">
                 {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} người</option>)}
               </select>
             </div>
@@ -260,9 +260,9 @@ export function HomePage() {
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
         >
-          <p className="font-condensed font-black uppercase text-4xl md:text-6xl leading-[1.05] tracking-tight text-[#0D1C2E] max-w-4xl">
+          <p className="font-condensed font-black uppercase text-4xl md:text-6xl leading-[1.05] tracking-tight text-brand-navy max-w-4xl">
             Xếp hàng ở bến xe <span className="text-gray-300">là may rủi.</span><br />
-            Đặt ghế trên An Chuyến <span className="text-[#785900] italic font-display normal-case font-medium tracking-normal">là chắc chắn.</span>
+            Đặt ghế trên An Chuyến <span className="text-brand-gold-dark italic font-display normal-case font-medium tracking-normal">là chắc chắn.</span>
           </p>
           <p className="text-gray-500 text-base mt-6 max-w-xl leading-relaxed">
             Không còn cảnh chen chúc mua vé tại quầy hay xe chạy rồi mới biết hết chỗ. Chọn ghế trước, thấy giá trước, giữ chỗ thật — không phải hẹn suông.
@@ -293,7 +293,7 @@ export function HomePage() {
       <section className="px-6 lg:px-12 py-24 max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-12 items-start">
           <div>
-            <h2 className="font-condensed font-black uppercase text-4xl md:text-5xl leading-[1.05] tracking-tight text-[#0D1C2E] mb-5">
+            <h2 className="font-condensed font-black uppercase text-4xl md:text-5xl leading-[1.05] tracking-tight text-brand-navy mb-5">
               Tính thử xem<br />vé "mua tại bến" tốn bao nhiêu.
             </h2>
             <p className="text-gray-500 text-base leading-relaxed max-w-md">
@@ -308,7 +308,7 @@ export function HomePage() {
             <div className="grid grid-cols-3 bg-[#F8F9FF] text-[11px] font-bold uppercase tracking-wider text-gray-500 px-6 py-4">
               <span>Yếu tố</span>
               <span className="text-right">Mua tại bến</span>
-              <span className="text-right text-[#785900]">An Chuyến</span>
+              <span className="text-right text-brand-gold-dark">An Chuyến</span>
             </div>
             {[
               ['Xem giá trước khi trả tiền', 'Hiếm khi', 'Luôn luôn'],
@@ -318,9 +318,9 @@ export function HomePage() {
               ['Thời gian xếp hàng mua vé', '15–30 phút', '60 giây'],
             ].map((row, i) => (
               <div key={i} className={`grid grid-cols-3 px-6 py-4 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-[#FAFAFA]'}`}>
-                <span className="text-[#1a1a1a] font-medium">{row[0]}</span>
+                <span className="text-foreground font-medium">{row[0]}</span>
                 <span className="text-right text-gray-400">{row[1]}</span>
-                <span className="text-right text-[#785900] font-bold">{row[2]}</span>
+                <span className="text-right text-brand-gold-dark font-bold">{row[2]}</span>
               </div>
             ))}
           </motion.div>
@@ -330,8 +330,8 @@ export function HomePage() {
       {/* ===== 3 STEPS — light, numbered like the hero rail but laid out horizontally ===== */}
       <section className="px-6 lg:px-12 py-24 max-w-[1400px] mx-auto">
         <div className="flex flex-col gap-2 mb-14">
-          <div className="text-[11px] font-bold text-[#785900] tracking-[0.2em] uppercase">✦ Đơn giản đến mức không cần hướng dẫn</div>
-          <h2 className="font-condensed font-black uppercase text-4xl md:text-5xl tracking-tight text-[#0D1C2E]">3 bước. Một hành trình.</h2>
+          <div className="text-[11px] font-bold text-brand-gold-dark tracking-[0.2em] uppercase">✦ Đơn giản đến mức không cần hướng dẫn</div>
+          <h2 className="font-condensed font-black uppercase text-4xl md:text-5xl tracking-tight text-brand-navy">3 bước. Một hành trình.</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           {STEPS.map((s, i) => (
@@ -339,10 +339,10 @@ export function HomePage() {
               key={s.n}
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="border-t-2 border-[#0D1C2E] pt-5"
+              className="border-t-2 border-brand-navy pt-5"
             >
-              <span className="font-display italic text-3xl text-[#d4af37]">{s.n}</span>
-              <h3 className="font-bold text-xl text-[#1a1a1a] mt-2 mb-2">{s.title}</h3>
+              <span className="font-display italic text-3xl text-brand-gold">{s.n}</span>
+              <h3 className="font-bold text-xl text-foreground mt-2 mb-2">{s.title}</h3>
               <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
             </motion.div>
           ))}
@@ -371,10 +371,10 @@ export function HomePage() {
               transition={{ duration: 0.5, delay: i * 0.08 }}
               className="grid grid-cols-[64px_1fr_auto] md:grid-cols-[96px_260px_1fr] items-center gap-6 py-7"
             >
-              <span className="font-display italic text-3xl md:text-4xl text-[#d4af37]/50">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-display italic text-3xl md:text-4xl text-brand-gold/50">{String(i + 1).padStart(2, '0')}</span>
               <div className="flex items-center gap-3">
                 <f.icon className="w-5 h-5 text-primary shrink-0" strokeWidth={1.75} />
-                <h3 className="font-bold text-[#1a1a1a] text-base md:text-lg">{f.title}</h3>
+                <h3 className="font-bold text-foreground text-base md:text-lg">{f.title}</h3>
               </div>
               <p className="hidden md:block text-sm text-gray-500 leading-relaxed max-w-md">{f.desc}</p>
             </motion.div>
@@ -386,8 +386,8 @@ export function HomePage() {
       <section id="destinations" className="px-6 lg:px-12 py-20 max-w-[1400px] mx-auto">
         <div className="w-full flex flex-col gap-10">
           <div className="flex flex-col gap-2">
-            <div className="text-[11px] font-bold text-[#785900] tracking-[0.2em] uppercase">✦ Tuyến đường được đặt nhiều nhất</div>
-            <h2 className="text-3xl md:text-5xl font-display font-medium text-[#0D1C2E]">Điểm đến <span className="italic text-[#785900]">nổi bật</span></h2>
+            <div className="text-[11px] font-bold text-brand-gold-dark tracking-[0.2em] uppercase">✦ Tuyến đường được đặt nhiều nhất</div>
+            <h2 className="text-3xl md:text-5xl font-display font-medium text-brand-navy">Điểm đến <span className="italic text-brand-gold-dark">nổi bật</span></h2>
           </div>
 
           {filteredRoutes.length > 0 ? (
@@ -404,8 +404,8 @@ export function HomePage() {
               onNavigate={(href) => navigate(href)}
             />
           ) : (
-            <div className="py-12 flex flex-col items-center justify-center text-[#585E6C] bg-white rounded-xl border border-dashed border-[#D4C5AB]">
-              <Search size={32} className="mb-3 text-[#D4C5AB]" />
+            <div className="py-12 flex flex-col items-center justify-center text-[#585E6C] bg-white rounded-xl border border-dashed border-brand-tan">
+              <Search size={32} className="mb-3 text-brand-tan" />
               <span className="text-sm font-semibold">Không tìm thấy điểm đến nào</span>
             </div>
           )}
@@ -426,7 +426,7 @@ export function HomePage() {
             // No real banner from the API — a plain brand gradient instead of an unverified stock photo.
             <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg, #0f1c14, #1c3524, #2f4f38, #4a6858)' }} />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#163328]/95 to-[#163328]/50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/50" />
 
           <div className="relative z-10 text-white max-w-lg">
             <div className="text-sm font-semibold text-secondary mb-3 tracking-wide uppercase">Ưu đãi có giới hạn</div>
@@ -447,7 +447,7 @@ export function HomePage() {
                   navigate(url);
                 }
               }}
-              className="bg-white text-[#1a1a1a] hover:bg-gray-100 px-6 py-3 rounded-full font-semibold flex items-center gap-3 transition-colors text-sm shadow-md"
+              className="bg-white text-foreground hover:bg-gray-100 px-6 py-3 rounded-full font-semibold flex items-center gap-3 transition-colors text-sm shadow-md"
             >
               Xem ưu đãi <ArrowRight size={16} />
             </button>
@@ -460,7 +460,7 @@ export function HomePage() {
         <section className="px-6 lg:px-12 py-16 max-w-[1400px] mx-auto">
           <div className="w-full px-4 lg:px-8">
             <div className="text-[11px] font-bold text-secondary tracking-[0.2em] uppercase mb-2">✦ Khách hàng nói gì</div>
-            <h2 className="text-3xl md:text-4xl font-display text-[#1a1a1a] font-medium mb-8">Đánh giá từ hành khách</h2>
+            <h2 className="text-3xl md:text-4xl font-display text-foreground font-medium mb-8">Đánh giá từ hành khách</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {reviews.slice(0, 6).map((r, i) => (
                 <motion.div
@@ -484,7 +484,7 @@ export function HomePage() {
                       )}
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-[#1a1a1a]">{r.name}</div>
+                      <div className="text-sm font-semibold text-foreground">{r.name}</div>
                       <div className="text-xs text-gray-400">{r.route}</div>
                     </div>
                   </div>

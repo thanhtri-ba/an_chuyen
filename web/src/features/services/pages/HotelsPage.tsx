@@ -23,7 +23,7 @@ export function HotelsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans pb-24">
+    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans pb-24">
 
       {/* ===== HERO ===== */}
       <section className="relative h-[60vh] min-h-[440px] flex items-center px-6 lg:px-12 pt-20 bg-[#0d1710]">
@@ -41,11 +41,11 @@ export function HotelsPage() {
           className="relative z-10 w-full mx-auto max-w-[1400px] text-white"
         >
           <div className="flex items-center gap-3 mb-4">
-            <span className="w-8 h-[2px] bg-[#d4af37]" />
-            <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-[#d4af37]">Nghỉ dưỡng chọn lọc</span>
+            <span className="w-8 h-[2px] bg-brand-gold" />
+            <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-brand-gold">Nghỉ dưỡng chọn lọc</span>
           </div>
           <h1 className="font-display font-medium text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-4 max-w-2xl">
-            Nơi dừng chân <span className="text-[#d4af37] italic">xứng đáng</span>
+            Nơi dừng chân <span className="text-brand-gold italic">xứng đáng</span>
           </h1>
           <p className="text-gray-200 text-lg max-w-md leading-relaxed font-medium">
             Khách sạn, resort và homestay được chọn lọc kỹ theo từng điểm đến trên hành trình của bạn.
@@ -59,19 +59,19 @@ export function HotelsPage() {
           <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full border-b md:border-b-0 md:border-r border-gray-100 group cursor-pointer hover:bg-gray-50/50 rounded-2xl md:rounded-l-full transition-colors">
             <MapPin className="text-gray-400 w-5 h-5 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5">Điểm đến</label>
-              <input type="text" placeholder="Bạn muốn nghỉ ở đâu?" className="text-sm border-none outline-none text-[#1a1a1a] font-medium placeholder:text-gray-400 w-full bg-transparent" />
+              <label className="text-[11px] font-bold text-foreground mb-0.5">Điểm đến</label>
+              <input type="text" placeholder="Bạn muốn nghỉ ở đâu?" className="text-sm border-none outline-none text-foreground font-medium placeholder:text-gray-400 w-full bg-transparent" />
             </div>
           </div>
 
           <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full border-b md:border-b-0 md:border-r border-gray-100 group cursor-pointer hover:bg-gray-50/50 transition-colors">
             <Calendar className="text-gray-400 w-5 h-5 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5">Nhận / Trả phòng</label>
+              <label className="text-[11px] font-bold text-foreground mb-0.5">Nhận / Trả phòng</label>
               <div className="flex items-center gap-1">
-                <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="text-sm border-none outline-none text-[#1a1a1a] font-medium w-full bg-transparent cursor-pointer" />
+                <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="text-sm border-none outline-none text-foreground font-medium w-full bg-transparent cursor-pointer" />
                 <span className="text-gray-300">–</span>
-                <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="text-sm border-none outline-none text-[#1a1a1a] font-medium w-full bg-transparent cursor-pointer" />
+                <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="text-sm border-none outline-none text-foreground font-medium w-full bg-transparent cursor-pointer" />
               </div>
             </div>
           </div>
@@ -79,8 +79,8 @@ export function HotelsPage() {
           <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full group cursor-pointer hover:bg-gray-50/50 transition-colors">
             <Users className="text-gray-400 w-5 h-5 group-hover:text-primary transition-colors" />
             <div className="flex flex-col w-full">
-              <label className="text-[11px] font-bold text-[#1a1a1a] mb-0.5">Khách</label>
-              <select value={guests} onChange={e => setGuests(Number(e.target.value))} className="text-sm border-none outline-none text-[#1a1a1a] font-medium w-full bg-transparent cursor-pointer appearance-none">
+              <label className="text-[11px] font-bold text-foreground mb-0.5">Khách</label>
+              <select value={guests} onChange={e => setGuests(Number(e.target.value))} className="text-sm border-none outline-none text-foreground font-medium w-full bg-transparent cursor-pointer appearance-none">
                 {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} khách</option>)}
               </select>
             </div>
@@ -94,7 +94,7 @@ export function HotelsPage() {
 
       {/* ===== HOTEL GRID ===== */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-        <h2 className="text-3xl font-display font-medium text-[#1a1a1a] mb-8">Được đặt nhiều nhất</h2>
+        <h2 className="text-3xl font-display font-medium text-foreground mb-8">Được đặt nhiều nhất</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {hotels.map((hotel, idx) => (
@@ -107,7 +107,7 @@ export function HotelsPage() {
             >
               <div className="relative h-64 overflow-hidden">
                 <img src={hotel.imageUrl} alt={hotel.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-[#1a1a1a] flex items-center gap-1.5 shadow-sm">
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-foreground flex items-center gap-1.5 shadow-sm">
                   <Star size={12} className="text-secondary fill-secondary" /> {hotel.rating} <span className="text-gray-400 font-normal">({hotel.reviewCount})</span>
                 </div>
                 <button className="absolute top-4 right-4 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
@@ -118,7 +118,7 @@ export function HotelsPage() {
               <div className="p-6 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-xl font-bold text-[#1a1a1a] leading-tight">{hotel.name}</h3>
+                    <h3 className="text-xl font-bold text-foreground leading-tight">{hotel.name}</h3>
                     <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
                       <MapPin size={12} /> {hotel.location}, {hotel.country}
                     </div>
@@ -142,7 +142,7 @@ export function HotelsPage() {
                   })}
                 </div>
 
-                <Link to={`/hotels/${hotel.slug}`} className="w-full mt-2 text-center bg-white border border-gray-200 text-[#1a1a1a] hover:border-primary hover:text-primary font-bold py-3 rounded-xl transition-colors shadow-sm">
+                <Link to={`/hotels/${hotel.slug}`} className="w-full mt-2 text-center bg-white border border-gray-200 text-foreground hover:border-primary hover:text-primary font-bold py-3 rounded-xl transition-colors shadow-sm">
                   Xem chi tiết
                 </Link>
               </div>
