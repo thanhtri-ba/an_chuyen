@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
 
-import { Armchair, Check, Download, ReceiptText, Search, User } from "lucide-react";
+import { Armchair, Check, Download, MapPin, ReceiptText, Search, StickyNote, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+
+const AMENITY_LABEL = {
+  nuocSuoi: { label: "Nước suối", unit: "chai" },
+  khanLanh: { label: "Khăn lạnh", unit: "cái" },
+  goiTuaCo: { label: "Gối tựa cổ", unit: "cái" },
+} satisfies Record<string, { label: string; unit: string }>;
 
 const STATUS_TABS = [
   { key: "ALL", label: "Tất cả" },
@@ -44,7 +51,9 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<(typeof STATUS_TABS)[number]["key"]>("ALL");
+  const [detailBookingId, setDetailBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -71,6 +80,20 @@ export default function Page() {
       alert(error.message || "Không thể xác nhận thanh toán.");
     } finally {
       setConfirmingId(null);
+    }
+  }
+
+  async function handleAdminCancel(bookingId: string) {
+    if (!confirm("Huỷ đơn đặt vé này? Nếu khách đã thanh toán qua ví, tiền sẽ được hoàn theo chính sách huỷ vé của nhà xe.")) return;
+    setCancellingId(bookingId);
+    try {
+      const res = await api.post<{ data?: { status?: string } }>(`/bookings/${bookingId}/admin-cancel`, {});
+      const newStatus = res?.data?.status || "CANCELLED";
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b)));
+    } catch (error: any) {
+      alert(error.message || "Không thể huỷ booking.");
+    } finally {
+      setCancellingId(null);
     }
   }
 
@@ -220,7 +243,11 @@ export default function Page() {
                 </TableRow>
               ) : (
                 filteredRows.map((r) => (
-                  <TableRow key={r.key} className="transition-colors hover:bg-muted/30">
+                  <TableRow
+                    key={r.key}
+                    className="cursor-pointer transition-colors hover:bg-muted/30"
+                    onClick={() => setDetailBookingId(r.bookingId)}
+                  >
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 font-semibold text-slate-600">
@@ -294,7 +321,10 @@ export default function Page() {
                           size="sm"
                           className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
                           disabled={confirmingId === r.bookingId}
-                          onClick={() => void handleConfirmCod({ id: r.bookingId, payment: { id: r.paymentId } })}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void handleConfirmCod({ id: r.bookingId, payment: { id: r.paymentId } });
+                          }}
                         >
                           <Check className="size-4" />
                           {confirmingId === r.bookingId ? "Đang duyệt..." : "Duyệt"}
@@ -310,6 +340,190 @@ export default function Page() {
           </Table>
         </CardContent>
       </Card>
+
+      <BookingDetailSheet
+        booking={bookings.find((b) => b.id === detailBookingId) ?? null}
+        open={detailBookingId != null}
+        onOpenChange={(open) => !open && setDetailBookingId(null)}
+        onConfirmCod={handleConfirmCod}
+        onCancel={handleAdminCancel}
+        confirmingId={confirmingId}
+        cancellingId={cancellingId}
+      />
     </div>
+  );
+}
+
+function BookingDetailSheet({
+  booking,
+  open,
+  onOpenChange,
+  onConfirmCod,
+  onCancel,
+  confirmingId,
+  cancellingId,
+}: {
+  booking: any | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirmCod: (booking: any) => void;
+  onCancel: (bookingId: string) => void;
+  confirmingId: string | null;
+  cancellingId: string | null;
+}) {
+  if (!booking) return null;
+
+  const route = booking.tripSchedule?.trip?.route;
+  const routeLabel = route ? `${route.departureCity?.name ?? "?"} → ${route.arrivalCity?.name ?? "?"}` : "—";
+  const agentName = booking.tripSchedule?.trip?.busAgent?.name ?? "—";
+  const departureTime = booking.tripSchedule?.departureTime;
+  const busClass = booking.tripSchedule?.trip?.busClass;
+
+  const amenities = booking.amenities as
+    | { nuocSuoi?: number; khanLanh?: number; goiTuaCo?: number; oCamUSB?: boolean }
+    | null
+    | undefined;
+  const amenityRows = amenities
+    ? (Object.keys(AMENITY_LABEL) as (keyof typeof AMENITY_LABEL)[])
+        .map((key: keyof typeof AMENITY_LABEL) => ({ key, qty: amenities![key] ?? 0 }))
+        .filter((r) => r.qty > 0)
+    : [];
+  const hasUsb = !!amenities?.oCamUSB;
+  const hasAnyAmenity = amenityRows.length > 0 || hasUsb;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
+        <SheetHeader className="border-border border-b">
+          <SheetTitle className="flex items-center gap-2">
+            Chi tiết đặt vé
+            <span className="font-mono text-muted-foreground text-xs">#{booking.id.slice(0, 8).toUpperCase()}</span>
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="flex flex-col gap-6 p-4">
+          {/* Thông tin chuyến đi — luôn ở trên cùng */}
+          <section className="flex flex-col gap-2 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
+              <MapPin className="size-4 text-muted-foreground" /> Thông tin chuyến đi
+            </div>
+            <div className="font-semibold text-foreground">{routeLabel}</div>
+            <div className="text-muted-foreground text-sm">
+              {departureTime
+                ? new Date(departureTime).toLocaleString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "—"}
+              {busClass ? ` · ${busClass}` : ""}
+            </div>
+            <div className="text-muted-foreground text-sm">Nhà xe: {agentName}</div>
+            <Badge
+              variant="outline"
+              className={cn("w-fit font-medium shadow-none", STATUS_LABEL[booking.status]?.cls || "border-gray-200 bg-gray-50 text-gray-600")}
+            >
+              {STATUS_LABEL[booking.status]?.label || booking.status}
+            </Badge>
+          </section>
+
+          {/* Khách hàng & Ghế */}
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
+              <User className="size-4 text-muted-foreground" /> Khách hàng & Ghế
+            </div>
+            <div className="rounded-lg border border-border p-3 text-sm">
+              <div className="font-medium text-foreground">{booking.user?.fullName ?? booking.userId?.slice(0, 8)}</div>
+              {booking.user?.phone && <div className="text-muted-foreground">{booking.user.phone}</div>}
+            </div>
+            <div className="flex flex-col gap-2">
+              {(booking.seatBookings ?? []).map((sb: any, i: number) => (
+                <div key={sb.id ?? i} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+                  <span className="flex items-center gap-1.5 font-mono font-semibold text-foreground">
+                    <Armchair className="size-3.5 text-muted-foreground" /> {sb.seat?.seatNumber ?? "—"}
+                  </span>
+                  <span className="text-muted-foreground">{booking.passengers?.[i]?.name ?? "—"}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Tiện ích — trước đây khách chọn ở bước đặt vé nhưng không được lưu lại,
+              nên mục này luôn trống; giờ đã lưu vào Booking.amenities khi tạo đơn. */}
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
+              <ReceiptText className="size-4 text-muted-foreground" /> Tiện ích đã chọn
+            </div>
+            {hasAnyAmenity ? (
+              <div className="flex flex-col gap-2 rounded-lg border border-border p-3 text-sm">
+                {amenityRows.map((r) => (
+                  <div key={r.key} className="flex items-center justify-between">
+                    <span className="text-foreground">{AMENITY_LABEL[r.key].label}</span>
+                    <span className="text-muted-foreground">
+                      {r.qty} {AMENITY_LABEL[r.key].unit}
+                    </span>
+                  </div>
+                ))}
+                {hasUsb && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-foreground">Ổ cắm USB</span>
+                    <span className="text-muted-foreground">Miễn phí</span>
+                  </div>
+                )}
+                {booking.amenitiesTotal > 0 && (
+                  <div className="flex items-center justify-between border-border border-t pt-2 font-medium">
+                    <span className="text-foreground">Tổng tiện ích</span>
+                    <span className="text-foreground">{Number(booking.amenitiesTotal).toLocaleString("vi-VN")} đ</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-border p-3 text-muted-foreground text-sm">
+                Khách không chọn tiện ích thêm nào.
+              </div>
+            )}
+          </section>
+
+          {booking.notes && (
+            <section className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
+                <StickyNote className="size-4 text-muted-foreground" /> Ghi chú của khách
+              </div>
+              <div className="rounded-lg border border-border p-3 text-muted-foreground text-sm">{booking.notes}</div>
+            </section>
+          )}
+
+          <section className="flex items-center justify-between border-border border-t pt-4">
+            <span className="font-semibold text-foreground">Tổng tiền</span>
+            <span className="font-bold text-foreground text-lg">{Number(booking.totalAmount).toLocaleString("vi-VN")} đ</span>
+          </section>
+
+          {(booking.status === "PENDING_PAYMENT" || booking.status === "CONFIRMED") && (
+            <section className="flex flex-col gap-2 border-border border-t pt-4">
+              {booking.status === "PENDING_PAYMENT" && (
+                <Button
+                  className="w-full gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+                  disabled={confirmingId === booking.id}
+                  onClick={() => onConfirmCod(booking)}
+                >
+                  <Check className="size-4" />
+                  {confirmingId === booking.id ? "Đang duyệt..." : "Duyệt thanh toán"}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="w-full gap-1.5 border-red-200 text-red-600 hover:bg-red-50"
+                disabled={cancellingId === booking.id}
+                onClick={() => onCancel(booking.id)}
+              >
+                {cancellingId === booking.id ? "Đang huỷ..." : "Huỷ & hoàn tiền"}
+              </Button>
+            </section>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

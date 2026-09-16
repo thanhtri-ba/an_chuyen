@@ -264,7 +264,7 @@ export class BookingService {
   // giờ còn lại tới giờ khởi hành) — trước đây booking đã CONFIRMED không thể
   // huỷ được và tiền trong ví bị mất trắng dù trạng thái Payment.REFUNDED đã
   // tồn tại sẵn trong schema nhưng chưa từng được set ở đâu.
-  static async cancelBooking(userId: string, bookingId: string) {
+  static async cancelBooking(userId: string, bookingId: string, isAdmin = false) {
     return await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
@@ -277,9 +277,12 @@ export class BookingService {
       if (!booking) {
         throw new Error('Booking không tồn tại');
       }
-      if (booking.userId !== userId) {
+      if (!isAdmin && booking.userId !== userId) {
         throw new Error('Bạn không có quyền huỷ booking này');
       }
+      // Tiền hoàn luôn vào đúng ví của chủ booking — quan trọng khi admin huỷ hộ,
+      // vì actor (admin) khác với booking.userId.
+      const refundUserId = booking.userId;
       if (booking.status !== 'PENDING_PAYMENT' && booking.status !== 'CONFIRMED') {
         throw new Error('Không thể huỷ booking ở trạng thái hiện tại');
       }
@@ -310,12 +313,12 @@ export class BookingService {
 
         if (refundAmount > 0) {
           await tx.wallet.update({
-            where: { userId },
+            where: { userId: refundUserId },
             data: { balance: { increment: refundAmount } },
           });
           await tx.walletTransaction.create({
             data: {
-              userId,
+              userId: refundUserId,
               amount: refundAmount,
               type: 'REFUND',
               description: `Hoàn tiền huỷ vé chuyến ${booking.tripScheduleId} (${refundPct}%)`,
