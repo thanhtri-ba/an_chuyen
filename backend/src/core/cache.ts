@@ -34,3 +34,11 @@ export async function getCached<T>(
 export function invalidateCache(key: string): void {
   cache.del(key);
 }
+
+/**
+ * Invalidate every cache key that starts with `prefix` (e.g. all cached
+ * trip-search pages after a schedule is created/moved/deleted).
+ */
+export function invalidateCacheByPrefix(prefix: string): void {
+  cache.del(cache.keys().filter((k) => k.startsWith(prefix)));
+}

@@ -28,6 +28,7 @@ const BusAgentsPage = lazy(() => import("@/app/(main)/dashboard/bus-agents/page"
 const RoutesPage = lazy(() => import("@/app/(main)/dashboard/routes/page"));
 const TripsPage = lazy(() => import("@/app/(main)/dashboard/trips/page"));
 const TripSchedulesPage = lazy(() => import("@/app/(main)/dashboard/trip-schedules/page"));
+const DayPlannerPage = lazy(() => import("@/app/(main)/dashboard/day-planner/page"));
 const BookingsPage = lazy(() => import("@/app/(main)/dashboard/bookings/page"));
 const VouchersPage = lazy(() => import("@/app/(main)/dashboard/vouchers/page"));
 const BannersPage = lazy(() => import("@/app/(main)/dashboard/banners/page"));
@@ -209,6 +210,16 @@ export default function App() {
                     <DashboardLayout>
                       <Suspense fallback={<div>Loading...</div>}>
                         <TripSchedulesPage />
+                      </Suspense>
+                    </DashboardLayout>
+                  }
+                />
+                <Route
+                  path="day-planner"
+                  element={
+                    <DashboardLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <DayPlannerPage />
                       </Suspense>
                     </DashboardLayout>
                   }

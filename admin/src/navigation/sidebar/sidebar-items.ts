@@ -2,6 +2,7 @@ import {
   Building2,
   Bus,
   Calendar,
+  CalendarClock,
   Car,
   ChartColumn,
   Compass,
@@ -84,6 +85,7 @@ export const sidebarItems: NavGroup[] = [
     label: "Quản Lý Vận Hành",
     items: [
       { id: "trip-schedules", title: "Lịch Trình", url: "/dashboard/trip-schedules", icon: Calendar },
+      { id: "day-planner", title: "Xếp Lịch Trong Ngày", url: "/dashboard/day-planner", icon: CalendarClock },
       { id: "trips", title: "Chuyến Xe", url: "/dashboard/trips", icon: Forklift },
       { id: "routes", title: "Tuyến Đường", url: "/dashboard/routes", icon: Forklift },
     ],

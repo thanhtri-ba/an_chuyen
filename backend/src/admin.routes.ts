@@ -1,10 +1,11 @@
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { verifyAccessToken, type AuthenticatedRequest } from './middleware/auth.middleware';
 import { requireAdmin } from './middleware/admin.middleware';
 import { supabaseAdmin } from './core/supabase';
 import { invalidateCache } from './core/cache';
 import { maskIdCard } from './core/mask';
+import { DayPlannerService, DayPlannerError } from './modules/schedule/day-planner.service';
 
 const router = Router();
 router.use(verifyAccessToken);
@@ -344,6 +345,32 @@ router.get('/tripSchedules/:id/vehicle-detail', async (req, res) => {
     res.status(500).json({ error: message });
   }
 });
+
+// "Xếp lịch trong ngày" — drag-and-drop day planner (see day-planner.service.ts).
+const dayPlannerHandler =
+  (fn: (req: Request) => Promise<unknown>) =>
+  async (req: Request, res: Response) => {
+    try {
+      const result = await fn(req);
+      res.json(result ?? { success: true });
+    } catch (error: unknown) {
+      const status = error instanceof DayPlannerError ? error.status : 500;
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      res.status(status).json({ message }); // admin api client surfaces `message`
+    }
+  };
+
+router.get('/day-planner/trips', dayPlannerHandler(() => DayPlannerService.listTrips()));
+router.get('/day-planner/schedules', dayPlannerHandler((req) => DayPlannerService.listDay(String(req.query.date ?? ''))));
+router.post(
+  '/day-planner/schedules',
+  dayPlannerHandler((req) => DayPlannerService.createFromTrip(req.body.tripId, new Date(req.body.departureTime))),
+);
+router.put(
+  '/day-planner/schedules/:id',
+  dayPlannerHandler((req) => DayPlannerService.reschedule(req.params.id, new Date(req.body.departureTime))),
+);
+router.delete('/day-planner/schedules/:id', dayPlannerHandler((req) => DayPlannerService.remove(req.params.id)));
 
 router.put('/tripSchedules/:id/assign', async (req, res) => {
   try {
